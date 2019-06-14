@@ -24,19 +24,9 @@ public class GYQuartzJob implements WLTJobIFC {
 
 	private String str;
 	private CommDMO dmo=new CommDMO();
-	
-//	public void aa(){
-//		try {
-//			new GYQuartzJob().run();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
 	@Override
 	public String run() throws Exception {
 		try {
-//			//生成柜员服务计划
-//			Thread.sleep(1000*10);
 			SimpleDateFormat format = new SimpleDateFormat("dd");
 			int currentDay = Integer.parseInt(format.format(new Date()));
 			GYQuartzJob gy=new GYQuartzJob();
@@ -47,10 +37,9 @@ public class GYQuartzJob implements WLTJobIFC {
 			case 15:
 			case 22:
 				gy.gradeEnd();
-//				gy.gradeScore();
+				gy.gradeScore();
 				break;
 			}
-			System.out.println("执行任务结束");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -58,6 +47,7 @@ public class GYQuartzJob implements WLTJobIFC {
 	}
 	public void gradeEnd(){
 		try {//结束打分:1.修改状态;2.计算总分
+			System.out.println("柜员服务质量打分成功");
 			HashVO[] vo = dmo.getHashVoArrayByDS(null, "SELECT distinct(USERCODE) AS USERCODE,STATE,PFTIME FROM WN_GYPF_TABLE WHERE STATE='评分中'");
 			if(vo==null||vo.length<=0){
 				return;
@@ -71,6 +61,10 @@ public class GYQuartzJob implements WLTJobIFC {
 		}
 	}
 	//结束每个人的评分
+	/**
+	 * 结束当前柜员服务质量考核,如果当前服务质量尚未评分或者尚未复核完成直接结束。
+	 * @param usercode:柜员号
+	 */
 	public void gradeEveryOne(String usercode){
 		try {
 			Double KOUOFEN = 0.0;
@@ -81,13 +75,7 @@ public class GYQuartzJob implements WLTJobIFC {
 			for (int i = 0; i < vo.length - 1; i++) {
 				String koufenValue = vo[i].getStringValue("KOUOFEN");
 				String defenValue = vo[i].getStringValue("FENZHI");
-				if (koufenValue == null || "".equals(koufenValue)) {
-					koufenValue = defenValue;
-				}
-				if (Double.parseDouble(koufenValue) > Double.parseDouble(defenValue)) {
-					koufenValue = defenValue;
-				}
-				KOUOFEN = Double.parseDouble(koufenValue);
+				KOUOFEN=Double.parseDouble(defenValue);
 				result = result + KOUOFEN;
 				update.setWhereCondition("id='" + vo[i].getStringValue("id") + "'");
 				update.putFieldValue("KOUOFEN", KOUOFEN);
@@ -95,7 +83,7 @@ public class GYQuartzJob implements WLTJobIFC {
 				list.add(update.getSQL());
 			}
 			double sum= Double.parseDouble(vo[vo.length-1].getStringValue("KOUOFEN"));
-			double sumfen = sum- result;
+			double sumfen = sum-result;
 			String sumSQL = "update wnSalaryDb.WN_GYPF_TABLE set KOUOFEN='" + sumfen + "',state='评分结束' where usercode='" + usercode + "' and xiangmu='总分'";
 			System.out.println(sumSQL);
 			list.add(sumSQL);
@@ -111,8 +99,9 @@ public class GYQuartzJob implements WLTJobIFC {
 	public void gradeScore() {
 		try {
 			WnSalaryServiceImpl service=new WnSalaryServiceImpl();
-			String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-		 	str = service.getSqlInsert(date,1);
+			String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+			System.out.println("开始生成打分计划");
+		 	str = service.getSqlInsert(date);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

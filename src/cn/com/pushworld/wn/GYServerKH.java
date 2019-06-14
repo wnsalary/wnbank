@@ -7,9 +7,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
 
 import cn.com.infostrategy.bs.common.CommDMO;
 import cn.com.infostrategy.to.common.HashVO;
@@ -39,7 +41,7 @@ import cn.com.infostrategy.ui.report.BillCellPanel;
  */
 public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListener, BillListSelectListener, ActionListener {
 
-	private CommDMO dmo = new CommDMO();
+//	private CommDMO dmo = new CommDMO();
 	private BillTreePanel billTreePanel_Dept = null;//机构树
 	private BillListPanel billListPanel_User_Post = null;//人员表
 	private BillListPanel billListPanel_User_check = null;//柜员评分
@@ -60,8 +62,8 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 	public void initialize() {
 		//获取到当前登录人的机构code
 		try {
-			USERCODES = dmo.getHashMapBySQLByDS(null, "select id,code from PUB_CORP_DEPT");
-			USERTYPE = dmo.getHashMapBySQLByDS(null, "select USERCODE,POSTNAME from  V_PUB_USER_POST_1 ");//对于人员评分表，不同的人看到柜员评分表中的内容
+			USERCODES = UIUtil.getHashMapBySQLByDS(null, "select id,code from PUB_CORP_DEPT");
+			USERTYPE = UIUtil.getHashMapBySQLByDS(null, "select USERCODE,POSTNAME from  WNSALARYDB.V_PUB_USER_POST_1");//对于人员评分表，不同的人看到柜员评分表中的内容
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -79,41 +81,28 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 		btn_save = new WLTButton("保存");
 		btn_save.addActionListener(this);
 		btn_end.addActionListener(this);
-		billListPanel_User_check.addBillListButton(btn_save);
-		billListPanel_User_check.addBillListButton(btn_end);
-		if ("主任".equals(USERTYPE.get(PFSUERCODE).toString())) {
-			//
+//		if ("主任".equals() || "副主任".equals(USERTYPE.get(PFSUERCODE).toString())) {
+        String userType=USERTYPE.get(PFSUERCODE).toString();//获取到当前登录人的身份
+		if(userType.contains("主任")){
 			btn_verify = new WLTButton("评分复核");
 			btn_verify.addActionListener(this);
 			billListPanel_User_check.addBillListButton(btn_verify);
 			billListPanel_User_check.setItemEditable("fhreason", true);
-		} else {
+		} else if(userType.contains("委派会计")){
+			billListPanel_User_check.addBillListButton(btn_save);
+			btn_end.setIconTextGap(-50);
+			billListPanel_User_check.addBillListButton(btn_end);
 			billListPanel_User_check.setItemEditable("fhreason", false);
 		}
 		billListPanel_User_check.repaintBillListButton();
 		billListPanel_User_check.addBillListSelectListener(this);
-
 		String PFDEPTCODE = USERCODES.get(PFUSERDEPT).toString();//获取到当前的机构code
 		billListPanel_User_Post.queryDataByCondition("deptcode='" + PFDEPTCODE + "' and POSTNAME like '%柜员%'", "seq,usercode");
 		//获取到当前登录人的机构code
-		System.out.println("当前登录人员的机构号:" + PFDEPTCODE);
 		if ("282007".equals(PFDEPTCODE)) {
 			splitPanel_all.add(billTreePanel_Dept);//如果当前登录人属于客户服务部，则显示机构树
 			billTreePanel_Dept.addBillTreeSelectListener(this);
 		}
-
-		//		else{
-		//			//获取到当前选中的柜员
-		//			
-		//			
-		//            //不显示机构树的前提下，根据机构号获取到当前机构的柜员
-		//			String userType=USERTYPE.get(PFSUERCODE).toString();
-		//			if("委派会计".equals(userType)){//委派会计无法只能进行评分，不能对分数进行复核
-		//				billListPanel_User_check.QueryData("select * from WN_GYPF_TABLE where 1=1 and  USERNAME='"+gyBillVo.getStringValue("USERNAME")+"' AND pftime='"+pfTime+"'");
-		//		        String[] notVisiable=new String[]{"PFUSERNAME","PFSUERCODE","PFUSERDEPT","FHUSERNAME","FHUSERDEPT","FHTIME","FHREASON"};
-		//		        billListPanel_User_check.setItemsVisible(notVisiable, false);//委派会计以上这些字段不可见
-		//			}
-		//		}
 		splitPanel_all.add(splitPanel);
 		splitPanel_all.setDividerLocation(180);
 		this.add(splitPanel_all);
@@ -123,7 +112,7 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == btn_save) {
 			try {
-				StringBuffer sb = new StringBuffer();
+				StringBuffer sb = new StringBuffer("");
 				BillVO[] bos = billListPanel_User_check.getBillVOs();
 				Double FENZHI = 0.0;
 				Double KOUOFEN = 0.0;
@@ -131,8 +120,10 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 				String pfreason = "";
 				int count = 1;
 				BillVO vov = billListPanel_User_check.getSelectedBillVO();
-				String pfUsercode=vov.getStringValue("USERCODE");
-				pfTime=dmo.getStringValueByDS(null, "SELECT max(PFTIME) FROM WN_GYPF_TABLE WHERE USERCODE='"+pfUsercode+"'");
+//				String pfUsercode=vov.getStringValue("USERCODE");
+				String usercode=billListPanel_User_Post.getSelectedBillVO().getStringValue("usercode");
+				System.out.println("当前柜员的柜员号:"+usercode);
+				pfTime=UIUtil.getStringValueByDS(null, "SELECT max(PFTIME) FROM WN_GYPF_TABLE WHERE USERCODE='"+usercode+"'");
 				if (vov == null) {
 					MessageBox.show(this, "请选择一条数据操作!");
 					return;
@@ -140,25 +131,37 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 				List list = new ArrayList<String>();
 				System.out.println("当前操作的表为:" + billListPanel_User_check.getTempletVO().getTablename());
 				UpdateSQLBuilder update = new UpdateSQLBuilder(billListPanel_User_check.getTempletVO().getTablename());
-				for (int i = 0; i < bos.length - 1; i++) {
-					FENZHI = Double.parseDouble(bos[i].getStringValue("FENZHI"));
-					pfreason = bos[i].getStringValue("FHREASON");
-					if (bos[i].getStringValue("KOUOFEN") != null) {
+				for (int i = 0; i < bos.length; i++) {
+					if(bos[i].getStringValue("xiangmu").equals("总分")){
+						continue;
+					}
+					if (bos[i].getStringValue("KOUOFEN") != null&&!bos[i].getStringValue("KOUOFEN").isEmpty()) {
 						KOUOFEN = Double.parseDouble(bos[i].getStringValue("KOUOFEN"));
+						FENZHI = Double.parseDouble(bos[i].getStringValue("FENZHI"));
 						if (FENZHI < KOUOFEN) {
-							sb.append("第" + (count) + "行数据项目为[" + bos[i].getStringValue("XIANGMU") + "],指标为[" + bos[i].getStringValue("ZHIBIAO") + "]扣分项大于分值   \n");
+							sb.append("第" + (count) + "行数据项目为[" + bos[i].getStringValue("XIANGMU") + "],指标为[" + bos[i].getStringValue("ZHIBIAO") + "]扣分项大于分值  \n");
 						}
 					} else {
-						sb.append("第" + (count) + "行数据项目为[" + bos[i].getStringValue("XIANGMU") + "],指标为[" + bos[i].getStringValue("ZHIBIAO") + "]扣分项为空   \n");
+						sb.append("第" + (count) + "行数据项目为[" + bos[i].getStringValue("XIANGMU") + "],指标为[" + bos[i].getStringValue("ZHIBIAO") + "]扣分项为空  \n");
 					}
-					result = result + KOUOFEN;
-					count = count + 1;
-					update.setWhereCondition("id='" + bos[i].getStringValue("id") + "'");
-					update.putFieldValue("KOUOFEN", KOUOFEN);
-					update.putFieldValue("FHREASON", pfreason);
-					list.add(update.getSQL());
 				}
+				
 				if (sb.length() <= 0) {
+					for (int i = 0; i < bos.length - 1; i++) {
+						KOUOFEN = Double.parseDouble(bos[i].getStringValue("KOUOFEN"));
+						FENZHI = Double.parseDouble(bos[i].getStringValue("FENZHI"));
+						if(KOUOFEN!=0){
+							KOUOFEN=FENZHI;
+						}
+						pfreason = bos[i].getStringValue("FHREASON");
+						result = result + KOUOFEN;
+						count = count + 1;
+						update.setWhereCondition("id='" + bos[i].getStringValue("id") + "'");
+						update.putFieldValue("KOUOFEN", KOUOFEN);
+						
+						update.putFieldValue("FHREASON", pfreason);
+						list.add(update.getSQL());
+					}
 					billListPanel_User_check.setRealValueAt(String.valueOf(100 - result), bos.length - 1, "KOUOFEN");
 					update.setWhereCondition("id='" + bos[bos.length - 1].getStringValue("id") + "'");
 					update.putFieldValue("KOUOFEN", 100 - result);
@@ -186,10 +189,11 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 				Double FENZHI = 0.0;
 				Double KOUOFEN = 0.0;
 				Double result = 100.0;
-				BillVO gyselected = billListPanel_User_check.getSelectedBillVO();
+				BillVO gyselected = billListPanel_User_Post.getSelectedBillVO();
 				String gyUserCode = gyselected.getStringValue("USERCODE");
 				String gyUserName = gyselected.getStringValue("USERNAME");
-				pfTime=dmo.getStringValueByDS(null,"SELECT max(PFTIME) FROM WN_GYPF_TABLE WHERE USERCODE='"+gyUserCode+"'");
+				pfTime=UIUtil.getStringValueByDS(null,"SELECT max(PFTIME) FROM WN_GYPF_TABLE WHERE USERCODE='"+gyUserCode+"'");
+				String PFDEPTCODE = USERCODES.get(PFUSERDEPT).toString();
 				String[] state = UIUtil.getStringArrayFirstColByDS(null, "select state from WN_GYPF_TABLE where state='评分中' AND USERCODE='" + gyUserCode + "'");//
 				if (state.length <= 0) {
 					MessageBox.show(this, "当前柜员【" + gyUserName + "】服务质量考核已经结束，无须重复结束！");
@@ -201,7 +205,7 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 				HashMap<String, String> map = UIUtil.getHashMapBySQLByDS(null, "select id,name from pub_corp_dept");
 				UpdateSQLBuilder update3=new UpdateSQLBuilder(billListPanel_User_check.getTempletVO().getTablename());
 				update3.setWhereCondition("USERCODE='"+gyUserCode+"' and PFTIME='"+pfTime+"'");
-				MessageBox.show(this,billListPanel_User_check.getTempletVO().getTablename());
+//				MessageBox.show(this,billListPanel_User_check.getTempletVO().getTablename());
 				for (int j = 0; j < bos.length; j++) {
 					if(bos[j].getStringValue("KOUOFEN")==null||bos[j].getStringValue("KOUOFEN").isEmpty()){
 						sb.append("部门为[" + map.get(bos[j].getStringValue("USERDEPT")) + "],柜员名称为[" + bos[j].getStringValue("USERNAME") + "]评分未完成！ \n");
@@ -224,22 +228,31 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 								KOUOFEN=0.0;
 							}
 							KOUOFEN=Double.parseDouble(bos[j].getStringValue("KOUOFEN"));
-							if (FENZHI <= KOUOFEN) {
-							    FENZHI=KOUOFEN;
+							if (FENZHI <= KOUOFEN || KOUOFEN!=0) {
+							    KOUOFEN=FENZHI;
 							}
 							System.out.println("当前扣分项:"+bos[j].getStringValue("xiangmu")+",扣分="+KOUOFEN);
 							result=result-KOUOFEN;
 							update.putFieldValue("KOUOFEN", KOUOFEN);
-							update.putFieldValue("state", "评分结束");
+							update.putFieldValue("PFUSERNAME", PFUSERNAME);
+							update.putFieldValue("PFSUERCODE", PFSUERCODE);
+							update.putFieldValue("PFUSERDEPT", PFDEPTCODE);
+							update2.putFieldValue("fhresult", "未复核");
 							sqlList.add(update.getSQL());
 						}
 						UIUtil.executeBatchByDS(null,sqlList);
 						update2.setWhereCondition("USERCODE='" + gyUserCode + "' and pftime='" + pfTime + "' and xiangmu='总分'");
 						update2.putFieldValue("state", "评分结束");
 						update2.putFieldValue("kouofen",result);
+						update2.putFieldValue("PFUSERNAME", PFUSERNAME);
+						update2.putFieldValue("PFSUERCODE", PFSUERCODE);
+						update2.putFieldValue("PFUSERDEPT", PFDEPTCODE);
+						update2.putFieldValue("fhresult", "未复核");
 						UIUtil.executeUpdateByDS(null, update2.getSQL());
 						MessageBox.show(this, "评分结束成功");
 						billListPanel_User_check.refreshData();
+					}else {
+						return;
 					}
 				} else {
 					UpdateSQLBuilder update = new UpdateSQLBuilder(billListPanel_User_check.getTempletVO().getTablename());
@@ -256,20 +269,26 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 							KOUOFEN=0.0;
 						}
 						KOUOFEN=Double.parseDouble(bos[j].getStringValue("KOUOFEN"));
-						if (FENZHI <= KOUOFEN) {
-						    FENZHI=KOUOFEN;
+						if (FENZHI <= KOUOFEN || KOUOFEN!=0) {
+						    KOUOFEN=FENZHI;
 						}
-						System.out.println("当前扣分项:"+bos[j].getStringValue("xiangmu")+",扣分="+KOUOFEN);
 						update.putFieldValue("state", "评分结束");
 						update.putFieldValue("KOUOFEN",KOUOFEN);
-						System.out.println("当前执行的sql:"+update.getSQL());
+						update.putFieldValue("PFUSERNAME", PFUSERNAME);
+						update.putFieldValue("PFSUERCODE", PFSUERCODE);
+						update.putFieldValue("PFUSERDEPT", PFDEPTCODE);
+						update.putFieldValue("fhresult", "未复核");
 						sqlList.add(update.getSQL());
 						result=result-KOUOFEN;
 					}
-				    dmo.executeBatchByDS(null, sqlList);
+				    UIUtil.executeBatchByDS(null, sqlList);
 					update2.setWhereCondition("USERCODE='" + gyUserCode + "' and pftime='" + pfTime + "' and xiangmu='总分'");
 					update2.putFieldValue("state", "评分结束");
 					update2.putFieldValue("kouofen",result);
+					update2.putFieldValue("PFUSERNAME", PFUSERNAME);
+					update2.putFieldValue("PFSUERCODE", PFSUERCODE);
+					update2.putFieldValue("PFUSERDEPT", PFDEPTCODE);
+					update2.putFieldValue("fhresult", "未复核");
 					UIUtil.executeUpdateByDS(null, update2.getSQL());
 					MessageBox.show(this, "评分结束成功");
 					billListPanel_User_check.refreshData();
@@ -282,45 +301,54 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 			VersifySource();
 		}
 	}
-
 	/**
 	 * 评分复核功能
 	 */
 	private void VersifySource() {
 		try {
-			
 			BillVO fhUser = billListPanel_User_Post.getSelectedBillVO();
 			String fhUserCode = fhUser.getStringValue("USERCODE");
-			HashVO[] pfNotEnd = dmo.getHashVoArrayByDS(null, "SELECT  * FROM WN_GYPF_TABLE WHERE PFTIME='"+pfTime+"' and USERCODE='"+fhUserCode+"' and state='评分中'");
+			HashVO[] pfNotEnd = UIUtil.getHashVoArrayByDS(null, "SELECT  * FROM WN_GYPF_TABLE WHERE PFTIME='"+pfTime+"' and USERCODE='"+fhUserCode+"' and state='评分中'");
 			if(pfNotEnd.length>0){
 				MessageBox.show(this,"当前柜员【"+fhUser.getStringValue("USERNAME")+"】评分尚未结束，无法进行分数复核。");
 			    return;
 			}
+			pfTime = UIUtil.getStringValueByDS(null, "SELECT max(PFTIME) FROM WN_GYPF_TABLE WHERE USERCODE='" + fhUserCode + "'");//批复时间设置
+			String count=  UIUtil.getStringValueByDS(null, "select count(*) from WN_GYPF_TABLE where usercode='"+fhUserCode+"' and pftime='"+pfTime+"' and fhresult='复核通过'");
+			 if(Double.parseDouble(count)>0){
+				 MessageBox.show(this,"当前柜员【"+fhUser.getStringValue("USERNAME")+"】评分复核完成,无需再次复核");
+				 return;
+			 }
 			//获取分数复核人员的信息
 			int result = MessageBox.showOptionDialog(this, "当前柜员分数进行复核", "提示", new String[] { "复核通过", "复核退回" }, 1);
+			System.out.println("当前复核结果为:"+result);
 			String FHUSERNAME = PFUSERNAME;
 			String FHUSERDEPT = USERCODES.get(PFUSERDEPT).toString();
 			String FHTIME = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date());
-			pfTime = dmo.getStringValueByDS(null, "SELECT max(PFTIME) FROM WN_GYPF_TABLE WHERE USERCODE='" + fhUserCode + "'");//批复时间设置
+		
 			UpdateSQLBuilder update = new UpdateSQLBuilder("WN_GYPF_TABLE");
 			update.setWhereCondition("pfTime='" + pfTime + "' and USERCODE='" + fhUserCode + "'");
 			update.putFieldValue("FHUSERNAME", PFUSERNAME);
 			update.putFieldValue("FHUSERDEPT", FHUSERDEPT);
 			update.putFieldValue("FHTIME", FHTIME);
-		    
-		    if (result == 0) {//审核通过
+		    if (result == 0) {//复核不通过
 				//设置复核信息
 				update.putFieldValue("FHRESULT", "复核通过");
-				dmo.executeUpdateByDS(null, update.getSQL());//执行修改
+				UIUtil.executeUpdateByDS(null, update.getSQL());//执行修改
 				billListPanel_User_check.setItemEditable("FHREASON", false);//评分结束，无法修改审核不通过能容
 				billListPanel_User_check.refreshData();
-			} else {
+			} else if(result==1){//复核不通过
 				update.putFieldValue("FHRESULT", "复核未通过");
 				String pfreason = JOptionPane.showInputDialog("请输入复核未通过的理由:");
 				update.putFieldValue("FHREASON", pfreason);
 				update.putFieldValue("STATE", "评分中");//将状态从评分结束修改为评分中，由委派会计继续评分
-				dmo.executeUpdateByDS(null, update.getSQL());//执行修改
+				update.putFieldValue("PFUSERNAME", "");
+				update.putFieldValue("PFSUERCODE", "");
+				update.putFieldValue("PFUSERDEPT", "");
+				UIUtil.executeUpdateByDS(null, update.getSQL());//执行修改
 				billListPanel_User_check.refreshData();
+			}else {//没有做任何事情
+				return ;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -352,16 +380,26 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 		try {
 			if (e.getSource() == billListPanel_User_Post) {
 				BillVO vo = billListPanel_User_Post.getSelectedBillVO();
-				billListPanel_User_check.QueryDataByCondition("USERDEPT='" + vo.getStringValue("deptid") + "' and usercode='" + vo.getStringValue("usercode") + "'");
+				pfTime=UIUtil.getStringValueByDS(null, "SELECT max(PFTIME) FROM WN_GYPF_TABLE WHERE USERCODE='"+vo.getStringValue("usercode")+"'");//
+				billListPanel_User_check.QueryDataByCondition("usercode='" + vo.getStringValue("usercode") + "' and pftime='"+pfTime+"'");
 			}
-			if (e.getSource() == billListPanel_User_check) {
+			else  if (e.getSource() == billListPanel_User_check) {
 				BillVO vo = billListPanel_User_check.getSelectedBillVO();
+				//获取到当前复核人登录信息
+				String userType=USERTYPE.get(PFSUERCODE).toString();
 				if (vo.getStringValue("state").equals("评分结束")) {
-					btn_save.setEnabled(false);
+					btn_save.setEnabled(false);//设置"保存"功能不可用
 					billListPanel_User_check.setItemEditable("KOUOFEN", false);//评分完成之后，设置不可编辑
 				} else {
-					btn_save.setEnabled(true);
-					billListPanel_User_check.setItemEditable("KOUOFEN", true);
+					if(userType.contains("委派会计")){
+						btn_save.setEnabled(true);
+						billListPanel_User_check.setItemEditable("KOUOFEN", true);
+					} else {
+						btn_save.setVisible(false);
+						btn_end.setVisible(false);
+						billListPanel_User_check.setItemEditable("KOUOFEN", false);
+					}
+					
 				}
 			}
 		} catch (Exception ex) {

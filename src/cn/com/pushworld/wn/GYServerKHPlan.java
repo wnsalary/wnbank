@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.text.html.StyleSheet.ListPainter;
 
 import com.ibm.db2.jcc.a.v;
 
@@ -35,7 +36,7 @@ import cn.com.pushworld.wn.ui.WnSalaryServiceIfc;
  */
 public class GYServerKHPlan extends AbstractWorkPanel implements ActionListener, BillListSelectListener {
 	private BillListPanel list = null;
-	private WLTButton btn_ks, btn_end = null;
+	private WLTButton btn_ks, btn_end,btn_delete = null;
 	private String str = null;
 	private CommDMO dmo = new CommDMO();
 	@Override
@@ -43,8 +44,11 @@ public class GYServerKHPlan extends AbstractWorkPanel implements ActionListener,
 		list = new BillListPanel("WN_GYKHPLAN_CODE1");
 		btn_ks = new WLTButton("开始打分");
 		btn_end = new WLTButton("结束打分");
+		btn_delete=new WLTButton("删除");
 		btn_ks.addActionListener(this);
 		btn_end.addActionListener(this);
+		btn_delete.addActionListener(this);
+		list.addBillListButton(btn_delete);
 		list.addBillListButton(btn_ks);
 		list.addBillListButton(btn_end);
 		list.repaintBillListButton();
@@ -57,8 +61,30 @@ public class GYServerKHPlan extends AbstractWorkPanel implements ActionListener,
 		if (act.getSource() == btn_ks) {
 			gradeScore();
 		}
-		if (act.getSource() == btn_end) {
+		else   if (act.getSource() == btn_end) {
 			gradeEnd();
+		}else if(act.getSource()==btn_delete){
+			deleteScore();
+		}
+	}
+
+	private void deleteScore() {//删除评分计划
+		try {
+			BillVO vo = list.getSelectedBillVO();
+			if(vo==null){
+				MessageBox.show(this,"请选中一条考核计划进行删除");
+				return;
+			}
+			//获取到当前考核计划的状态
+			String state=UIUtil.getStringValueByDS(null, "select state from WN_GYKHPLAN where id='"+vo.getStringValue("ID")+"'");
+		    if(!"未评分".equals(state)){
+		    	MessageBox.show(this,"当前评分计划【"+vo.getStringValue("PLANNAME")+"】的状态为【"+state+"】,无法删除");
+		    	return;
+		    }
+		    UIUtil.executeUpdateByDS(null, "delete from WN_GYKHPLAN  where ID='"+vo.getStringValue("id")+"'");
+		    list.refreshData();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -107,7 +133,9 @@ public class GYServerKHPlan extends AbstractWorkPanel implements ActionListener,
 					}
 				}
 			});
+			list.refreshData();
 			MessageBox.show(this, str);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -119,16 +147,24 @@ public class GYServerKHPlan extends AbstractWorkPanel implements ActionListener,
 //			if("评分结束".equals(selectedBillVO.getStringValue("state"))){
 //				MessageBox.show(this,"当前考核计划已经结束");
 //			}
+			//获取到当前打分项
+			BillVO vo = list.getSelectedBillVO();
+			if( vo==null){
+				MessageBox.show(this,"请选中一行数据进行操作");
+				return;
+			}
+			String id=vo.getStringValue("ID");
 			final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil.lookUpRemoteService(WnSalaryServiceIfc.class);
 			new SplashWindow(this, new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent event) {
-					String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+					String date = new SimpleDateFormat("yyyy-MM-dd  hh:MM:ss").format(new Date());
 					str = service.getSqlInsert(date);
 				}
 			});
-			
-//			UIUtil.executeUpdateByDS(null,"UPDATE WN_GYKHPLAN SET STATE='评分开始' WHERE ID='""'" );
+			UIUtil.executeUpdateByDS(null,"UPDATE WN_GYKHPLAN SET STATE='评分中' WHERE ID='"+id+"'" );
+			MessageBox.show(this,str);
+			list.refreshData();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -136,18 +172,31 @@ public class GYServerKHPlan extends AbstractWorkPanel implements ActionListener,
 
 	public void gradeEnd() {
 		try {//结束打分:1.修改状态;2.计算总分
-			HashVO[] vo = UIUtil.getHashVoArrayByDS(null, "SELECT distinct(USERCODE) AS USERCODE,STATE,PFTIME FROM WN_GYPF_TABLE WHERE STATE='评分中'");
+			BillVO selectedBillVO = list.getSelectedBillVO();
+			if(selectedBillVO==null){
+				MessageBox.show(this,"请选中一条考核计划进行操作");
+				return;
+			}
+			final HashVO[] vo = UIUtil.getHashVoArrayByDS(null, "SELECT distinct(USERCODE) AS USERCODE,STATE,PFTIME FROM WN_GYPF_TABLE WHERE STATE='评分中'");
 			String result =UIUtil.getStringValueByDS(null, "SELECT COUNT(*) FROM WN_GYPF_TABLE WHERE STATE='评分中' OR FHRESULT IS NULL OR FHRESULT='未通过'");
 			int  count=Integer.parseInt(result);
+			
 			int sumcount=0;
 			if(count>0){
-				sumcount=MessageBox.showOptionDialog(this, "当前考核计划中存在是否评分尚未结束或尚未复核的柜员，是否结束当前考核计划","提示", new String[] { "是", "否" },1);
+				sumcount=MessageBox.showOptionDialog(this, "当前考核计划中存在是否评分尚未结束或尚未复核的柜员，是否结束当前考核计划","提示", new String[] { "否", "是" },0);
 			}
 			if(sumcount!=0){
-				for (int i = 0; i < vo.length; i++) {
-					HashVO v = vo[i];
-					gradeEndEveryOne(v.getStringValue("USERCODE"));
-				}
+				new SplashWindow(this, new  AbstractAction() {
+					@Override
+					public void actionPerformed(ActionEvent actionevent) {
+						for (int i = 0; i < vo.length; i++) {
+							HashVO v = vo[i];
+							gradeEndEveryOne(v.getStringValue("USERCODE"));
+						}
+					}
+				});
+				MessageBox.show(this,"当前考核计划结束成功");
+				UIUtil.executeUpdateByDS(null, "update WN_GYKHPLAN set  state='评分结束' where id='"+selectedBillVO.getStringValue("ID")+"'");
 			}else{
 				return;
 			}
