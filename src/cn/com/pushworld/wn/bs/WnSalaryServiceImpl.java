@@ -542,27 +542,28 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			HashMap<String, String> kmap = dmo
 					.getHashMapBySQLByDS(
 							null,
-							"select distinct(dk.xd_col16),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+							"select distinct(dk.xd_col1),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
 									+ kmonth + "' and XD_COL7<>0");
 			// 上月的客户证件和客户经理号map
 			HashMap<String, String> smap = dmo
 					.getHashMapBySQLByDS(
 							null,
-							"select distinct(dk.xd_col16),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+							"select distinct(dk.xd_col1),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
 									+ smonth + "' and XD_COL7<>0");
 			for (String str : kmap.keySet()) {
+				System.out.println(">>>>>>>>>>>>>>>>>"+kmap.size());
 				if (kmap.get(str).equals(smap.get(str))) {
 					continue;
 				} else {
 					update
 							.setWhereCondition("to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
-									+ smonth + "' and xd_col16='" + str + "'");
+									+ smonth + "' and xd_col1='" + str + "'");
 					update.putFieldValue("XD_COL81", kmap.get(str));
 					list.add(update.getSQL());
-					sb.append(smonth + "客户证件号为[" + str + "]客户经理为["
+					sb.append(smonth + "贷款账号为[" + str + "]客户经理为["
 							+ map.get(smap.get(str))
 							+ "]与考核月的客户经理信息不符，故修改客户经理为["
-							+ map.get(kmap.get(str)) + "] "
+							+  map.get(kmap.get(str)) + "] "
 							+ System.getProperty("line.separator"));
 				}
 				if (list.size() > 5000) {// zzl 1000 一提交
@@ -658,18 +659,18 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			HashMap<String, String> kmap = dmo
 					.getHashMapBySQLByDS(
 							null,
-							"select XD_COL7,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+							"select XD_COL1,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
 									+ kmonth
-									+ "' and XD_COL7 is not null and XD_COL96 is not null");
+									+ "' and XD_COL1 is not null and XD_COL96 is not null");
 			// 年初客户证件和客户经理号map
 			String year = String.valueOf(Integer.parseInt(kmonth
 					.substring(0, 4)) - 1);
 			HashMap<String, String> smap = dmo
 					.getHashMapBySQLByDS(
 							null,
-							"select XD_COL7,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+							"select XD_COL1,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
 									+ year
-									+ "-12-31' and XD_COL7 is not null and XD_COL96 is not null");
+									+ "-12-31' and XD_COL1 is not null and XD_COL96 is not null");
 			for (String str : kmap.keySet()) {
 				if (kmap.get(str).equals(smap.get(str))) {
 					continue;
@@ -677,12 +678,12 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					update
 							.setWhereCondition("to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
 									+ year
-									+ "-12-31' and xd_col16='"
+									+ "-12-31' and XD_COL1='"
 									+ str
 									+ "'");
 					update.putFieldValue("XD_COL96", kmap.get(str));
 					list.add(update.getSQL());
-					sb.append("2018-12-31客户证件号为[" + str + "]客户经理为["
+					sb.append("2018-12-31客户号为[" + str + "]客户经理为["
 							+ map.get(smap.get(str))
 							+ "]与考核月的客户经理信息不符，故修改客户经理为["
 							+ map.get(kmap.get(str)) + "] "
