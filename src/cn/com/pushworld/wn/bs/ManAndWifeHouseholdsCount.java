@@ -27,11 +27,6 @@ public class ManAndWifeHouseholdsCount {
 	 * @return
 	 */
 	public HashMap<String, String> getComputeMap(String date){
-		if(date==null){
-			System.out.println("0");
-		}else{
-	    	System.out.println("date:"+date);
-		}
 		HashMap<String,String> map=new HashMap<String, String>();
 		String [] time=date.split(";");
 		day=time[4].toString();
@@ -140,7 +135,6 @@ public class ManAndWifeHouseholdsCount {
 	 * @return
 	 */
 	public HashMap<String,String> getCount(String date){
-		System.out.println("date:"+date);
 		HashMap<String,String> map=new HashMap<String, String>();
 		String [] time=date.split(";");
 		HashMap<String, String> DSHQDSMap=getDSHQDS(date);
