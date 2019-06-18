@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<deployments>
+  <deployment alt-context-root="" context-root="/wnbank" deployment-path="D:/Tomcat6.0.18/webapps/wnbank" project-name="wnbank" server-id="tomcat6Server" state="DEPLOYED" type="WEB"/>
+</deployments>
