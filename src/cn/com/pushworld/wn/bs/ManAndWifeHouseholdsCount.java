@@ -27,10 +27,16 @@ public class ManAndWifeHouseholdsCount {
 	 * @return
 	 */
 	public HashMap<String, String> getComputeMap(String date){
+		if(date==null){
+			System.out.println("0");
+		}else{
+	    	System.out.println("date:"+date);
+		}
 		HashMap<String,String> map=new HashMap<String, String>();
 		String [] time=date.split(";");
 		day=time[4].toString();
 		try {
+			
 			vo=dmo.getHashVoArrayByDS(null,"select code,name from v_sal_personinfo where STATIONKIND in ('乡镇客户经理','城区客户经理','乡镇网点副主任','城区网点副主任','副主任兼职客户经理')");
 			HashMap<String,String> yearmap=year.getYearCount(date, vo);			
 //			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_RJ_CKYXHSTJ");
@@ -134,6 +140,7 @@ public class ManAndWifeHouseholdsCount {
 	 * @return
 	 */
 	public HashMap<String,String> getCount(String date){
+		System.out.println("date:"+date);
 		HashMap<String,String> map=new HashMap<String, String>();
 		String [] time=date.split(";");
 		HashMap<String, String> DSHQDSMap=getDSHQDS(date);
