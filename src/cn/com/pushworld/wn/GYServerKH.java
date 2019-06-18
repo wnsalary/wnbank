@@ -334,6 +334,7 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 		    if (result == 0) {//复核不通过
 				//设置复核信息
 				update.putFieldValue("FHRESULT", "复核通过");
+				update.putFieldValue("FHREASON", "");
 				UIUtil.executeUpdateByDS(null, update.getSQL());//执行修改
 				billListPanel_User_check.setItemEditable("FHREASON", false);//评分结束，无法修改审核不通过能容
 				billListPanel_User_check.refreshData();

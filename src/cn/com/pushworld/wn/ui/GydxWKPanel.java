@@ -36,7 +36,7 @@ import cn.com.infostrategy.ui.mdata.BillTreeSelectionEvent;
 import freemarker.template.SimpleDate;
 
 public class GydxWKPanel extends AbstractWorkPanel implements BillTreeSelectListener, BillListSelectListener, ActionListener {
-	private CommDMO dmo = new CommDMO();
+//	private CommDMO dmo = new CommDMO();
 	private BillTreePanel billTreePanel_Dept = null;//机构树
 	private BillListPanel billListPanel_User_Post = null;//人员表
 	private BillListPanel billListPanel_User_check = null;//柜员评分
@@ -303,15 +303,14 @@ public class GydxWKPanel extends AbstractWorkPanel implements BillTreeSelectList
 		try {
 			BillVO fhUser = billListPanel_User_Post.getSelectedBillVO();
 			String fhUserCode = fhUser.getStringValue("USERCODE");
-			MessageBox.show(this,fhUserCode);
-			pfTime = dmo.getStringValueByDS(null, "SELECT max(PFTIME) FROM wn_gydx_table WHERE USERCODE='" + fhUserCode + "'");//批复时间设置
-			HashVO[] pfNotEnd = dmo.getHashVoArrayByDS(null, "SELECT  * FROM wn_gydx_table WHERE  USERCODE='"+fhUserCode+"' and state='评分中'");
+			pfTime =UIUtil.getStringValueByDS(null, "SELECT max(PFTIME) FROM wn_gydx_table WHERE USERCODE='" + fhUserCode + "'");//批复时间设置
+			HashVO[] pfNotEnd = UIUtil.getHashVoArrayByDS(null, "SELECT  * FROM wn_gydx_table WHERE  USERCODE='"+fhUserCode+"' and state='评分中'");
 			if(pfNotEnd.length>0){
 				MessageBox.show(this,"当前柜员【"+fhUser.getStringValue("USERNAME")+"】评分尚未结束，无法进行分数复核。");
 			    return;
 			}
 			//判断当前柜员复核是否通过，对于复核通过的柜员无需再次进行复核;
-			HashVO[] pfsuccess = dmo.getHashVoArrayByDS(null, "SELECT  * FROM wn_gydx_table WHERE  USERCODE='"+fhUserCode+"' and fhresult='复核通过'  and pftime='"+pfTime+"'");
+			HashVO[] pfsuccess = UIUtil.getHashVoArrayByDS(null, "SELECT  * FROM wn_gydx_table WHERE  USERCODE='"+fhUserCode+"' and fhresult='复核通过'  and pftime='"+pfTime+"'");
 			if(pfsuccess.length>0){
 				MessageBox.show(this,"当前柜员【"+fhUser.getStringValue("USERNAME")+"】复核已经完成或当前评分尚未结束，请勿重复操作。");
 			    return;
@@ -328,7 +327,7 @@ public class GydxWKPanel extends AbstractWorkPanel implements BillTreeSelectList
 			if(result == 0){
 				update.putFieldValue("FHRESULT", "复核通过");
 				update.putFieldValue("fhreason","" );
-				dmo.executeUpdateByDS(null, update.getSQL());//执行修改
+				UIUtil.executeUpdateByDS(null, update.getSQL());//执行修改
 				billListPanel_User_check.setItemEditable("FHREASON", false);//评分结束，无法修改审核不通过能容
 				billListPanel_User_check.refreshData();
 			}else if(result==1){
