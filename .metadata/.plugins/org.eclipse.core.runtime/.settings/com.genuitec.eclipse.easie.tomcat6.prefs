@@ -1,8 +1,0 @@
-ENDORSED_DIRS="D\:\\Tomcat6.0.18/common/endorsed"
-JDK_HOME=D\:\\myeclipse 13\\m13\\binary\\com.sun.java.jdk.win32.x86_64_1.6.0.u43
-LIBRARY_PATH="D\:\\myeclipse 13\\m13\\binary\\com.sun.java.jdk.win32.x86_64_1.6.0.u43\\bin;D\:\\Tomcat6.0.18\\bin"
-SERVER_ENABLEMENT=true
-TOMCAT_BASE=D\:\\Tomcat6.0.18
-TOMCAT_HOME=D\:\\Tomcat6.0.18
-TOMCAT_TEMP=D\:\\Tomcat6.0.18\\temp
-eclipse.preferences.version=1

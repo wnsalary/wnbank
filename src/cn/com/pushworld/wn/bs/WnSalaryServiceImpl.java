@@ -551,7 +551,6 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 							"select distinct(dk.xd_col1),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
 									+ smonth + "' and XD_COL7<>0");
 			for (String str : kmap.keySet()) {
-				System.out.println(">>>>>>>>>>>>>>>>>"+kmap.size());
 				if (kmap.get(str).equals(smap.get(str))) {
 					continue;
 				} else {
