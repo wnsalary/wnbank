@@ -321,7 +321,6 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 			 }
 			//获取分数复核人员的信息
 			int result = MessageBox.showOptionDialog(this, "当前柜员分数进行复核", "提示", new String[] { "复核通过", "复核退回" }, 1);
-			System.out.println("当前复核结果为:"+result);
 			String FHUSERNAME = PFUSERNAME;
 			String FHUSERDEPT = USERCODES.get(PFUSERDEPT).toString();
 			String FHTIME = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date());
@@ -331,7 +330,7 @@ public class GYServerKH extends AbstractWorkPanel implements BillTreeSelectListe
 			update.putFieldValue("FHUSERNAME", PFUSERNAME);
 			update.putFieldValue("FHUSERDEPT", FHUSERDEPT);
 			update.putFieldValue("FHTIME", FHTIME);
-		    if (result == 0) {//复核不通过
+		    if (result == 0) {//复核通过
 				//设置复核信息
 				update.putFieldValue("FHRESULT", "复核通过");
 				update.putFieldValue("FHREASON", "");
