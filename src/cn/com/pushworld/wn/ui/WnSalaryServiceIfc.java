@@ -138,4 +138,9 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc{
 	 * fj[农户建档指标完成比]
 	 */
 	public String getNhjdHs(String date);
+	
+	/**
+	 * fj[黔农e贷线上替代完成率]
+	 */
+	public String getQnedXstd(String data);
 }
