@@ -35,6 +35,11 @@ public class AverageDailyManAnd {
 			InsertSQLBuilder insert=new InsertSQLBuilder("WN_RJ_CKYXHSTJ");
 			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_RJ_CKYXHSTJ");
 			InsertSQLBuilder insertB=new InsertSQLBuilder("WN_deposit_balance");//记录完成数做完成比用
+			InsertSQLBuilder insertYe=new InsertSQLBuilder("wm_ck_balance");//记录存款余额
+			HashVO [] hsvo=dmo.getHashVoArrayByDS(null,"select * from wm_ck_balance where date_time='"+time[1].toString()+"'");
+			if(hsvo.length>0){
+				dmo.executeUpdateByDS(null,"delete from wm_ck_balance where E='"+time[1].toString()+"'");
+			}
 			List list=new ArrayList<String>();
 			HashMap <String,String> countMap=getCount(date);
 			//防止重复计算，故做删除
@@ -124,6 +129,13 @@ public class AverageDailyManAnd {
 			}
 			for(String str:countMap.keySet()){
 				System.out.println(""+str+"考核月余额"+countMap.get(str));
+			}
+			//zzl  把余额记录到一张表里
+			for(String str:map.keySet()){
+				insertYe.putFieldValue("username", str);
+				insertYe.putFieldValue("counths", map.get(str));
+				insertYe.putFieldValue("date_time", time[1].toString());
+				list.add(insertYe.getSQL());
 			}
 			dmo.executeBatchByDS(null, list);
 		} catch (Exception e) {

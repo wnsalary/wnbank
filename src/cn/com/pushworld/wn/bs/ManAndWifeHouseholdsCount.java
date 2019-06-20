@@ -37,6 +37,11 @@ public class ManAndWifeHouseholdsCount {
 //			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_RJ_CKYXHSTJ");
 //			InsertSQLBuilder insert=new InsertSQLBuilder("WN_CKYXHSTJ");//记录已计发和未计发的
 			InsertSQLBuilder insert=new InsertSQLBuilder("WN_deposit_number");//记录完成数做完成比用
+			InsertSQLBuilder insertHs=new InsertSQLBuilder("wm_ck_count");//记录户数
+			HashVO [] hsvo=dmo.getHashVoArrayByDS(null,"select * from wm_ck_count where date_time='"+time[1].toString()+"'");
+			if(hsvo.length>0){
+				dmo.executeUpdateByDS(null,"delete from wm_ck_count where E='"+time[1].toString()+"'");
+			}
 			List list=new ArrayList<String>();
 			HashVO [] tjvos=dmo.getHashVoArrayByDS(null,"select * from WN_CKYXHSTJ where E='"+time[1].toString()+"'");
 			if(tjvos.length>0){
@@ -75,7 +80,7 @@ public class ManAndWifeHouseholdsCount {
 					map.put(vo[i].getStringValue("name"), String.valueOf(a-b));
 				}
 				insert.putFieldValue("name",vo[i].getStringValue("name"));
-				insert.putFieldValue("passed",a-b);
+				insert.putFieldValue("passed",a);
 				insert.putFieldValue("task",rwMap.get(vo[i].getStringValue("name")));
 				insert.putFieldValue("date_time",time[1].toString());
 				list.add(insert.getSQL());
@@ -120,6 +125,13 @@ public class ManAndWifeHouseholdsCount {
 			}
 			for(String str:countMap.keySet()){
 				System.out.println(""+str+"考核月户数"+countMap.get(str));
+			}
+			//zzl  把户数记录到一个表里
+			for(String str:map.keySet()){
+				insertHs.putFieldValue("username", str);
+				insertHs.putFieldValue("counths", map.get(str));
+				insertHs.putFieldValue("date_time", time[1].toString());
+				list.add(insertHs.getSQL());
 			}
 		 dmo.executeBatchByDS(null, list);
 		} catch (Exception e) {
@@ -363,7 +375,7 @@ public class ManAndWifeHouseholdsCount {
 		HashMap<String, String> map=new HashMap<String, String>();
 		try {
 			map=dmo.getHashMapBySQLByDS(null,"select c.CUS_MANAGER as CUS_MANAGER,count(c.CUS_MANAGER) tj from (select  cust_no, (sum(acct_bal)/"+day+") as acct_bal  from wnbank.A_AGR_DEP_ACCT_ENT_FX where acct_bal > 100 and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')>='"+time[0].toString()+"' and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')<='"+time[1].toString()+"' group by cust_no) a left join wnbank.S_OFCR_CH_ACCT_MAST b on a.cust_no = b.COD_CUST left join wnbank.S_CMIS_ACC_LOAN c on b.NAM_CUST_SHRT = c.CUS_NAME where c.LOAN_BALANCE > 0 and a.acct_bal>5000 group by c.cus_id,c.CUS_MANAGER");
-		    String [][]data=dmo.getStringArrayByDS(null,"select distinct(a.cust_no),c.CUS_NAME,c.CUS_MANAGER CUS_MANAGER from (select  cust_no cust_no, (sum(acct_bal)/"+day+") as acct_bal  from wnbank.A_AGR_DEP_ACCT_ENT_FX where acct_bal > 100 and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')>='"+time[0].toString()+"' and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')<='"+time[1].toString()+"' group by cust_no) a left join wnbank.S_OFCR_CH_ACCT_MAST b on a.cust_no = b.COD_CUST left join (select * from wnbank.S_CMIS_ACC_LOAN where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='2019-04-30') c on b.NAM_CUST_SHRT = c.CUS_NAME where c.LOAN_BALANCE > 0 and a.acct_bal>5000");
+		    String [][]data=dmo.getStringArrayByDS(null,"select distinct(a.cust_no),c.CUS_NAME,c.CUS_MANAGER CUS_MANAGER from (select  cust_no cust_no, (sum(acct_bal)/"+day+") as acct_bal  from wnbank.A_AGR_DEP_ACCT_ENT_FX where acct_bal > 100 and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')>='"+time[0].toString()+"' and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')<='"+time[1].toString()+"' group by cust_no) a left join wnbank.S_OFCR_CH_ACCT_MAST b on a.cust_no = b.COD_CUST left join (select * from wnbank.S_CMIS_ACC_LOAN where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"+time[1].toString()+"') c on b.NAM_CUST_SHRT = c.CUS_NAME where c.LOAN_BALANCE > 0 and a.acct_bal>5000");
 		    getInsertSql(null, data, time[1].toString());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
