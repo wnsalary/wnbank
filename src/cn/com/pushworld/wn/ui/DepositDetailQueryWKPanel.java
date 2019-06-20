@@ -22,7 +22,6 @@ public class DepositDetailQueryWKPanel extends AbstractWorkPanel implements Bill
 		list=new BillListPanel("V_WN_DEPOSIT_MXCX_CODE1");
 		list.addBillListHtmlHrefListener(this);
 		this.add(list);
-		
 	}
 
 	@Override
