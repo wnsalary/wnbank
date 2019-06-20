@@ -25,6 +25,7 @@ public class TwiceDistribute extends AbstractWorkPanel implements ActionListener
 	 private UIUtil uiutil = new UIUtil();
 	 private BillListPanel billListPanel =null;
 	 private WLTButton btn_submit, btn_edit,btn_select;
+	 private String WDMC = ClientEnvironment.getInstance().getLoginUserDeptName();
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==btn_submit){
@@ -119,8 +120,27 @@ public class TwiceDistribute extends AbstractWorkPanel implements ActionListener
 	}
 
 	public void Query() {
-		String sqlCondition = billListPanel.getQuickQueryPanel().getQuerySQLCondition();
-		String sql = "select * from wn_twicedistribute where 1=1 "+sqlCondition+"";
+		String name1;
+		String code1;
+		String time1;
+		String name = billListPanel.getQuickQueryPanel().getCompentRealValue("name");
+		String code = billListPanel.getQuickQueryPanel().getCompentRealValue("code");
+		String time = billListPanel.getQuickQueryPanel().getCompentRealValue("time");
+		if(name.equals("")){
+			name1="1=1";
+		}else{
+			name1="name='"+name+"'";
+		}if(code.equals("")){
+			code1=" and 1=1";
+		}else{
+			code1=" and code='"+code+"'";
+		}if(time.equals("")){
+			time1="and 1=1";
+		}else{
+			time1=" and time='"+time+"'";
+		}
+		String sqlCondition = name1+code1+time1;
+        String sql = "select * from wn_twicedistribute where "+sqlCondition+" and WDMC = '"+WDMC+"'";
 		billListPanel.QueryData(sql);
 		
 	}
