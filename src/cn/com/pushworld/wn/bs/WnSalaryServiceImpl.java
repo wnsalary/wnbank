@@ -2249,5 +2249,87 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		return map;
 	
 	}
+	/**
+	 * fj
+	 * [单位职工小微企业建档户数完成比]
+	 */
+
+	@Override
+	public String getDwzgXwqyRatio(String date) {
+		String result = null;
+		InsertSQLBuilder insert = new InsertSQLBuilder("wn_zgxw_wcb");
+		List list = new ArrayList<String>();
+		try{
+		HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
+		//得到客户经理的任务数
+		HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(T) from EXCEL_TAB_53 where year||'-'||month='" + date.substring(0, 7) + "' group by A");
+		if (rwMap.size() == 0) {
+			return "当前时间【" + date + "】没有上传任务数";
+		}
+		HashMap<String, String> dwzgMap = getDwzgCount(date);
+		HashMap<String, String> xwqyMap = getXwqyCount(date);
+		for(String str:userMap.keySet()){
+			Double dwzgcount=0.0;
+			Double xwqycount=0.0;
+			Double count = 0.0;
+			if(dwzgMap.get(str)==null){
+				dwzgcount=0.0;
+			}else{
+				dwzgcount=Double.parseDouble(dwzgMap.get(str));
+			}
+			if(xwqyMap.get(str)==null){
+				xwqycount=0.0;
+			}else{
+				xwqycount=Double.parseDouble(xwqyMap.get(str));
+			}
+			count=dwzgcount+xwqycount;
+			insert.putFieldValue("username", str);
+			insert.putFieldValue("dwzgcount", dwzgcount);
+			insert.putFieldValue("xwqycount", xwqycount);
+			insert.putFieldValue("passed", count);
+			insert.putFieldValue("task", rwMap.get(str));
+			insert.putFieldValue("date_time", date);
+			list.add(insert.getSQL());
+		}
+		dmo.executeBatchByDS(null,list);
+		result="查询成功";
+		}catch (Exception e) {
+			e.printStackTrace();
+			result="查询失败";
+		}
+		return result;
+	}
+	
+   /**
+    * 客户经理小微企业建档户数
+    * @param date
+    * @return
+    */
+	private HashMap<String, String> getXwqyCount(String date) {
+		HashMap<String, String> map=new HashMap<String, String>();
+		try {
+			map = dmo.getHashMapBySQLByDS(null, "select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"+getMonthC(date)+"' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"+date+"' and xd_col10 not in('未评级','等外','!$') and XD_COL4='206' and XD_COL163 not in('05','03','06','01') group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return map;
+	}
+	/**
+	 * 客户经理单位职工建档户数
+	 * @param date
+	 * @return
+	 */
+
+	private HashMap<String, String> getDwzgCount(String date) {
+		HashMap<String, String> map=new HashMap<String, String>();
+		try {
+			map = dmo.getHashMapBySQLByDS(null, "select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"+getMonthC(date)+"'and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"+date+"'and xd_col10 not in('未评级','等外','!$') and XD_COL4='907' group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return map;
+	}
 	
 }
