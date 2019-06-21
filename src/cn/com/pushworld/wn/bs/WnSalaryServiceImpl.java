@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import cn.com.infostrategy.bs.common.CommDMO;
@@ -1887,17 +1888,34 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				UpdateSQLBuilder update = new UpdateSQLBuilder(
 						"wn_managerdx_table");
 				List<String> _sqllist = new ArrayList<String>();
+				Map<String, Double> map=new HashMap<String, Double>();
 				for (int i = 0; i < vos.length; i++) {
+					
 					String xiangmu = vos[i].getStringValue("xiangmu");
 					// if("总分".equals(xiangmu)){continue;}
 					String fenzhi = vos[i].getStringValue("fenzhi");
+					String koufen = vos[i].getStringValue("koufen");
 					String khsm = vos[i].getStringValue("khsm");
-					String usercode = vos[i].getStringValue("usercode");
+					String  usercode = vos[i].getStringValue("usercode");
+					if(koufen==null || "".isEmpty()|| Integer.parseInt(koufen)>=Integer.parseInt(fenzhi)){
+						koufen=fenzhi;
+					}
+                    if(!map.containsKey(usercode)){
+                    	map.put(usercode, Double.valueOf(koufen));
+                    }else {
+                    	map.put(usercode, map.get(usercode)+Double.valueOf(koufen));
+                    }
 					update.setWhereCondition("usercode='" + usercode
 							+ "' and khsm='" + khsm + "' and state='评分中'");
-					update.putFieldValue("koufen", fenzhi);
+					update.putFieldValue("koufen", koufen);
 					update.putFieldValue("state", "评分结束");
 					_sqllist.add(update.getSQL());
+				}
+				Set<String> usercodeKey = map.keySet();
+				String sql="";
+				for (String usercode : usercodeKey) {
+			         sql="update wn_managerdx_table set fenzhi='"+map.get(usercode)+"' where usercode='"+usercode+"' and state='评分中'";
+				     _sqllist.add(sql);
 				}
 				dmo.executeBatchByDS(null, _sqllist);
 				result = "当前考核计划结束成功";
