@@ -7,6 +7,7 @@ import cn.com.infostrategy.bs.common.CommDMO;
 import cn.com.infostrategy.bs.common.WLTJobIFC;
 import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.infostrategy.ui.common.commDMO;
+import cn.com.pushworld.wn.bs.WnSalaryServiceImpl;
 import cn.com.pushworld.wn.ui.WnSalaryServiceIfc;
 
 public class ManagerQuartzJob implements WLTJobIFC {

@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 
-import javax.jms.Message;
 
 import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.ui.common.AbstractWorkPanel;

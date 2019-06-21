@@ -2,12 +2,12 @@ package cn.com.pushworld.wn.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.ibm.icu.text.SimpleDateFormat;
 
 import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.ui.common.AbstractWorkPanel;
