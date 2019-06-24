@@ -150,4 +150,9 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc{
 	 * @return
 	 */
 	public String getDwzgXwqyRatio(String data);
+	/**
+	 * 对客户经理进行绩效考核
+	 * @return
+	 */
+	public String managerLevelCompute();
 }

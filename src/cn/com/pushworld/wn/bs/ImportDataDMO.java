@@ -8,12 +8,13 @@ import ch.ethz.ssh2.*;
 import cn.com.infostrategy.bs.common.AbstractDMO;
 import cn.com.infostrategy.bs.common.CommDMO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
-import cn.com.pushworld.wn.to.LinuxImportdataUtil;
+import cn.com.infostrategy.ui.common.ClientEnvironment;
+import cn.com.pushworld.wn.to.*;
 
-public class ImportDataDMO extends AbstractDMO {
+public class ImportDataDMO {
 	private CommDMO dmo = new CommDMO();
-	private LinuxImportdataUtil linuxUtil=new  LinuxImportdataUtil();
-	
+	private LinuxImportdataUtil linuxUtil=LinuxImportdataUtil.getInstance();
+	private String loginUserCode=ClientEnvironment.getInstance().getLoginUserCode();
 	public  String ImportAll(){
 		String str="";
 		InsertSQLBuilder insert=new InsertSQLBuilder("IMPORTLOG");
@@ -21,13 +22,14 @@ public class ImportDataDMO extends AbstractDMO {
 			SimpleDateFormat simple=new SimpleDateFormat("yyyy-MM-dd HH24:mm:ss");
            	String startDate=simple.format(new Date());//开始时间
            	//获取到导入路径(全量导入时，导入日期是从已导入的日期开始导入)
-           	String lastImport = linuxUtil.getLastImport1();
+           	String lastImport = linuxUtil.getLastImport1();//获取到上一次导入的最后一天的数据
+           	System.out.println("获取到上一次导入的最后一个文件夹："+lastImport);
            	String currentImport=linuxUtil.getNextDay(lastImport);//从当前日期开始
            	String importTable="ALL";//导入的表
            	Long importLength=linuxUtil.getImportLength();//计算导入文件大小
            	////调用导入方法
            	Connection login = linuxUtil.login("192.168.1.25", "oracle", "ABCabc@123");//登录Linux系统
-           	String execute = linuxUtil.execute(login, "java -jar /home/oracle/wnImport.jar");
+           	String execute = linuxUtil.execute(login, "java -jar /home/oracle/wnImportTest.jar");//执行导入操作
            	String result="";
            	String endDate=simple.format(new Date());//导入结束时间
            	String finalImport=linuxUtil.getLastImport1();//获取到最后的导入日期
@@ -38,6 +40,8 @@ public class ImportDataDMO extends AbstractDMO {
             insert.putFieldValue("IMPORTRESULT",result );
             insert.putFieldValue("FILELENGTH",importLength);
             insert.putFieldValue("IMPORTROUTE", fileRoute);
+            insert.putFieldValue("operationAtaff", loginUserCode);
+            insert.putFieldValue("operationtype","全量导入");
             dmo.executeUpdateByDS(null, insert.getSQL());
             str="数据导入成功,导入文件为:"+finalImport; 
 		} catch (Exception e) {

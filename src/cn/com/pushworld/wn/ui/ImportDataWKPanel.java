@@ -2,16 +2,14 @@ package cn.com.pushworld.wn.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.security.Provider.Service;
+
 
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 
-import bsh.This;
 
 import cn.com.infostrategy.ui.common.AbstractWorkPanel;
+import cn.com.infostrategy.ui.common.ClientEnvironment;
 import cn.com.infostrategy.ui.common.MessageBox;
 import cn.com.infostrategy.ui.common.SplashWindow;
 import cn.com.infostrategy.ui.common.UIUtil;
@@ -22,6 +20,8 @@ public class ImportDataWKPanel extends AbstractWorkPanel implements ActionListen
     private  BillListPanel listPanel;
     private WLTButton importAll,importOne,importDay;
     private String str;
+    //获取到登录人的信息
+    private String loginUserCode=ClientEnvironment.getInstance().getLoginUserCode();
 	@Override
 	public void initialize() {
 		listPanel=new BillListPanel("WN_IMPORTLOG_ZPY_Q01");
@@ -88,6 +88,7 @@ public class ImportDataWKPanel extends AbstractWorkPanel implements ActionListen
 	}
 	private void ImportAll() {//全量数据导入
 		try {
+			
 			final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil.lookUpRemoteService(WnSalaryServiceIfc.class);
 			new  SplashWindow(this, new AbstractAction() {
 				@Override

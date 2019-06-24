@@ -2391,4 +2391,239 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		return map;
 	}
 	
+    /**
+     * 客户经理等级评定计算(客户经理半年一评级)
+     * @return
+     */
+	@Override
+	public String managerLevelCompute() {
+		try {
+			InsertSQLBuilder insert=new InsertSQLBuilder("WN_MANAGERDXSCORE");
+			HashVO[] managerInfos = dmo.getHashVoArrayByDS(null, "SELECT CODE,NAME,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+			//获取客户经理每一项考核得分情况
+			HashMap<String, Double> dqdkshl = getDqdkshl();//到期贷款收回率考核
+			HashMap<String, Double> dnxzbldk = getDnxzbldk();//当年新增不良贷款
+			HashMap<String, Double> shcl = getshcl();//收回存量不良贷款
+			HashMap<String, Double> dKsjyh = getDKsjyh();//贷款手机银行客户覆盖率
+			HashMap<String, Double> znsh = getZnsh();//助农商户维护
+			HashMap<String, Double> cKyxhs = getCKyxhs();//存款有效户数提升
+			HashMap<String, Double> cKyxhsye = getCKyxhsye();//存款有效户数余额提升
+			HashMap<String, Double> dKyexz = getDKyexz();//贷款余额新增
+			HashMap<String, Double> dKhsxz = getDKhsxz();//贷款户数新增
+			HashMap<String, Double> jdRate = jdRate();//新建档案
+			HashMap<String, Double> qnedRate = qnedRate();//黔农E贷签约
+			HashMap<String, Double> qnedtdScore = qnedtdScore();
+			double sum=0;
+			List<String> _sqlList=new ArrayList<String>();
+			for (int i = 0; i < managerInfos.length; i++) {
+				String manager_name=managerInfos[i].getStringValue("name");//获取到客户经理姓名
+				sum=dqdkshl.get(manager_name)+dnxzbldk.get(manager_name)+
+						shcl.get(manager_name)+dKsjyh.get(manager_name)+znsh.get(manager_name)+cKyxhs.get(manager_name)
+						+cKyxhsye.get(manager_name)+dKyexz.get(manager_name)+dKhsxz.get(manager_name)+jdRate.get(manager_name)
+						+qnedRate.get(manager_name)+qnedtdScore.get(manager_name);
+				insert.putFieldValue("MANAEGER_NAME", manager_name);
+				insert.putFieldValue("DQDKSHL", dqdkshl.get(manager_name));//到期贷款收回率
+				insert.putFieldValue("DNXZBLDK",dnxzbldk.get(manager_name) );//当年新增不良贷款
+				insert.putFieldValue("SHCLBLDK", shcl.get(manager_name));//收回存量不良贷款
+				insert.putFieldValue("DKKHSJFGL",dKsjyh.get(manager_name));//贷款手机银行客户覆盖率
+				insert.putFieldValue("ZNSHWH",znsh.get(manager_name) );//助农商户维护
+				insert.putFieldValue("CKYXHS", cKyxhs.get(manager_name));//存款有效户数提升
+				insert.putFieldValue("CKYXHSTS",cKyxhsye.get(manager_name) );
+				insert.putFieldValue("DKYEXZ", dKyexz.get(manager_name));//贷款余额新增
+				insert.putFieldValue("DKHSXZ",dKhsxz.get(manager_name) );//贷款户数新增
+				insert.putFieldValue("XJDA",jdRate.get(manager_name) );//建档户数新增
+				insert.putFieldValue("QNEDQY", qnedRate.get(manager_name));//黔农E贷签约
+				insert.putFieldValue("QNEDXSTD",qnedtdScore.get(manager_name) );//黔农E贷线上替代
+				insert.putFieldValue("SCORESUM", sum);//总分
+				insert.putFieldValue("DATE_TIME", new  SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+				_sqlList.add(insert.getSQL());
+			}
+			dmo.executeBatchByDS(null, _sqlList);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "客户经理等级评定事失败";
+		}
+		return "客户经理等级计算成功";
+	}
+	
+	
+	
+	
+	
+	/**
+	 * 黔农E贷线上替代
+	 * @return
+	 */
+	public HashMap<String, Double> qnedtdScore(){
+		try {
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	/**
+	 * 客户经理评级:建档考核
+	 * 新建档案占4分，计分方式为：
+	 * 得分=年初至评分时点新建档案数/（年初新建档案任务数*评分时点月数/12）*4分。 
+	 * @return
+	 */
+	public HashMap<String, Double> jdRate(){
+		HashMap<String, Double> resultMap=new HashMap<String, Double>();
+		try {
+			//获取到年初时间
+			String yearStartDate=getYearStart();
+			SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd");
+			////获取到建档评级考核数据
+			String gtjmSQL="select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"+yearStartDate+"' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"+format.format(new Date())+"' and xd_col10 not in('未评级','等外','!$') and XD_COL4 in('206','908') group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";//个体工商户、居民建档户数
+		    String dwzgSQL="select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"+yearStartDate+"'and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"+format.format(new Date())+"'and xd_col10 not in('未评级','等外','!$') and XD_COL4='907' group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";//单位职工
+		    String nhSQL="select yb.xd_col2 xd_col2,zc.tj tj  from(select xx.xd_col96 xd_col96,count(xx.xd_col96) tj from (select XD_COL1,XD_COL96 from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"+yearStartDate+"' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"+format.format(new Date())+"' and xd_col10 not in('未评级','等外','!$') and XD_COL4='905') xx left join wnbank.S_LOAN_KHXXZCQK zc on xx.xd_col1=zc.xd_col1 where zc.XD_COL6!='0' group by xx.xd_col96)zc left join wnbank.s_loan_ryb yb on zc.xd_col96=yb.xd_col1";//农户建档
+		    String xwSQL="select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"+yearStartDate+"' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"+format.format(new Date())+"' and xd_col10 not in('未评级','等外','!$') and XD_COL4='206' and XD_COL163 not in('05','03','06','01') group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";//小微企业建档
+		    
+		    HashMap<String, String> gtjmMap=dmo.getHashMapBySQLByDS(null, gtjmSQL);
+		    HashMap<String, String> dwzgMap=dmo.getHashMapBySQLByDS(null, dwzgSQL);
+		    HashMap<String, String> nhMap=dmo.getHashMapBySQLByDS(null,nhSQL );
+		    HashMap<String, String> xwMap = dmo.getHashMapBySQLByDS(null, xwSQL);
+		    //获取到相应的人员信息
+		    HashVO[] managerVos = dmo.getHashVoArrayByDS(null, "SELECT CODE,NAME,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+		    for (int i = 0; i < managerVos.length; i++) {
+				String manager_name=managerVos[i].getStringValue("name");
+			    double  sum=0;
+			    sum=Double.parseDouble(gtjmMap.get(manager_name)==null?"0":gtjmMap.get(manager_name))+Double.parseDouble(dwzgMap.get(manager_name)==null?"0":dwzgMap.get(manager_name))
+			    		+Double.parseDouble(nhMap.get(manager_name)==null?"0":nhMap.get(manager_name))+Double.parseDouble(xwMap.get(manager_name)==null?"0":xwMap.get(manager_name));
+			    ////计算每一位客户经理的得分
+			    //TODO
+			}
+		
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return resultMap;
+	}
+	//黔农E贷签约
+    public HashMap<String, Double>  qnedRate(){
+    	HashMap<String, Double> resultMap=new HashMap<String, Double>();
+    	try {
+			//获取到年初时间
+    		String yearStartDate=getYearStart();
+    		SimpleDateFormat simple=new SimpleDateFormat("yyyy-MM-dd");
+    		String qnedSQL="select aa.e name,count(aa.e) num from (select distinct(a) a,e  from wnsalarydb.excel_tab_1 where f>='2019-01-01' AND f<='2019-01-31') aa group by aa.e";
+    		 HashMap<String,String> qnedMap = dmo.getHashMapBySQLByDS(null, qnedSQL);
+    		HashVO[] managerVos = dmo.getHashVoArrayByDS(null, "SELECT CODE,NAME,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+    		for (int i = 0; i < managerVos.length; i++) {
+				String manager_name=managerVos[i].getStringValue("name");
+				double sum=Double.parseDouble(qnedMap.get(manager_name)==null?"0":qnedMap.get(manager_name));
+				//计算完成的情况以及得分
+				//TODO
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return resultMap;
+    }
+    //到期贷款收回率考核
+    
+    public HashMap<String, Double> getDqdkshl(){
+    	HashMap<String, Double> resultMap=new HashMap<String, Double>();
+    	try {
+			String dqdkSQL="";
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return resultMap;
+    }
+    
+    //当年新增不良贷款
+    public HashMap<String, Double> getDnxzbldk(){
+    	HashMap<String, Double> resultMap=new HashMap<String, Double>();
+    	try {
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return resultMap;
+    }
+    //收回存量不良贷款
+    public HashMap<String, Double>  getshcl(){
+    	HashMap<String, Double> resultMap=new HashMap<String, Double>();
+    	
+    	try {
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return resultMap;
+    }
+    //贷款客户手机银行开户覆盖率
+    public HashMap<String, Double> getDKsjyh(){
+    	HashMap<String, Double> resultMap=new HashMap<String, Double>();
+    	try {
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return resultMap;		
+    }
+    //助农商户维护
+    public HashMap<String, Double> getZnsh(){
+    	HashMap<String, Double> resultMap=new HashMap<String, Double>();
+    	try {
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return resultMap;
+    }
+    //存款有效户数提升
+    public HashMap<String, Double> getCKyxhs(){
+    	HashMap<String, Double> resultMap=new HashMap<String, Double>();
+    	try {
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return resultMap;
+    }
+    //存款有效户数余额提升
+    public HashMap<String, Double> getCKyxhsye(){
+    	HashMap<String, Double> resultMap=new HashMap<String, Double>();
+    	try {
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return resultMap;
+    }
+    //贷款余额新增
+    public HashMap<String, Double> getDKyexz(){
+    	HashMap<String, Double> resultMap=new HashMap<String, Double>();
+    	try {
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return resultMap;
+    }
+    //贷款户数新增
+    public HashMap<String, Double> getDKhsxz(){
+    	HashMap<String, Double> resultMap=new HashMap<String, Double>();
+    	try {
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return resultMap;
+    }
+    //获取年初时间
+    public String getYearStart(){
+    	SimpleDateFormat simple=new SimpleDateFormat("yyyy");
+    	String yearStartDate="";
+    	try {
+    		yearStartDate=simple.format(new Date())+"-01-01";
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return yearStartDate;
+    }
+	
 }
