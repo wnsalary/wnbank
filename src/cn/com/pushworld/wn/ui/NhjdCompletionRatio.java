@@ -21,15 +21,29 @@ public class NhjdCompletionRatio extends AbstractWorkPanel implements ActionList
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==billListPanel.getQuickQueryPanel()){
 			String[][] data;
+			String name1,time1;
+			String time = billListPanel.getQuickQueryPanel().getCompentRealValue("time");
+			String name = billListPanel.getQuickQueryPanel().getCompentRealValue("name");
+			if(name.equals("")){
+				name1="1=1";
+			}else{
+				name1="name='"+name+"'";
+			}if(time.equals("")){
+				time1="and 1=1";
+			}else{
+				time1=" and time='"+time+"'";
+			}
+			String sqlCondition=name1+time1;
+			String sql = "select * from V_WN_NHJD_WCB  where "+sqlCondition;
 			try {
-				data = UIUtil.getStringArrayByDS(null, billListPanel.getQuickQueryPanel().getQuerySQL());
+				data = UIUtil.getStringArrayByDS(null,sql);
 				if(data.length<=0){
 					WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil.lookUpRemoteService(WnSalaryServiceIfc.class);
-					String str=service.getNhjdHs(billListPanel.getQuickQueryPanel().getCompentRealValue("DATE_TIME").substring(0,billListPanel.getQuickQueryPanel().getCompentRealValue("DATE_TIME").length()-1));
+					String str=service.getNhjdHs(billListPanel.getQuickQueryPanel().getCompentRealValue("DATE_TIME").replace("Äê", "-").replace("ÔÂ;",""));
 					MessageBox.show(this,str);
-					billListPanel.QueryData(billListPanel.getQuickQueryPanel().getQuerySQL());
+					billListPanel.QueryData(sql);
 				}else{
-					billListPanel.QueryData(billListPanel.getQuickQueryPanel().getQuerySQL());
+					billListPanel.QueryData(sql);
 				}
 			} catch (WLTRemoteException e1) {
 				e1.printStackTrace();
