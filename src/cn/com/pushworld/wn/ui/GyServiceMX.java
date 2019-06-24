@@ -34,7 +34,7 @@ public class GyServiceMX extends AbstractWorkPanel implements ActionListener{
 	private void QuickQuery() {
 		String name = ClientEnvironment.getInstance().getLoginUserName();//获取当前登录人姓名
 		String sqlCondition = listPanel.getQuickQueryPanel().getQuerySQLCondition();//获取快速查询面板上的查询条件
-		String sql="select * from V_GYYW_MX  where 1=1 and B='"+name+"'"+sqlCondition;;
+		String sql="select * from V_GYYW_MX  where 1=1 "+sqlCondition;;
 		listPanel.QueryData(sql);
 	}
 	
