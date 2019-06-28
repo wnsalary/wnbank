@@ -2391,6 +2391,236 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		}
 		return map;
 	}
+
+	@Override
+	public String getGyClass(String date) {
+		List list = new ArrayList<String>();
+		InsertSQLBuilder insert = new InsertSQLBuilder("wn_zgxw_wcb");
+		String result = null;
+		String year = date.substring(0,4);
+		String month = date.substring(5,7);
+		String str = getAnnual(year,month);
+		if(str==null){
+			result = "当前时间不在考核时间范围内！";
+		}
+		try {
+			HashMap<String,String> userMap = dmo.getHashMapBySQLByDS(null,"select B,B from (select B,count(B) as c from excel_tab_39 group by B) where c>=5");
+			HashMap<String,String> userDeptMap = dmo.getHashMapBySQLByDS(null,"select username,deptname from v_pub_user_post_1");
+			HashMap<String,String> wmgfMap = getWmgf(str,year);
+			HashMap<String,String> fwzlMap = getFwzl(str,year);
+			HashMap<String,String> gzzlMap = getGzzl(str,year);
+			HashMap<String,String> wdpjzbMap = getWdpjzb(str,year);
+			HashMap<String,String> qxpjzbMap = getQxpjzb(str,year);
+			HashMap<String,String> ckzfMap = getCkzfzb(str,year);
+			HashMap<String,String> dztdlMap = getDztdl(str,year);
+			HashMap<String,String> wgjfMap = getWgjf(year,month);
+			for(String user:userMap.keySet()){
+				Double wmgfcount=0.0;
+				Double fwzlcount=0.0;
+				Double gzzlcount=0.0;
+				Double wdpjcount=0.0;
+				Double qxpjcount=0.0;
+				Double ckzfcount=0.0;
+				Double dztdlcount=0.0;
+				Double wgjfcount=0.0;
+				Double count=0.0;
+				if(wmgfMap.get(user)==null){
+					wmgfcount=0.0;
+				}else{
+					wmgfcount=Double.parseDouble(wmgfMap.get(user));
+				}if(fwzlMap.get(user)==null){
+					fwzlcount=0.0;
+				}else{
+					fwzlcount=Double.parseDouble(fwzlMap.get(user));
+				}if(gzzlMap.get(user)==null){
+					gzzlcount=0.0;
+				}else{
+					gzzlcount=Double.parseDouble(gzzlMap.get(user));
+				}if(wdpjzbMap.get(user)==null){
+					wdpjcount=0.0;
+				}else{
+					wdpjcount=Double.parseDouble(wdpjzbMap.get(user));
+				}if(qxpjzbMap.get(user)==null){
+					qxpjcount=0.0;
+				}else{
+					qxpjcount=Double.parseDouble(qxpjzbMap.get(user));
+				}if(ckzfMap.get(user)==null||Integer.valueOf(ckzfMap.get(user))<=0){
+					ckzfcount=0.0;
+				}else{
+					ckzfcount=Double.parseDouble(ckzfMap.get(user));
+				}if(dztdlMap.get(user)==null){
+					dztdlcount=0.0;
+				}else{
+					dztdlcount=Double.parseDouble(dztdlMap.get(user));
+				}if(wgjfMap.get(user)==null){
+					wgjfcount=0.0;
+				}else{
+					wgjfcount=Double.parseDouble(wgjfMap.get(user));
+				}
+				count=wmgfcount+fwzlcount+gzzlcount+wdpjcount+qxpjcount+ckzfcount+dztdlcount+wgjfcount;
+				insert.putFieldValue("", user);
+				insert.putFieldValue("", userDeptMap.get(user));
+				insert.putFieldValue("", str);
+				insert.putFieldValue("", wmgfMap.get(user));
+				insert.putFieldValue("", fwzlMap.get(user));
+				insert.putFieldValue("", gzzlMap.get(user));
+				insert.putFieldValue("", wdpjzbMap.get(user));
+				insert.putFieldValue("", qxpjzbMap.get(user));
+				insert.putFieldValue("", ckzfMap.get(user));
+				insert.putFieldValue("", dztdlMap.get(user));
+				insert.putFieldValue("", wgjfMap.get(user));
+				insert.putFieldValue("", count);
+			}
+			dmo.executeBatchByDS(null,list);
+			result="柜员评级成功";
+		} catch (Exception e) {
+			result = "柜员评级失败，请联系系统管理员！v";
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 柜员累计违规积分
+	 * @param year
+	 * @param month
+	 * @return
+	 */
+	private HashMap<String, String> getWgjf(String year, String month) {
+		HashMap<String,String> map = new HashMap<String, String>();
+		try {
+			map = dmo.getHashMapBySQLByDS(null,"select A,B from excel_tab_ where year||'-'||month="+year+"-"+month);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return map;
+	}
+	
+	/**
+	 * 柜员所在网点电子替代率
+	 * @param str
+	 * @param year
+	 * @return
+	 */
+	private HashMap<String, String> getDztdl(String str, String year) {
+		HashMap<String,String> map = new HashMap<String, String>();
+		return map;
+	}
+	
+	/**
+	 * 所在网点存款半年内增幅
+	 * @param str
+	 * @param year
+	 * @return
+	 */
+	private HashMap<String, String> getCkzfzb(String str, String year) {
+		HashMap<String,String> map = new HashMap<String, String>();
+		return map;
+	}
+	
+	/**
+	 * 月平均工资占全辖柜员平均定量考核占比
+	 * @param date
+	 * @param year
+	 * @return
+	 */
+	private HashMap<String, String> getQxpjzb(String date, String year) {
+		HashMap<String,String> map = new HashMap<String, String>();
+		return map;
+	}
+	
+	/**
+	 * 月平均工资占所在网点柜员平均定量考核工资占比
+	 * @param date
+	 * @param year
+	 * @return
+	 */
+	private HashMap<String, String> getWdpjzb(String date, String year) {
+		HashMap<String,String> map = new HashMap<String, String>();
+		return map;
+	}
+
+	/**
+	 * 柜员工作质量得分平均分
+	 * @param str
+	 * @param year
+	 * @return
+	 */
+	private HashMap<String, String> getGzzl(String str,String year) {
+		HashMap<String,String> map = new HashMap<String, String>();
+		try {
+			if(str.contains("上")){
+			map = dmo.getHashMapBySQLByDS(null,"select a.B,(a.C+b.C)/6/100*10 as c from (select B,sum(E) as c from (select b,e from excel_tab_39 where year||'-'||month='"+year+"-01' or year||'-'||month='"+year+"-02' or year||'-'||month='"+year+"-03' or year||'-'||month='"+year+"-04' or year||'-'||month='"+year+"-05' or year||'-'||month='"+year+"-06') group by B) a,(select username username,sum(kouofen) as c from WN_GYPF_TABLE  where xiangmu ='总分' and pftime>='"+year+"-01-01' and pftime<='"+year+"-06-30' group by username) b where a.B=b.username");
+		}else if(str.contains("下")){
+			map = dmo.getHashMapBySQLByDS(null,"select a.B,(a.C+b.C)/6/100*10 as c from (select B,sum(E) as c from (select b,e from excel_tab_39 where year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-07' or year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-08' or year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-09' or year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-10' or year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-11' or year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-12') group by B) a,(select username username,sum(kouofen) as c from WN_GYPF_TABLE  where xiangmu ='总分' and pftime>='"+String.valueOf((Integer.valueOf(year)-1))+"-07-01' and pftime<='"+String.valueOf((Integer.valueOf(year)-1))+"-12-31' group by username) b where a.B=b.username");
+		}
+		} catch (Exception e) {
+			
+		}
+		return map;
+	}
+	/**
+	 * 柜员服务质量得分平均分
+	 * @param str
+	 * @param year
+	 * @return
+	 */
+
+	private HashMap<String, String> getFwzl(String str,String year) {
+		HashMap<String,String> map = new HashMap<String, String>();
+		try {
+			if(str.contains("上")){
+			map = dmo.getHashMapBySQLByDS(null,"select a.B,(a.C+b.C)/24/100*10 as c from (select B,sum(F) as c from (select b,f from excel_tab_39 where year||'-'||month='"+year+"-01' or year||'-'||month='"+year+"-02' or year||'-'||month='"+year+"-03' or year||'-'||month='"+year+"-04' or year||'-'||month='"+year+"-05' or year||'-'||month='"+year+"-06') group by B) a,(select username username,sum(kouofen) as c from WN_GYPF_TABLE  where xiangmu ='总分' and pftime>='"+year+"-01-01' and pftime<='"+year+"-06-30' group by username) b where a.B=b.username");
+		}else if(str.contains("下")){
+			map = dmo.getHashMapBySQLByDS(null,"select a.B,(a.C+b.C)/24/100*10 as c from (select B,sum(F) as c from (select b,f from excel_tab_39 where year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-07' or year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-08' or year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-09' or year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-10' or year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-11' or year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-12') group by B) a,(select username username,sum(kouofen) as c from WN_GYPF_TABLE  where xiangmu ='总分' and pftime>='"+String.valueOf((Integer.valueOf(year)-1))+"-07-01' and pftime<='"+String.valueOf((Integer.valueOf(year)-1))+"-12-31' group by username) b where a.B=b.username");
+		}
+		} catch (Exception e) {
+			
+		}
+		return map;
+	}
+	/**
+	 * 所在网点文明规范服务管理考核平均分
+	 * @param str
+	 * @param year
+	 * @return
+	 */
+
+	private HashMap<String, String> getWmgf(String str,String year) {
+		HashMap<String,String> map = new HashMap<String, String>();
+		try {
+			if(str.contains("上")){
+				map = dmo.getHashMapBySQLByDS(null,"select a.username,b.c/100*10 from v_pub_user_post_1 a,(select deptname,sum(koufen)/2 as c from (select * from WN_BMPF_TABLE where (to_char(to_date(pftime,'yyyy-mm-dd'),'yyyy-mm')='"+year+"-03' or to_char(to_date(pftime,'yyyy-mm-dd'),'yyyy-mm')='"+year+"-06') and xiangmu='文明客户服务部' and state='评分结束') group by deptname) b where a.deptname=b.deptname");
+			}else if(str.contains("下")){
+				map = dmo.getHashMapBySQLByDS(null, "select a.username,b.c/100*10 from v_pub_user_post_1 a,(select deptname,sum(koufen)/2 as c from (select * from WN_BMPF_TABLE where (to_char(to_date(pftime,'yyyy-mm-dd'),'yyyy-mm')='"+String.valueOf((Integer.valueOf(year)-1))+"-09' or to_char(to_date(pftime,'yyyy-mm-dd'),'yyyy-mm')='"+String.valueOf((Integer.valueOf(year)-1))+"-09') and xiangmu='文明客户服务部' and state='评分结束') group by deptname) b where a.deptname=b.deptname ");
+			}
+		} catch (Exception e) {
+			
+		}
+		return map;
+	}
+
+	/**
+	 * 获取年度
+	 * @param year
+	 * @param month
+	 * @return
+	 */
+	private String getAnnual(String year, String month) {
+		String result = null;
+		Integer years;
+		String year1;
+		if(month=="7"){
+			result = year+"年上半年";
+		}else if(month=="1"){
+			years = Integer.valueOf(year)-1;
+			year1 = String.valueOf(years);
+			result = year1+"年下半年";
+		}else{
+			result = null;
+		}
+		return result;
+	}
 	
     /**
      * 客户经理等级评定计算(客户经理半年一评级)
