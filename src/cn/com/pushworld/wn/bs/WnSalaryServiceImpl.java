@@ -2395,7 +2395,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	@Override
 	public String getGyClass(String date) {
 		List list = new ArrayList<String>();
-		InsertSQLBuilder insert = new InsertSQLBuilder("wn_zgxw_wcb");
+		InsertSQLBuilder insert = new InsertSQLBuilder("WN_GYPJ");
 		String result = null;
 		String year = date.substring(0,4);
 		String month = date.substring(5,7);
@@ -2458,18 +2458,18 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					wgjfcount=Double.parseDouble(wgjfMap.get(user));
 				}
 				count=wmgfcount+fwzlcount+gzzlcount+wdpjcount+qxpjcount+ckzfcount+dztdlcount+wgjfcount;
-				insert.putFieldValue("", user);
-				insert.putFieldValue("", userDeptMap.get(user));
-				insert.putFieldValue("", str);
-				insert.putFieldValue("", wmgfMap.get(user));
-				insert.putFieldValue("", fwzlMap.get(user));
-				insert.putFieldValue("", gzzlMap.get(user));
-				insert.putFieldValue("", wdpjzbMap.get(user));
-				insert.putFieldValue("", qxpjzbMap.get(user));
-				insert.putFieldValue("", ckzfMap.get(user));
-				insert.putFieldValue("", dztdlMap.get(user));
-				insert.putFieldValue("", wgjfMap.get(user));
-				insert.putFieldValue("", count);
+				insert.putFieldValue("name", user);
+				insert.putFieldValue("wdmc", userDeptMap.get(user));
+				insert.putFieldValue("pjtime", str);
+				insert.putFieldValue("wmgf", wmgfMap.get(user));
+				insert.putFieldValue("fwzl", fwzlMap.get(user));
+				insert.putFieldValue("gzzl", gzzlMap.get(user));
+				insert.putFieldValue("szwd", wdpjzbMap.get(user));
+				insert.putFieldValue("qxgy", qxpjzbMap.get(user));
+				insert.putFieldValue("ckzf", ckzfMap.get(user));
+				insert.putFieldValue("dztdl", dztdlMap.get(user));
+				insert.putFieldValue("wgjf", wgjfMap.get(user));
+				insert.putFieldValue("hjdf", count);
 			}
 			dmo.executeBatchByDS(null,list);
 			result="柜员评级成功";
@@ -2515,6 +2515,15 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	 */
 	private HashMap<String, String> getCkzfzb(String str, String year) {
 		HashMap<String,String> map = new HashMap<String, String>();
+		try {
+			if(str.contains("上")){
+			map = dmo.getHashMapBySQLByDS(null,"select username,c*20 as c from (select username,case when c>1 then 1 when c<0 then 0 else c end as c from (select a.username,b.rate as c from v_pub_user_post_1 a left join (select A,F/B as rate from excel_tab_9 where year||'-'||month='"+year+"-06') b on a.deptname=substr(b.A,12)))");
+			}else if(str.contains("下")){	
+				map=dmo.getHashMapBySQLByDS(null,"select username,c*20 as c from (select username,case when c>1 then 1 when c<0 then 0 else c end as c from (select a.username,b.rate as c from v_pub_user_post_1 a left join (select a.A,(a.C-b.C)/b.C as rate from (select A,C from excel_tab_9 where year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-12') a left join (select A,C from excel_tab_9 where year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-06') b on a.A=b.A) b on a.deptname=substr(b.A,12)))");
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 		return map;
 	}
 	
