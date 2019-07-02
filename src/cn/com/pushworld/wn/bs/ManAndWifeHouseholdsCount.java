@@ -33,14 +33,14 @@ public class ManAndWifeHouseholdsCount {
 		try {
 			
 			vo=dmo.getHashVoArrayByDS(null,"select code,name from v_sal_personinfo where STATIONKIND in ('乡镇客户经理','城区客户经理','乡镇网点副主任','城区网点副主任','副主任兼职客户经理')");
-			HashMap<String,String> yearmap=year.getYearCount(date, vo);			
+			HashMap<String,String> yearmap=year.getYearCount(date, vo);				
 //			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_RJ_CKYXHSTJ");
 //			InsertSQLBuilder insert=new InsertSQLBuilder("WN_CKYXHSTJ");//记录已计发和未计发的
 			InsertSQLBuilder insert=new InsertSQLBuilder("WN_deposit_number");//记录完成数做完成比用
-			InsertSQLBuilder insertHs=new InsertSQLBuilder("wm_ck_count");//记录户数
+			InsertSQLBuilder insertHs=new InsertSQLBuilder("wn_ck_count");//记录户数
 			HashVO [] hsvo=dmo.getHashVoArrayByDS(null,"select * from wm_ck_count where date_time='"+time[1].toString()+"'");
 			if(hsvo.length>0){
-				dmo.executeUpdateByDS(null,"delete from wm_ck_count where E='"+time[1].toString()+"'");
+				dmo.executeUpdateByDS(null,"delete from wm_ck_count where date_time='"+time[1].toString()+"'");
 			}
 			List list=new ArrayList<String>();
 			HashVO [] tjvos=dmo.getHashVoArrayByDS(null,"select * from WN_CKYXHSTJ where E='"+time[1].toString()+"'");
@@ -50,6 +50,10 @@ public class ManAndWifeHouseholdsCount {
 			HashVO [] ckbi=dmo.getHashVoArrayByDS(null,"select * from WN_deposit_number where date_time='"+time[1].toString()+"'");
 			if(ckbi.length>0){
 				dmo.executeUpdateByDS(null,"delete from WN_deposit_number where date_time='"+time[1].toString()+"'");
+			}
+			String [] name=dmo.getStringArrayFirstColByDS(null, "select name from wn_deposit_detail where date_time='"+date+"'");
+			if(name.length>0){ 
+				dmo.executeUpdateByDS(null,"delete from wn_deposit_detail where date_time='"+date+"'");
 			}
 			//得到客户经理的任务数
 			HashMap<String,String> rwMap=dmo.getHashMapBySQLByDS(null, "select A,sum(B) from EXCEL_TAB_53 where year||'-'||month='"+time[1].toString().substring(0,7)+"' group by A");
@@ -120,12 +124,12 @@ public class ManAndWifeHouseholdsCount {
 //				list.add(update.getSQL());
 //			}
 
-			for(String str:yearmap.keySet()){
-				System.out.println(""+str+"年初户数"+yearmap.get(str));
-			}
-			for(String str:countMap.keySet()){
-				System.out.println(""+str+"考核月户数"+countMap.get(str));
-			}
+//			for(String str:yearmap.keySet()){
+//				System.out.println(""+str+"年初户数"+yearmap.get(str));
+//			}
+//			for(String str:countMap.keySet()){
+//				System.out.println(""+str+"考核月户数"+countMap.get(str));
+//			}
 			//zzl  把户数记录到一个表里
 			for(String str:map.keySet()){
 				insertHs.putFieldValue("username", str);
@@ -397,11 +401,7 @@ public class ManAndWifeHouseholdsCount {
 		try {
 			List sqllist=new ArrayList<String>();
 			InsertSQLBuilder insert=new InsertSQLBuilder("wn_deposit_detail");
-			String [] name=dmo.getStringArrayFirstColByDS(null, "select name from wn_deposit_detail where data_time='"+date+"'");
-			if(name.length>0){ 
-				dmo.executeUpdateByDS(null,"delete from wn_deposit_detail where data_time='"+date+"'");
-			}
-			if(list.size()>0){
+			if(list!=null){
 				for(int i=0;i<list.size();i++){
 					String [] str=list.get(i);
 					insert.putFieldValue("Idno", str[0].toString());
@@ -411,7 +411,7 @@ public class ManAndWifeHouseholdsCount {
 					sqllist.add(insert.getSQL());
 				}				
 			}
-			if(data.length>0){
+			if(data!=null){
 				for(int i=0;i<data.length;i++){
 					insert.putFieldValue("Idno", data[i][0].toString());
 					insert.putFieldValue("name", data[i][1].toString());

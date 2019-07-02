@@ -1,7 +1,11 @@
 package cn.com.pushworld.wn.ui;
 
+import java.util.HashMap;
+
+import cn.com.infostrategy.to.common.WLTRemoteException;
 import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.ui.common.AbstractWorkPanel;
+import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.infostrategy.ui.mdata.BillListDialog;
 import cn.com.infostrategy.ui.mdata.BillListHtmlHrefEvent;
 import cn.com.infostrategy.ui.mdata.BillListHtmlHrefListener;
@@ -28,10 +32,19 @@ public class DepositDetailQueryWKPanel extends AbstractWorkPanel implements Bill
 	public void onBillListHtmlHrefClicked(BillListHtmlHrefEvent event) {
 		if(event.getSource()==list){
 		    BillVO vo= list.getSelectedBillVO();
-		    BillListDialog dialog=new BillListDialog(this,"有效户数查询","V_S_LOAN_HK_CODE1");
-		    dialog.getBilllistPanel().QueryDataByCondition("xd_col1='"+vo.getStringValue("xd_col1")+"'");
-		    dialog.getBtn_confirm().setVisible(false);
-		    dialog.setVisible(true);
+		    try {
+				HashMap<String, String> usernamp=UIUtil.getHashMapBySQLByDS(null,"select xd_col2,xd_col1 from wnbank.s_loan_ryb");
+			    BillListDialog dialog=new BillListDialog(this,"有效户数查询","WN_DEPOSIT_DETAIL_CODE1");
+			    dialog.getBilllistPanel().QueryDataByCondition("khjlid='"+usernamp.get(vo.getStringValue("NAME"))+"' and date_time='"+vo.getStringValue("date_time")+"'");
+			    dialog.getBtn_confirm().setVisible(false);
+			    dialog.setVisible(true);
+		    } catch (WLTRemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 	}

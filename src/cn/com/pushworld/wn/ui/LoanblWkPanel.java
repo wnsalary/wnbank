@@ -17,6 +17,7 @@ import cn.com.infostrategy.ui.mdata.BillListDialog;
 import cn.com.infostrategy.ui.mdata.BillListHtmlHrefEvent;
 import cn.com.infostrategy.ui.mdata.BillListHtmlHrefListener;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
+import freemarker.template.SimpleDate;
 
 public class LoanblWkPanel extends AbstractWorkPanel implements ActionListener,
 		BillListHtmlHrefListener, ChangeListener {
@@ -33,10 +34,10 @@ public class LoanblWkPanel extends AbstractWorkPanel implements ActionListener,
 		listPanel1 = new BillListPanel("V_WN_DQDKSHL_ZPY_Q01");// 到期贷款收回率考核
 		listPanel1.addBillListHtmlHrefListener(this);
 		listPanel1.repaintBillListButton();
-		listPanel2 = new BillListPanel("V_WN_DNXZBLDK_ZPY_Q01");
+		listPanel2 = new BillListPanel("V_WN_DNXZBLDK_ZPY_Q01");//当年新增不良贷款
 		listPanel2.getQuickQueryPanel().addBillQuickActionListener(this);
 		listPanel2.addBillListHtmlHrefListener(this);
-		listPanel3=new BillListPanel("V_WN_SHBWBL_ZPY_Q01");
+		listPanel3=new BillListPanel("V_WN_SHBWBL_ZPY_Q01");//收回不良贷款
 		listPanel3.repaintBillListButton();
 		tab=new WLTTabbedPane();
 		tab.addTab("收回存量不良贷款", listPanel);
@@ -53,16 +54,20 @@ public class LoanblWkPanel extends AbstractWorkPanel implements ActionListener,
 			try {
 				// 涉及到写查询条件
 				String querySQL = listPanel.getQuickQueryPanel().getQuerySQL();
-				String allSQL = "select a.cus_manager,a.xd_col1,a.xd_col2,a.xd_col3,a.xd_col4,a.xd_col5,a.xd_col6,a.xd_col7,a.xd_col16,a.xd_col22,a.LOAD_DATES,a.ck from ";
+				querySQL=querySQL.replace("年", "-").replace("月", "");
+				System.out.println("查询条件为:"+querySQL);
+				String allSQL = "select distinct(a.XD_COL1),a.XD_COL2,a.XD_COL4,a.XD_COL5,a.XD_COL6,a.XD_COL7,a.XD_COL16,a.XD_COL22,a.khjl,a.LOAD_DATES,a.hkxx from ";
 				SimpleDateFormat simple = new SimpleDateFormat("yyyy");
-				Integer year = Integer.parseInt(simple.format(new Date())) - 1;
+				//获取到查询条件
+				String date_time=listPanel.getQuickQueryPanel().getRealValueAt("load_dates");
+				Integer year = Integer.parseInt(simple.format(new SimpleDateFormat("yyyy年MM月").parse(date_time))) - 1;
 				String lastYearEnd = year + "-" + "12-31";
 				allSQL = allSQL
 						+ "("
 						+ querySQL
 						+ ") a left join (select * from wnbank.s_loan_dk where xd_col22 in ('03','04') and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
 						+ lastYearEnd
-						+ "') b on b.xd_col1=a.xd_col1 where b.xd_col1 is not null";
+						+ "') b on b.xd_col1=a.xd_col1 where b.xd_col1 is not null and a.xd_col7>0";
 				listPanel.QueryData(allSQL);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -71,9 +76,10 @@ public class LoanblWkPanel extends AbstractWorkPanel implements ActionListener,
 			try {
               String querySQL=listPanel2.getQuickQueryPanel().getQuerySQL();
               System.out.println("当年新增不良贷款:"+querySQL);
-              String allSQL="select a.xd_col1,a.xd_col2,a.xd_col4,a.xd_col5,a.xd_col6,a.xd_col7,a.xd_col22,a.xd_col16,a.cus_manager,a.load_dates, a.ck from ";
+              String allSQL="select a.khjl,a.xd_col1,a.xd_col2,a.xd_col4,a.xd_col5,a.xd_col6,a.xd_col7,a.xd_col22,a.xd_col16,a.load_dates from ";
               SimpleDateFormat simple=new SimpleDateFormat("yyyy");
-              Integer year=Integer.parseInt(simple.format(new Date()))-1;
+              String date_time=listPanel2.getQuickQueryPanel().getRealValueAt("load_dates");
+              Integer year = Integer.parseInt(simple.format(new SimpleDateFormat("yyyy年MM月").parse(date_time))) - 1;
               String lastYearEnd=year+"-12-31";
               allSQL=allSQL+" ("+querySQL+") a left join (select * from wnbank.s_loan_dk where xd_col22 in ('01','02') and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"+lastYearEnd+"')  b  on b.xd_col1=a.xd_col1 where b.xd_col1 is not null";
 			  listPanel2.QueryData(allSQL);
@@ -86,8 +92,8 @@ public class LoanblWkPanel extends AbstractWorkPanel implements ActionListener,
 	@Override
 	public void onBillListHtmlHrefClicked(BillListHtmlHrefEvent event) {
 		if(event.getSource()==listPanel){
-			BillVO vo = listPanel.getSelectedBillVO();
-			    BillListDialog dialog=new BillListDialog(listPanel,"查看","V_S_LOAN_HK_CODE1");
+			    BillVO vo = listPanel.getSelectedBillVO();
+			    BillListDialog dialog=new BillListDialog(listPanel,"还款信息","V_S_LOAN_HK_CODE1");
 			    dialog.getBilllistPanel().QueryDataByCondition("xd_col1='"+vo.getStringValue("xd_col1")+"'");
 			    dialog.getBtn_confirm().setVisible(false);
 			    dialog.setVisible(true);

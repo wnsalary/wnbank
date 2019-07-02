@@ -11,7 +11,11 @@ import cn.com.infostrategy.ui.common.SplashWindow;
 import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.infostrategy.ui.common.WLTButton;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
-
+import cn.com.pushworld.wn.bs.WnSalaryServiceImpl;
+/**
+ * 客户经理等级评定
+ * @author ZPY
+ */
 public class ManagerScoreDXWKPanel extends AbstractWorkPanel implements ActionListener {
     
 	private BillListPanel listPanel=null;
@@ -30,13 +34,17 @@ public class ManagerScoreDXWKPanel extends AbstractWorkPanel implements ActionLi
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==rateButton){//客户经理等级评定
 			try {
-				
-				 final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil.lookUpRemoteService(WnSalaryServiceIfc.class);
+				//允许客户去选择是对上半年进行考核还是对下半年进行考核
+				 final int dateNum=MessageBox.showOptionDialog(this, "请选择考核的时间段","提示", new String[] { "上半年", "下半年" },0);
+				final WnSalaryServiceIfc service=new WnSalaryServiceImpl();
+				if(dateNum==-1){
+					return;
+				}
 				 new SplashWindow(this, new AbstractAction() {
-					
+					private static final long serialVersionUID = 1L;
 					@Override
 					public void actionPerformed(ActionEvent e) {//对客户经理进行评级考核功能开发
-                      message=service.managerLevelCompute();
+                      message=service.managerLevelCompute(dateNum);
 					}
 				});
 				 MessageBox.show(this,message);

@@ -151,11 +151,6 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc{
 	 */
 	public String getDwzgXwqyRatio(String data);
 	/**
-	 * 对客户经理进行绩效考核
-	 * @return
-	 */
-	public String managerLevelCompute();
-	/**
 	 * 
 	 * 柜员绩效工资等级评定
 	 * @param date
@@ -169,4 +164,9 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc{
 	 * @return
 	 */
 	public String getWpkjClass(String date);
+	/**
+	 * 对客户经理进行绩效考核
+	 * @return
+	 */
+	public String managerLevelCompute(int dateNum);
 }

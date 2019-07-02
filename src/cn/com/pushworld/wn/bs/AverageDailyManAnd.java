@@ -35,7 +35,7 @@ public class AverageDailyManAnd {
 			InsertSQLBuilder insert=new InsertSQLBuilder("WN_RJ_CKYXHSTJ");
 			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_RJ_CKYXHSTJ");
 			InsertSQLBuilder insertB=new InsertSQLBuilder("WN_deposit_balance");//记录完成数做完成比用
-			InsertSQLBuilder insertYe=new InsertSQLBuilder("wm_ck_balance");//记录存款余额
+			InsertSQLBuilder insertYe=new InsertSQLBuilder("wn_ck_balance");//记录存款余额
 			HashVO [] hsvo=dmo.getHashVoArrayByDS(null,"select * from wm_ck_balance where date_time='"+time[1].toString()+"'");
 			if(hsvo.length>0){
 				dmo.executeUpdateByDS(null,"delete from wm_ck_balance where E='"+time[1].toString()+"'");
