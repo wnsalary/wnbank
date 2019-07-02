@@ -2865,5 +2865,24 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		}
     	return yearStartDate;
     }
+
+	@Override
+	public String getWpkjClass(String date) {
+		List list = new ArrayList<String>();
+		InsertSQLBuilder insert = new InsertSQLBuilder("WN_GYPJ");
+		String result = null;
+		String year = date.substring(0,4);
+		String month = date.substring(5,7);
+		String str = getAnnual(year,month);
+		if(str==null){
+			result = "当前时间不在考核时间范围内！";
+		}
+		try {
+			HashMap<String,String> userMap = dmo.getHashMapBySQLByDS(null, "");
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		return null;
+	}
 	
 }

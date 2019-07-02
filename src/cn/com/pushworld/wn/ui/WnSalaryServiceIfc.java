@@ -162,4 +162,11 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc{
 	 * @return
 	 */
 	public String getGyClass(String date);
+	
+	/**
+	 * 委派会计绩效工资等级评定
+	 * @param date
+	 * @return
+	 */
+	public String getWpkjClass(String date);
 }
