@@ -589,7 +589,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		StringBuffer sb = new StringBuffer();
 		StringBuffer sqlsb=new StringBuffer();
 		try {
-			UpdateSQLBuilder update = new UpdateSQLBuilder("wnbank.s_loan_hkxx");
+			UpdateSQLBuilder update = new UpdateSQLBuilder("wnbank.s_loan_khxx");
 			List list = new ArrayList<String>();
 			//客户经理的信息表map
 			HashMap<String, String> map = dmo.getHashMapBySQLByDS(null, "select xd_col1,xd_col2 from wnbank.s_loan_ryb");
