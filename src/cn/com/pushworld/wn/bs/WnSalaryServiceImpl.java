@@ -1,6 +1,8 @@
 package cn.com.pushworld.wn.bs;
 
-import java.math.BigDecimal;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -13,21 +15,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jxl.write.DateTime;
-
-import org.apache.axis.encoding.ser.ArraySerializer;
-import org.apache.catalina.startup.PasswdUserDatabase;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-
-import com.ibm.db2.jcc.a.jl;
-
 import cn.com.infostrategy.bs.common.CommDMO;
+import cn.com.infostrategy.bs.common.ServerEnvironment;
 import cn.com.infostrategy.to.common.HashVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
-import cn.com.infostrategy.to.mdata.formulaEngine.jepFunctions.IF;
-import cn.com.infostrategy.ui.common.MessageBox;
-import cn.com.pushworld.salary.bs.indexpage.MoneyTotleReport;
 import cn.com.pushworld.wn.ui.WnSalaryServiceIfc;
 
 public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
@@ -425,74 +417,140 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	 * 每个月的客户经理对应的贷款需要调整，故需要修改上月的基数。
 	 */
 	public String getChange() {
+		String xx=null;
 		Date date = new Date();
 		Calendar scal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
 		scal.setTime(date);
-		scal.set(Calendar.DAY_OF_MONTH, 31);
 		scal.add(Calendar.MONTH, -2);//取当前日期的后一天. 
+		scal.set(Calendar.DAY_OF_MONTH,scal.getActualMaximum(Calendar.DATE));
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		String smonth = df.format(scal.getTime());//上月的月数
 		Calendar cal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
 		cal.setTime(date);
-		cal.set(Calendar.DAY_OF_MONTH, 0);
-		//		cal.add(Calendar.MONTH, -1);//取当前日期的后一天. 
+		cal.add(Calendar.MONTH, -1);//取当前日期的后一天. 
+		cal.set(Calendar.DAY_OF_MONTH,cal.getActualMaximum(Calendar.DATE));
 		String kmonth = df.format(cal.getTime());//考核月的月数
 		StringBuffer sb = new StringBuffer();
+		StringBuffer sqlsb=new StringBuffer();
 		try {
 			UpdateSQLBuilder update = new UpdateSQLBuilder("wnbank.s_loan_dk");
 			List list = new ArrayList<String>();
 			//客户经理的信息表map
 			HashMap<String, String> map = dmo.getHashMapBySQLByDS(null, "select xd_col1,xd_col2 from wnbank.s_loan_ryb");
 			//考核月的客户证件和客户经理号map
-			HashMap<String, String> kmap = dmo.getHashMapBySQLByDS(null, "select distinct(dk.xd_col16),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + kmonth + "' and XD_COL7<>0");
+			HashMap<String, String> kmap = dmo.getHashMapBySQLByDS(null, "select distinct(dk.xd_col1),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + kmonth + "' and XD_COL7<>0");
 			//上月的客户证件和客户经理号map
-			HashMap<String, String> smap = dmo.getHashMapBySQLByDS(null, "select distinct(dk.xd_col16),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + smonth + "' and XD_COL7<>0");
+			HashMap<String, String> smap = dmo.getHashMapBySQLByDS(null, "select distinct(dk.xd_col1),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + smonth + "' and XD_COL7<>0");
+			int a=0;
 			for (String str : kmap.keySet()) {
 				if (kmap.get(str).equals(smap.get(str))) {
 					continue;
 				} else {
-					update.setWhereCondition("to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + smonth + "' and xd_col16='" + str + "'");
+					a=a+1;
+					update.setWhereCondition("to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + smonth + "' and xd_col1='" + str + "'");
 					update.putFieldValue("XD_COL81", kmap.get(str));
+					sb.append(smonth + "贷款号为[" + str + "]客户经理为[" + map.get(smap.get(str)) + "]与考核月的客户经理信息不符，故修改客户经理为[" + map.get(kmap.get(str)) + "]"+System.getProperty("line.separator"));
 					list.add(update.getSQL());
-					sb.append(smonth + "客户证件号为[" + str + "]客户经理为[" + map.get(smap.get(str)) + "]与考核月的客户经理信息不符，故修改客户经理为[" + map.get(kmap.get(str)) + "]  \n");
+					if(a>5000){
+						txtWriteFile(sb,"DK");
+						sb.delete(0, sb.length());
+						a=0;
+					}
 				}
 				if (list.size() > 5000) {//zzl 1000 一提交
 					dmo.executeBatchByDS(null, list);
+					for(int i=0;i<list.size();i++){
+						sqlsb.append(list.get(i).toString()+System.getProperty("line.separator"));
+					}
+					txtWriteFile(sqlsb,"DK_SQL");
+					sqlsb.delete(0,sqlsb.length());  
 					list.clear();
 				}
 			}
-			dmo.executeBatchByDS(null, list);
+			if(list.size()>0){
+				dmo.executeBatchByDS(null, list);
+				for(int i=0;i<list.size();i++){
+					sqlsb.append(list.get(i).toString()+System.getProperty("line.separator"));
+				}
+				txtWriteFile(sqlsb,"DK_SQL");
+				sqlsb.delete(0,sqlsb.length());  
+				list.clear();
+			}
+			if(sb.length()>0){
+				txtWriteFile(sb,"DK");
+			}
+			xx="客户经理信息变更成功";
 		} catch (Exception e) {
-			sb.append("客户经理信息变更失败");
+			xx="客户经理信息变更失败";
 			e.printStackTrace();
 		}
-		return sb.toString();
+		return xx;
 	}
 
 	public static void main(String[] args) {
-		//		Date date = new Date();
-		//		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-		//		Calendar cal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
-		//		cal.setTime(date);
-		//		cal.set(Calendar.DAY_OF_MONTH, 0);
-		//		//		cal.add(Calendar.MONTH, -1);//取当前日期的后一天. 
-		//		String kmonth = df.format(cal.getTime());//考核月的月数
-		//		System.out.println(">>>>>>>>>>>" + kmonth);
-		//
-		//		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
-		//		try {
-		//			cal.setTime(format.parse("2019-5-24"));
-		//		} catch (ParseException e) {
-		//			// TODO Auto-generated catch block
-		//			e.printStackTrace();
-		//		}
-		//		cal.add(Calendar.MONTH, -1);
-		//		cal.set(Calendar.DAY_OF_MONTH,cal.getActualMaximum(Calendar.DATE));
-		//		Date otherDate = cal.getTime();
-		//		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		//		System.out.println(">>>>>>>>>>>>>>>>"+dateFormat.format(otherDate));
+//		Date date = new Date();
+//		Calendar scal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
+//		scal.setTime(date);
+//		scal.add(Calendar.MONTH, -2);//取当前日期的后一天. 
+//		scal.set(Calendar.DAY_OF_MONTH,scal.getActualMaximum(Calendar.DATE));
+//		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+//		String smonth = df.format(scal.getTime());//上月的月数
+//		Calendar cal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
+//		cal.setTime(date);
+//		cal.add(Calendar.MONTH, -1);//取当前日期的后一天. 
+//		cal.set(Calendar.DAY_OF_MONTH,cal.getActualMaximum(Calendar.DATE));
+//		String kmonth = df.format(cal.getTime());//考核月的月数
+//		System.out.println(">>>>>smonth>>>>>>>>>."+smonth+">>>>kmonth>>>>>>"+kmonth);
+		// /* 写入Txt文件 */
+		try{
+			Date date = new Date();
+			SimpleDateFormat dfMonth = new SimpleDateFormat("yyyyMM");
+			SimpleDateFormat dfDay = new SimpleDateFormat("yyyyMMdd");
+//			String filePath = System.getProperty("WLTUPLOADFILEDIR");
+//			filePath=filePath+"\\"+dfMonth+"\\"+dfDay;
+			File writepath = new File("C:\\Users\\longlonggo521\\Desktop\\"+dfMonth.format(date).toString()+"\\"+dfDay.format(date).toString()); // 相对路径，如果没有则要建立一个新的output。txt文件
+			if(!writepath.exists()){
+				writepath.mkdirs();
+				}
+			File writename = new File("C:\\Users\\longlonggo521\\Desktop\\"+dfMonth.format(date).toString()+"\\"+dfDay.format(date).toString()+"\\niubi.txt"); // 相对路径，如果没有则要建立一个新的output。txt文件
+			if(!writename.exists()){
+				writename.createNewFile(); // 创建新文件
+			}
+			BufferedWriter out = new BufferedWriter(new FileWriter(writename,true));
+			out.write("好好学习"); // \r\n即为换行
+			out.flush(); // 把缓存区内容压入文件
+			out.close(); // 最后记得关闭文件 
+		}catch (Exception  e){
+			e.printStackTrace();
+		}
 	}
-
+/**
+ * zzl
+ * 把导出的日志写入txt
+ */
+	public void txtWriteFile(StringBuffer sb,String name){
+		try{
+			Date date = new Date();
+			SimpleDateFormat dfMonth = new SimpleDateFormat("yyyyMM");
+			SimpleDateFormat dfDay = new SimpleDateFormat("yyyyMMdd");
+			String filePath = ServerEnvironment.getProperty("WLTUPLOADFILEDIR");
+			filePath=filePath+"\\ManagerLog\\"+dfMonth.format(date).toString()+"\\"+dfDay.format(date).toString();
+			File writepath = new File(filePath); // 相对路径，如果没有则要建立一个新的output。txt文件
+			if(!writepath.exists()){
+				writepath.mkdirs();
+			}
+			File writename = new File(filePath+"\\"+name+"_"+dfDay.format(date).toString()+".txt"); // 相对路径，如果没有则要建立一个新的output。txt文件
+			if(!writename.exists()){
+				writename.createNewFile(); // 创建新文件
+			}
+			BufferedWriter out = new BufferedWriter(new FileWriter(writename,true));
+			out.write(sb.toString()); // \r\n即为换行
+			out.flush(); // 把缓存区内容压入文件
+			out.close(); // 最后记得关闭文件 
+		}catch (Exception  e){
+			e.printStackTrace();
+		}
+	}
 	/**
 	 * zzl
 	 * @param date
@@ -520,43 +578,69 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	 */
 	@Override
 	public String getCKChange() {
+		String xx=null;
 		Date date = new Date();
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		Calendar cal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
 		cal.setTime(date);
-		cal.set(Calendar.DAY_OF_MONTH, 0);
-		//		cal.add(Calendar.MONTH, -1);//取当前日期的后一天. 
+		cal.add(Calendar.MONTH, -1);//取当前日期的后一天. 
+		cal.set(Calendar.DAY_OF_MONTH,cal.getActualMaximum(Calendar.DATE));
 		String kmonth = df.format(cal.getTime());//考核月的月数
 		StringBuffer sb = new StringBuffer();
+		StringBuffer sqlsb=new StringBuffer();
 		try {
 			UpdateSQLBuilder update = new UpdateSQLBuilder("wnbank.s_loan_hkxx");
 			List list = new ArrayList<String>();
 			//客户经理的信息表map
 			HashMap<String, String> map = dmo.getHashMapBySQLByDS(null, "select xd_col1,xd_col2 from wnbank.s_loan_ryb");
 			//考核月的客户证件和客户经理号map
-			HashMap<String, String> kmap = dmo.getHashMapBySQLByDS(null, "select XD_COL7,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + kmonth + "' and XD_COL7 is not null and XD_COL96 is not null");
+			HashMap<String, String> kmap = dmo.getHashMapBySQLByDS(null, "select XD_COL1,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + kmonth + "' and XD_COL7 is not null and XD_COL96 is not null");
 			//上月的客户证件和客户经理号map
-			HashMap<String, String> smap = dmo.getHashMapBySQLByDS(null, "select distinct(dk.xd_col16),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='2018-12-31' and XD_COL7<>0");
+			HashMap<String, String> smap = dmo.getHashMapBySQLByDS(null, "select XD_COL1,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='2018-12-31' and XD_COL7 is not null and XD_COL96 is not null");
+			int a=0;
 			for (String str : kmap.keySet()) {
 				if (kmap.get(str).equals(smap.get(str))) {
 					continue;
 				} else {
-					update.setWhereCondition("to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='2018-12-31' and xd_col16='" + str + "'");
+					a=a+1;
+					update.setWhereCondition("to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='2018-12-31' and xd_col1='" + str + "'");
 					update.putFieldValue("XD_COL81", kmap.get(str));
 					list.add(update.getSQL());
-					sb.append("2018-12-31客户证件号为[" + str + "]客户经理为[" + map.get(smap.get(str)) + "]与考核月的客户经理信息不符，故修改客户经理为[" + map.get(kmap.get(str)) + "]  \n");
+					sb.append("2018-12-31客户号为[" + str + "]客户经理为[" + map.get(smap.get(str)) + "]与考核月的客户经理信息不符，故修改客户经理为[" + map.get(kmap.get(str)) + "]  \n");
+					if(a>5000){
+						txtWriteFile(sb,"CK");
+						sb.delete(0, sb.length());
+						a=0;
+					}
 				}
 				if (list.size() > 5000) {//zzl 1000 一提交
 					dmo.executeBatchByDS(null, list);
+					for(int i=0;i<list.size();i++){
+						sqlsb.append(list.get(i).toString()+System.getProperty("line.separator"));
+					}
+					txtWriteFile(sqlsb,"CK_SQL");
+					sqlsb.delete(0,sqlsb.length());  
 					list.clear();
 				}
 			}
-			dmo.executeBatchByDS(null, list);
+			if(list.size()>0){
+				dmo.executeBatchByDS(null, list);
+				for(int i=0;i<list.size();i++){
+					sqlsb.append(list.get(i).toString()+System.getProperty("line.separator"));
+				}
+				txtWriteFile(sqlsb,"CK_SQL");
+				sqlsb.delete(0,sqlsb.length());  
+				list.clear();
+			}
+			if(sb.length()>0){
+				txtWriteFile(sb,"CK");
+			}
+			xx="客户经理信息变更成功";
 		} catch (Exception e) {
-			sb.append("客户经理信息变更失败");
+			xx="客户经理信息变更失败";
 			e.printStackTrace();
 		}
-		return sb.toString();
+		return xx;
 	}
 
 	/**
