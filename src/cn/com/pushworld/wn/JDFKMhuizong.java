@@ -131,27 +131,34 @@ public class JDFKMhuizong extends AbstractWorkPanel implements ActionListener {
 			//获取选中数据
 			BillVO[] selected = listPanel.getSelectedBillVOs();
 			if(selected.length <= 0){
-				MessageBox.show(listPanel,"请选择一条或者多条记录再执行此操作;");
+				MessageBox.show(listPanel,"请选择一条或多条记录在执行此操作;");
 				return;
 			}
 			List<String> list = new ArrayList<String>();
 			for (int i = 0; i < selected.length; i++) {
 				String selectedId = selected[i].getStringValue("ID");
 				String state = selected[i].getStringValue("state");
+				String JFFSE = selected[i].getStringValue("JFFSE");
+				String JFTJZJ = selected[i].getStringValue("JFTJZJ");
+				String DFFSE = selected[i].getStringValue("DFFSE");
+				String DFTJZJ = selected[i].getStringValue("DFTJZJ");
 				String updateSQL = "";
 				if (state.equals("未提交") || state.equals("已退回")) {
-					updateSQL = "update WN_JDFKMHZB_02 set state='已提交' where id='" + selectedId + "'";
-					list.add(updateSQL);
+					if(Double.parseDouble(JFFSE)<Double.parseDouble(JFTJZJ)||Double.parseDouble(DFFSE)<Double.parseDouble(DFTJZJ)){
+						MessageBox.show(this,"您选择的记录中有不合理的数据，请重新填写后提交！");
+					}else{
+						updateSQL = "update WN_JDFKMHZB_02 set state='已提交' where id='" + selectedId + "'";
+						list.add(updateSQL);
+					}
 				}
 				System.out.println(list.size());
 				if (list.size() >= 5000) {
-					uiUtil.executeBatchByDS(null, list);
+					UIUtil.executeBatchByDS(null, list);
 					list.clear();
 				}
 			}
 			if (list.size() > 0) {
-				uiUtil.executeBatchByDS(null, list);
-				MessageBox.show("数据提交完成");
+				UIUtil.executeBatchByDS(null, list);
 			} else {
 				MessageBox.show("当前选中数据已经提交,请重新选择");
 			}

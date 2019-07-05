@@ -2477,16 +2477,20 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	}
 
 	@Override
-	public String getGyClass(String date) {
+	public String getGyClass(String date) throws Exception {
 		List list = new ArrayList<String>();
 		InsertSQLBuilder insert = new InsertSQLBuilder("WN_GYPJ");
 		String result = null;
 		String year = date.substring(0,4);
 		String month = date.substring(5,7);
 		String str = getAnnual(year,month);
-		if(str==null){
+		
+			HashVO[] vos = dmo.getHashVoArrayByDS(null,"select * from V_WN_GYPJ where pjtime='"+str+"'");
+			if(vos.length>0){
+			result = "该半年度已考核，请点击查询查看！";
+			}else if(str==null){
 			result = "当前时间不在考核时间范围内！";
-		}
+		}else{
 		try {
 			HashMap<String,String> userMap = dmo.getHashMapBySQLByDS(null,"select B,B from (select B,count(B) as c from excel_tab_39 group by B) where c>=5");
 			HashMap<String,String> userDeptMap = dmo.getHashMapBySQLByDS(null,"select username,deptname from v_pub_user_post_1");
@@ -2528,7 +2532,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					qxpjcount=0.0;
 				}else{
 					qxpjcount=Double.parseDouble(qxpjzbMap.get(user));
-				}if(ckzfMap.get(user)==null||Integer.valueOf(ckzfMap.get(user))<=0){
+				}if(ckzfMap.get(user)==null||ckzfMap.get(user).equals("")){
 					ckzfcount=0.0;
 				}else{
 					ckzfcount=Double.parseDouble(ckzfMap.get(user));
@@ -2545,22 +2549,86 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				insert.putFieldValue("name", user);
 				insert.putFieldValue("wdmc", userDeptMap.get(user));
 				insert.putFieldValue("pjtime", str);
-				insert.putFieldValue("wmgf", wmgfMap.get(user));
-				insert.putFieldValue("fwzl", fwzlMap.get(user));
-				insert.putFieldValue("gzzl", gzzlMap.get(user));
-				insert.putFieldValue("szwd", wdpjzbMap.get(user));
-				insert.putFieldValue("qxgy", qxpjzbMap.get(user));
-				insert.putFieldValue("ckzf", ckzfMap.get(user));
-				insert.putFieldValue("dztdl", dztdlMap.get(user));
-				insert.putFieldValue("wgjf", wgjfMap.get(user));
+				insert.putFieldValue("wmgf", wmgfcount);
+				insert.putFieldValue("fwzl", fwzlcount);
+				insert.putFieldValue("gzzl", gzzlcount);
+				insert.putFieldValue("szwd", wdpjcount);
+				insert.putFieldValue("qxgy", qxpjcount);
+				insert.putFieldValue("ckzf", ckzfcount);
+				insert.putFieldValue("dztdl",dztdlcount);
+				insert.putFieldValue("wgjf", wgjfcount);
 				insert.putFieldValue("hjdf", count);
+				list.add(insert.getSQL());
 			}
 			dmo.executeBatchByDS(null,list);
-			result="柜员评级成功";
+			result="柜员评级成功,请点击查询查看！";
+			
 		} catch (Exception e) {
-			result = "柜员评级失败，请联系系统管理员！v";
+			e.printStackTrace();
+			result = "柜员评级失败，请联系系统管理员！";
+		}
 		}
 		
+		return result;
+	}
+	
+	@Override
+	public String getWpkjClass(String date) {
+		List list = new ArrayList<String>();
+		InsertSQLBuilder insert = new InsertSQLBuilder("wn_wpkj_pj");
+		String result = null;
+		String year = date.substring(0,4);
+		String month = date.substring(5,7);
+		String str = getAnnual(year,month);
+		if(str==null){
+			result = "当前时间不在考核时间范围内！";
+		}
+		try {
+			HashMap<String,String> userMap = dmo.getHashMapBySQLByDS(null, "");
+			HashMap<String,String> userDeptMap = dmo.getHashMapBySQLByDS(null,"select username,deptname from v_pub_user_post_1");
+			HashMap<String,String> xcdfMap = dmo.getHashMapBySQLByDS(null,"");
+			HashMap<String,String> ypjfMap = dmo.getHashMapBySQLByDS(null,"");
+			HashMap<String,String> jzksMap = dmo.getHashMapBySQLByDS(null,"");
+			HashMap<String,String> wgjfMap = dmo.getHashMapBySQLByDS(null,"");
+			for(String user:userMap.keySet()){
+				Double xcdf = 0.0;
+				Double ypjf = 0.0;
+				Double jzks = 0.0;
+				Double wgjf = 0.0;
+				Double count = 0.0;
+				if(xcdfMap.get(user)==null){
+					xcdf = 0.0;
+				}else{
+					xcdf = Double.parseDouble(xcdfMap.get(user));
+				}if(ypjfMap.get(user)==null){
+					ypjf = 0.0;
+				}else{
+					ypjf = Double.parseDouble(ypjfMap.get(user));
+				}if(jzksMap.get(user)==null){
+					jzks = 0.0;
+				}else{
+					jzks = Double.parseDouble(jzksMap.get(user));
+				}if(wgjfMap.get(user)==null){
+					wgjf = 0.0;
+				}else{
+					wgjf = Double.parseDouble(wgjfMap.get(user));
+				}
+				count = xcdf+ypjf+wgjf+xcdf;
+				insert.putFieldValue("name",user);
+				insert.putFieldValue("wdmc",userDeptMap.get(user));
+				insert.putFieldValue("pjtime",str);
+				insert.putFieldValue("xcdf",xcdf);
+				insert.putFieldValue("ypjf",ypjf);
+				insert.putFieldValue("jzks",jzks);
+				insert.putFieldValue("wgjf",wgjf);
+				list.add(insert.getSQL());
+			}
+			dmo.executeBatchByDS(null,list);
+			result = "评级成功！";
+		} catch (Exception e) {
+			e.printStackTrace();
+			result = "评级失败，请联系管理员！";
+		}
 		return result;
 	}
 	
@@ -2573,7 +2641,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	private HashMap<String, String> getWgjf(String year, String month) {
 		HashMap<String,String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null,"select A,B from excel_tab_ where year||'-'||month="+year+"-"+month);
+			map = dmo.getHashMapBySQLByDS(null,"select A,B from wn_data_040");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -2588,6 +2656,11 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	 */
 	private HashMap<String, String> getDztdl(String str, String year) {
 		HashMap<String,String> map = new HashMap<String, String>();
+		try {
+			map = dmo.getHashMapBySQLByDS(null,"select a.username,b.M/100*20 from v_pub_user_post_1 a left join wn_data_041 b on a.deptname=substr(b.B,12)");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return map;
 	}
 	
@@ -2601,9 +2674,9 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		HashMap<String,String> map = new HashMap<String, String>();
 		try {
 			if(str.contains("上")){
-			map = dmo.getHashMapBySQLByDS(null,"select username,c*20 as c from (select username,case when c>1 then 1 when c<0 then 0 else c end as c from (select a.username,b.rate as c from v_pub_user_post_1 a left join (select A,F/B as rate from excel_tab_9 where year||'-'||month='"+year+"-06') b on a.deptname=substr(b.A,12)))");
+			map = dmo.getHashMapBySQLByDS(null,"select username,c from (select username,c*20 as c from (select username,case when c>1 then 1 when c<0 then 0 else c end as c from (select a.username,b.rate as c from v_pub_user_post_1 a left join (select A,F/B as rate from excel_tab_9 where year||'-'||month='"+year+"-06') b on a.deptname=substr(b.A,12))))");
 			}else if(str.contains("下")){	
-				map=dmo.getHashMapBySQLByDS(null,"select username,c*20 as c from (select username,case when c>1 then 1 when c<0 then 0 else c end as c from (select a.username,b.rate as c from v_pub_user_post_1 a left join (select a.A,(a.C-b.C)/b.C as rate from (select A,C from excel_tab_9 where year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-12') a left join (select A,C from excel_tab_9 where year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-06') b on a.A=b.A) b on a.deptname=substr(b.A,12)))");
+				map=dmo.getHashMapBySQLByDS(null,"select username,c from (select username,c*20 as c from (select username,case when c>1 then 1 when c<0 then 0 else c end as c from (select a.username,b.rate as c from v_pub_user_post_1 a left join (select a.A,(a.C-b.C)/b.C as rate from (select A,C from excel_tab_9 where year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-12') a left join (select A,C from excel_tab_9 where year||'-'||month='"+String.valueOf((Integer.valueOf(year)-1))+"-06') b on a.A=b.A) b on a.deptname=substr(b.A,12))))");
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -2619,6 +2692,11 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	 */
 	private HashMap<String, String> getQxpjzb(String date, String year) {
 		HashMap<String,String> map = new HashMap<String, String>();
+		try {
+			map = dmo.getHashMapBySQLByDS(null,"select B ,case when rate>15 then 15 else rate end as rate from (select a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) group by B) a ,(select (sum(d)/5)/102 as c  from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) ) b)");
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 		return map;
 	}
 	
@@ -2630,6 +2708,11 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	 */
 	private HashMap<String, String> getWdpjzb(String date, String year) {
 		HashMap<String,String> map = new HashMap<String, String>();
+		try {
+			map = dmo.getHashMapBySQLByDS(null,"select B,case when rate>15 then 15 else rate end as rate from (select  a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) group by B) a left join (select a.B,b.count as c from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) and year||'-'||month='2019-05') a left join (select a.c,(b.count/a.count)/5 as count from (select c,count(B) as count from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) and year||'-'||month='2019-05' group by c) a left join (select a.c,sum(b.c) as count from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) and year||'-'||month='2019-05') a left join (select B,sum(D) as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) group by B) b on a.b=b.b group by a.c) b on a.c=b.c) b on a.c=b.c) b on a.b=b.b)");
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 		return map;
 	}
 
@@ -2703,9 +2786,9 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		String result = null;
 		Integer years;
 		String year1;
-		if(month=="7"){
+		if(month.equals("07")){
 			result = year+"年上半年";
-		}else if(month=="1"){
+		}else if(month=="01"){
 			years = Integer.valueOf(year)-1;
 			year1 = String.valueOf(years);
 			result = year1+"年下半年";
@@ -2714,24 +2797,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		}
 		return result;
 	}
-	@Override
-	public String getWpkjClass(String date) {
-		List list = new ArrayList<String>();
-		InsertSQLBuilder insert = new InsertSQLBuilder("WN_GYPJ");
-		String result = null;
-		String year = date.substring(0,4);
-		String month = date.substring(5,7);
-		String str = getAnnual(year,month);
-		if(str==null){
-			result = "当前时间不在考核时间范围内！";
-		}
-		try {
-			HashMap<String,String> userMap = dmo.getHashMapBySQLByDS(null, "");
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
-		return null;
-	}
+
 	/**
 	 * ZPY 客户经理等级评定计算(客户经理半年一评级)
 	 * 
@@ -3391,6 +3457,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		return result;
 	}
 
+
 	// 获取到年末时间
 	public String getYearEndDate() {
 		String result = "";
@@ -3446,4 +3513,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		list.add(checkDate);
 		return list;
 	}
+
+	
+	
+
 }

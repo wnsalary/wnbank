@@ -152,14 +152,15 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc{
 	public String getDwzgXwqyRatio(String data);
 	/**
 	 * 
-	 * 柜员绩效工资等级评定
+	 * fj柜员绩效工资等级评定
 	 * @param date
 	 * @return
+	 * @throws Exception 
 	 */
-	public String getGyClass(String date);
+	public String getGyClass(String date) throws Exception;
 	
 	/**
-	 * 委派会计绩效工资等级评定
+	 * fj委派会计绩效工资等级评定
 	 * @param date
 	 * @return
 	 */

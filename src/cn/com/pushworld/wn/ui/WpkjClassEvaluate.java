@@ -25,7 +25,8 @@ public class WpkjClassEvaluate extends AbstractWorkPanel implements ActionListen
 				String str = service.getWpkjClass(date);
 				MessageBox.show(this,str);
 			} catch (Exception e2) {
-				// TODO: handle exception
+				e2.printStackTrace();
+				MessageBox.show("评级失败，请联系管理员");
 			}
 		}
 		
@@ -33,7 +34,7 @@ public class WpkjClassEvaluate extends AbstractWorkPanel implements ActionListen
 
 	@Override
 	public void initialize() {
-		billListPanel = new BillListPanel("");
+		billListPanel = new BillListPanel("V_WN_WPKJ_PJ_CODE1");
 		btn_evaluate = new WLTButton("评级考核");
 		btn_evaluate.addActionListener(this);
 		billListPanel.addBatchBillListButton(new WLTButton[] { btn_evaluate });
