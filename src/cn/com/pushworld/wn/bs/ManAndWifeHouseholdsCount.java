@@ -38,9 +38,9 @@ public class ManAndWifeHouseholdsCount {
 //			InsertSQLBuilder insert=new InsertSQLBuilder("WN_CKYXHSTJ");//记录已计发和未计发的
 			InsertSQLBuilder insert=new InsertSQLBuilder("WN_deposit_number");//记录完成数做完成比用
 			InsertSQLBuilder insertHs=new InsertSQLBuilder("wn_ck_count");//记录户数
-			HashVO [] hsvo=dmo.getHashVoArrayByDS(null,"select * from wm_ck_count where date_time='"+time[1].toString()+"'");
+			HashVO [] hsvo=dmo.getHashVoArrayByDS(null,"select * from wn_ck_count where date_time='"+time[1].toString()+"'");
 			if(hsvo.length>0){
-				dmo.executeUpdateByDS(null,"delete from wm_ck_count where date_time='"+time[1].toString()+"'");
+				dmo.executeUpdateByDS(null,"delete from wn_ck_count where date_time='"+time[1].toString()+"'");
 			}
 			List list=new ArrayList<String>();
 			HashVO [] tjvos=dmo.getHashVoArrayByDS(null,"select * from WN_CKYXHSTJ where E='"+time[1].toString()+"'");
