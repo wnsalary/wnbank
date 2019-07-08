@@ -18,7 +18,7 @@ public class DepositTimingJob implements WLTJobIFC{
 
 	@Override
 	public String run() throws Exception {
-		String inputParam=getKHYCMonth()+";"+getKHYMMonth()+";"+getKHNCYear()+";"+getSYYMMonth()+";"+getMonthCount()+";"+getKHNCMYear();
+		String inputParam=getKHYCMonth()+";"+getKHYMMonth()+";"+getSYYMMonth()+";"+getSYYMMonth()+";"+getMonthCount()+";"+getSYYCMonth();
 		ManAndWifeHouseholdsCount mc=new ManAndWifeHouseholdsCount();
 		mc.getComputeMap(inputParam);
 		AverageDailyManAnd am=new AverageDailyManAnd();
@@ -68,7 +68,7 @@ public class DepositTimingJob implements WLTJobIFC{
 		return dateFormat.format(otherDate)+"-12-31";
 	}
 	/**
-	 * 上月指标考核时间
+	 * 上月月末指标考核时间
 	 * zzl
 	 * @return
 	 */
@@ -77,6 +77,20 @@ public class DepositTimingJob implements WLTJobIFC{
 		cal.setTime(new Date());
 		cal.add(Calendar.MONTH, -2);
 		cal.set(Calendar.DAY_OF_MONTH,cal.getActualMaximum(Calendar.DATE));
+		Date otherDate = cal.getTime();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		return dateFormat.format(otherDate);
+	}
+	/**
+	 * 上月月初指标考核时间
+	 * zzl
+	 * @return
+	 */
+	public String getSYYCMonth(){
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(new Date());
+		cal.add(Calendar.MONTH, -2);
+		cal.set(Calendar.DAY_OF_MONTH,cal.getActualMinimum(Calendar.DATE));
 		Date otherDate = cal.getTime();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		return dateFormat.format(otherDate);
@@ -112,10 +126,10 @@ public class DepositTimingJob implements WLTJobIFC{
 	public static void main(String[] args) {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(new Date());
-		cal.add(Calendar.MONTH, -1);
-		cal.set(Calendar.DAY_OF_MONTH,cal.getActualMaximum(Calendar.DATE));
+		cal.add(Calendar.MONTH, -2);
+		cal.set(Calendar.DAY_OF_MONTH,cal.getActualMinimum(Calendar.DATE));
 		Date otherDate = cal.getTime();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("dd");
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		System.out.println(">>>>>>>>>>>>>"+dateFormat.format(otherDate));
 	}
 
