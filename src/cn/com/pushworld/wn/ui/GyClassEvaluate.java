@@ -34,7 +34,7 @@ public class GyClassEvaluate extends AbstractWorkPanel implements ActionListener
 
 	@Override
 	public void initialize() {
-		billListPanel = new BillListPanel("V_WN_GYPJ_CODE1");
+		billListPanel = new BillListPanel("V_WN_GYPJ_fj_CODE1");
 		btn_evaluation = new WLTButton("ÆÀ¼¶¿¼ºË");
 		btn_evaluation.addActionListener(this);
 		billListPanel.addBatchBillListButton(new WLTButton[] { btn_evaluation });

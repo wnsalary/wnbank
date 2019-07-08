@@ -163,8 +163,9 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc{
 	 * fj委派会计绩效工资等级评定
 	 * @param date
 	 * @return
+	 * @throws Exception 
 	 */
-	public String getWpkjClass(String date);
+	public String getWpkjClass(String date) throws Exception;
 	/**
 	 * 对客户经理进行绩效考核
 	 * @return
