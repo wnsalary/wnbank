@@ -2287,6 +2287,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 						count=0.0;
 					}else{
 						count=Double.parseDouble(map.get(str));
+					}if(rwMap.get(str)=="0"){
+						continue;
 					}
 					insert.putFieldValue("name",str);
 					insert.putFieldValue("passed",count);
@@ -2484,8 +2486,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		String year = date.substring(0,4);
 		String month = date.substring(5,7);
 		String str = getAnnual(year,month);
-		
-			HashVO[] vos = dmo.getHashVoArrayByDS(null,"select * from V_WN_GYPJ where pjtime='"+str+"'");
+		HashVO[] vos = dmo.getHashVoArrayByDS(null,"select * from V_WN_GYPJ where pjtime='"+str+"'");
 			if(vos.length>0){
 			result = "该半年度已考核，请点击查询查看！";
 			}else if(str==null){
@@ -2699,7 +2700,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	private HashMap<String, String> getQxpjzb(String date, String year) {
 		HashMap<String,String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null,"select B ,case when rate>15 then 15 else rate end as rate from (select a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) group by B) a ,(select (sum(d)/5)/102 as c  from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) ) b)");
+			map = dmo.getHashMapBySQLByDS(null,"select B ,case when rate>15 then 15 else rate end as rate from (select a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) a ,(select (sum(d)/5)/102 as c  from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) ) b)");
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -2715,7 +2716,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	private HashMap<String, String> getWdpjzb(String date, String year) {
 		HashMap<String,String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null,"select B,case when rate>15 then 15 else rate end as rate from (select  a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) group by B) a left join (select a.B,b.count as c from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) and year||'-'||month='2019-05') a left join (select a.c,(b.count/a.count)/5 as count from (select c,count(B) as count from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) and year||'-'||month='2019-05' group by c) a left join (select a.c,sum(b.c) as count from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) and year||'-'||month='2019-05') a left join (select B,sum(D) as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=5) group by B) b on a.b=b.b group by a.c) b on a.c=b.c) b on a.c=b.c) b on a.b=b.b)");
+			map = dmo.getHashMapBySQLByDS(null,"select B,case when rate>15 then 15 else rate end as rate from (select  a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) a left join (select a.B,b.count as c from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05') a left join (select a.c,(b.count/a.count)/5 as count from (select c,count(B) as count from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05' group by c) a left join (select a.c,sum(b.c) as count from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05') a left join (select B,sum(D) as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) b on a.b=b.b group by a.c) b on a.c=b.c) b on a.c=b.c) b on a.b=b.b)");
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
