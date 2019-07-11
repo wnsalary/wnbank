@@ -12,19 +12,26 @@ import cn.com.infostrategy.bs.common.WLTJobIFC;
  *
  * 2019-6-20-下午03:37:26
  * 存款的定时任务，由于数据量大，比较耗时。
- * [考核月初日期]+";"+[考核的月末日期]+";"+[年初日期]+";"+[上月指标考核时间]+";"+[本月天数str]+";"+[年初月初日期]
+ * [考核月初日期]+";"+[考核的月末日期]+";"+[上月月初日期]+";"+[上月指月末日期]+";"+[年初月初日期]+";"+[年初月末日期]+";"+[天数]
  */
 public class DepositTimingJob implements WLTJobIFC{
 
 	@Override
 	public String run() throws Exception {
-		String inputParam=getKHYCMonth()+";"+getKHYMMonth()+";"+getSYYMMonth()+";"+getSYYMMonth()+";"+getMonthCount()+";"+getSYYCMonth();
+		String inputParam=getKHYCMonth()+";"+getKHYMMonth()+";"+getSYYCMonth()+";"
+        +getSYYMMonth()+";"+getKHNCMYear()+";"+getKHNCYear()+";"+getMonthCount();		
 		ManAndWifeHouseholdsCount mc=new ManAndWifeHouseholdsCount();
 		mc.getComputeMap(inputParam);
 		AverageDailyManAnd am=new AverageDailyManAnd();
 		am.getComputeMap(inputParam);
 //		System.out.println(">>>>>>>>>>>>>"+inputParam);
 		return "计算成功";
+	}
+	public static void main(String[] args) {
+		DepositTimingJob a=new DepositTimingJob();		
+		String inputParam=a.getKHYCMonth()+";"+a.getKHYMMonth()+";"+a.getSYYCMonth()+";"
+		                 +a.getSYYMMonth()+";"+a.getKHNCMYear()+";"+a.getKHNCYear()+";"+a.getMonthCount();
+		System.out.println(">>>>>>>>>>>>>>"+inputParam);
 	}
 	/**
 	 * 考核月初日期
@@ -122,15 +129,4 @@ public class DepositTimingJob implements WLTJobIFC{
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
 		return dateFormat.format(otherDate)+"-12-01";
 	}
-	
-	public static void main(String[] args) {
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(new Date());
-		cal.add(Calendar.MONTH, -2);
-		cal.set(Calendar.DAY_OF_MONTH,cal.getActualMinimum(Calendar.DATE));
-		Date otherDate = cal.getTime();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		System.out.println(">>>>>>>>>>>>>"+dateFormat.format(otherDate));
-	}
-
 }

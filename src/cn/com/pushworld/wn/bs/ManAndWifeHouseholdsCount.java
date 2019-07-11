@@ -14,10 +14,12 @@ import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
  *
  * 2019-3-25-下午05:23:44
  * 计算有效存款户数
+ *  [考核月初日期]+";"+[考核的月末日期]+";"+[上月月初日期]+";"+[上月指月末日期]+";"+[年初月初日期]+";"+[年初月末日期]+";"+[天数]
  */
 public class ManAndWifeHouseholdsCount {
 	private CommDMO dmo=new CommDMO();
-	private YearManAndWifeHouseholdsCount year=new YearManAndWifeHouseholdsCount();
+	private YearManAndWifeHouseholdsCount year=new YearManAndWifeHouseholdsCount();//年初的户数
+	private MonthManAndWifeHouseholdsCount month=new MonthManAndWifeHouseholdsCount();//上月的户数
 	private HashVO [] vo=null;
 	private String day=null;
 
@@ -29,11 +31,12 @@ public class ManAndWifeHouseholdsCount {
 	public HashMap<String, String> getComputeMap(String date){
 		HashMap<String,String> map=new HashMap<String, String>();
 		String [] time=date.split(";");
-		day=time[4].toString();
+		day=time[6].toString();
 		try {
 			
 			vo=dmo.getHashVoArrayByDS(null,"select code,name from v_sal_personinfo where STATIONKIND in ('乡镇客户经理','城区客户经理','乡镇网点副主任','城区网点副主任','副主任兼职客户经理')");
-			HashMap<String,String> yearmap=year.getYearCount(date, vo);				
+			HashMap<String,String> yearmap=year.getYearCount(date, vo);	//年初的户数
+			HashMap<String,String> monthmap=month.getYearCount(date, vo);	//上月的户数
 //			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_RJ_CKYXHSTJ");
 //			InsertSQLBuilder insert=new InsertSQLBuilder("WN_CKYXHSTJ");//记录已计发和未计发的
 			InsertSQLBuilder insert=new InsertSQLBuilder("WN_deposit_number");//记录完成数做完成比用
@@ -56,7 +59,7 @@ public class ManAndWifeHouseholdsCount {
 				dmo.executeUpdateByDS(null,"delete from wn_deposit_detail where date_time='"+date+"'");
 			}
 			//得到客户经理的任务数
-			HashMap<String,String> rwMap=dmo.getHashMapBySQLByDS(null, "select A,sum(B) from EXCEL_TAB_53 where year||'-'||month='"+time[1].toString().substring(0,7)+"' group by A");
+			HashMap<String,String> rwMap=dmo.getHashMapBySQLByDS(null, "select A,sum(B) from EXCEL_TAB_53 where year='"+time[1].toString().substring(0,4)+"' group by A");
 			//已计发jfmap
 			HashMap<String, String> jfmap=dmo.getHashMapBySQLByDS(null,"select B,sum(C) C from WN_CKYXHSTJ  group by B");
 			//未计发
@@ -65,16 +68,16 @@ public class ManAndWifeHouseholdsCount {
 			map=getCount(date);
 			for(int i=0;i<vo.length;i++){
 //				String id=dmo.getSequenceNextValByDS(null,"S_WN_CKYXHSTJ");
-				int a,b=0;
+				int a,b,c=0;//a==考核月户数  b===上月户数  c===年初户数
 				if(countMap.get(vo[i].getStringValue("name"))==null){
 					a=0;
 				}else{
 					a=Integer.parseInt(countMap.get(vo[i].getStringValue("name")));
 				}
-				if(yearmap.get(vo[i].getStringValue("name"))==null){
+				if(monthmap.get(vo[i].getStringValue("name"))==null){
 					b=0;
 				}else{
-					b=Integer.parseInt(yearmap.get(vo[i].getStringValue("name")).toString());
+					b=Integer.parseInt(monthmap.get(vo[i].getStringValue("name")).toString());
 				}
 				if((a-b)>80){
 					map.put(vo[i].getStringValue("name"), "80");
@@ -83,8 +86,13 @@ public class ManAndWifeHouseholdsCount {
 				}else{
 					map.put(vo[i].getStringValue("name"), String.valueOf(a-b));
 				}
+				if(yearmap.get(vo[i].getStringValue("name"))==null){
+					c=0;
+				}else{
+					c=Integer.parseInt(yearmap.get(vo[i].getStringValue("name")).toString());
+				}
 				insert.putFieldValue("name",vo[i].getStringValue("name"));
-				insert.putFieldValue("passed",a);
+				insert.putFieldValue("passed",a-c);
 				insert.putFieldValue("task",rwMap.get(vo[i].getStringValue("name")));
 				insert.putFieldValue("date_time",time[1].toString());
 				list.add(insert.getSQL());

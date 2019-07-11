@@ -7,7 +7,7 @@ import cn.com.infostrategy.ui.mdata.BillListPanel;
  * 
  * @author zzl
  *
- * 2019-5-27-下午04:34:42
+ * 2019-5-27-下午04:34:42WNSALARYDB
  * 存款余额新增完成比
  */
 public class BepositBalanceWKPanel extends AbstractWorkPanel{

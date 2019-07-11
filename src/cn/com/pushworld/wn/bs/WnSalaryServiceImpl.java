@@ -488,41 +488,40 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	}
 
 	public static void main(String[] args) {
-//		Date date = new Date();
-//		Calendar scal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
-//		scal.setTime(date);
-//		scal.add(Calendar.MONTH, -2);//取当前日期的后一天. 
-//		scal.set(Calendar.DAY_OF_MONTH,scal.getActualMaximum(Calendar.DATE));
-//		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-//		String smonth = df.format(scal.getTime());//上月的月数
-//		Calendar cal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
-//		cal.setTime(date);
-//		cal.add(Calendar.MONTH, -1);//取当前日期的后一天. 
-//		cal.set(Calendar.DAY_OF_MONTH,cal.getActualMaximum(Calendar.DATE));
-//		String kmonth = df.format(cal.getTime());//考核月的月数
-//		System.out.println(">>>>>smonth>>>>>>>>>."+smonth+">>>>kmonth>>>>>>"+kmonth);
-		// /* 写入Txt文件 */
-		try{
-			Date date = new Date();
-			SimpleDateFormat dfMonth = new SimpleDateFormat("yyyyMM");
-			SimpleDateFormat dfDay = new SimpleDateFormat("yyyyMMdd");
-//			String filePath = System.getProperty("WLTUPLOADFILEDIR");
-//			filePath=filePath+"\\"+dfMonth+"\\"+dfDay;
-			File writepath = new File("C:\\Users\\longlonggo521\\Desktop\\"+dfMonth.format(date).toString()+"\\"+dfDay.format(date).toString()); // 相对路径，如果没有则要建立一个新的output。txt文件
-			if(!writepath.exists()){
-				writepath.mkdirs();
-				}
-			File writename = new File("C:\\Users\\longlonggo521\\Desktop\\"+dfMonth.format(date).toString()+"\\"+dfDay.format(date).toString()+"\\niubi.txt"); // 相对路径，如果没有则要建立一个新的output。txt文件
-			if(!writename.exists()){
-				writename.createNewFile(); // 创建新文件
-			}
-			BufferedWriter out = new BufferedWriter(new FileWriter(writename,true));
-			out.write("好好学习"); // \r\n即为换行
-			out.flush(); // 把缓存区内容压入文件
-			out.close(); // 最后记得关闭文件 
-		}catch (Exception  e){
+		Calendar cal = Calendar.getInstance();
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
+		try {
+			cal.setTime(format.parse("2019-07-11"));
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		cal.add(Calendar.YEAR, -1);
+		Date otherDate = cal.getTime();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
+		System.out.println(">>>>>>.>"+dateFormat.format(otherDate)+"-12-31");
+		// /* 写入Txt文件 */
+//		try{
+//			Date date = new Date();
+//			SimpleDateFormat dfMonth = new SimpleDateFormat("yyyyMM");
+//			SimpleDateFormat dfDay = new SimpleDateFormat("yyyyMMdd");
+//			String filePath = System.getProperty("WLTUPLOADFILEDIR");
+//			filePath=filePath+"\\"+dfMonth+"\\"+dfDay;
+//			File writepath = new File("C:\\Users\\longlonggo521\\Desktop\\"+dfMonth.format(date).toString()+"\\"+dfDay.format(date).toString()); // 相对路径，如果没有则要建立一个新的output。txt文件
+//			if(!writepath.exists()){
+//				writepath.mkdirs();
+//				}
+//			File writename = new File("C:\\Users\\longlonggo521\\Desktop\\"+dfMonth.format(date).toString()+"\\"+dfDay.format(date).toString()+"\\niubi.txt"); // 相对路径，如果没有则要建立一个新的output。txt文件
+//			if(!writename.exists()){
+//				writename.createNewFile(); // 创建新文件
+//			}
+//			BufferedWriter out = new BufferedWriter(new FileWriter(writename,true));
+//			out.write("好好学习"); // \r\n即为换行
+//			out.flush(); // 把缓存区内容压入文件
+//			out.close(); // 最后记得关闭文件 
+//		}catch (Exception  e){
+//			e.printStackTrace();
+//		}
 	}
 /**
  * zzl
@@ -570,6 +569,26 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		Date otherDate = cal.getTime();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		return dateFormat.format(otherDate);
+	}
+	/**
+	 * zzl
+	 * @param date
+	 * @return 返回年初年末时间
+	 */
+	public String getYearDate(String date) {
+		Calendar cal = Calendar.getInstance();
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
+		try {
+			cal.setTime(format.parse(date));
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		cal.add(Calendar.YEAR, -1);
+		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DATE));
+		Date otherDate = cal.getTime();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
+		return dateFormat.format(otherDate)+"-12-31";
 	}
 
 	/**
@@ -914,7 +933,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			//得到客户经理的Map
 			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
 			//得到客户经理的任务数
-			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(D) from EXCEL_TAB_53 where year||'-'||month='" + date.substring(0, 7) + "' group by A");
+			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(D) from EXCEL_TAB_53 where year='" + date.substring(0, 4) + "' group by A");
 			if (rwMap.size() == 0) {
 				return "当前时间【" + date + "】没有上传任务数";
 			}
@@ -1392,7 +1411,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			//得到客户经理的Map
 			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
 			//得到客户经理的任务数
-			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(E) from EXCEL_TAB_53 where year||'-'||month='" + date.substring(0, 7) + "' group by A");
+			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(E) from EXCEL_TAB_53 where year='" + date.substring(0, 4) + "' group by A");
 			if (rwMap.size() == 0) {
 				return "当前时间【" + date + "】没有上传任务数";
 			}
@@ -1404,7 +1423,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			HashMap<String, String> YEKDKNHMap = getKDKNHSalesOffice(date);
 			HashMap<String, String> YESDKNHMap = getSDKNHSalesOffice(date);
 			HashMap<String, String> YEKDKQTMap = getKDKQTSalesOffice(date);
-			HashMap<String, String> YESDKQTMap = getKDKQTSalesOffice(date);
+			HashMap<String, String> YESDKQTMap = getSDKQTSalesOffice(date);
 			HashMap<String, String> YEKDKDGMap = getKDKDGSalesOffice(date);
 			HashMap<String, String> YESDKDGMap = getSDKDGSalesOffice(date);
 			HashMap<String, String> KCQNHMap = getKDKCQNHSalesOffice(date);
@@ -1551,13 +1570,13 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	/**
 	 * zzl
-	 * 营业部上月贷款余额-农户Map
+	 * 营业部年初贷款余额-农户Map
 	 * @return
 	 */
 	public HashMap<String, String> getSDKNHSalesOffice(String date) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,sum(aa.xd_col7)/10000 xd_col7 from (select xd_col81,sum(xd_col7) as xd_col7,sum(xd_col6) xd_col6  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getSMonthDate(date)
+			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,sum(aa.xd_col7)/10000 xd_col7 from (select xd_col81,sum(xd_col7) as xd_col7,sum(xd_col6) xd_col6  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getYearDate(date)
 					+ "'  and xd_col2 not like '公司' and XD_COL22<>'05' and XD_COL166 not in('81320101')  and XD_COL7<>0  and xd_col72 in('16','24','15','25','30','z01','38','45','46','47','48') group by XD_COL14,xd_col81) aa left join wnbank.s_loan_ryb bb on aa.xd_col81=bb.xd_col1 where aa.xd_col6<5000000 group by bb.xd_col2");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -1585,13 +1604,13 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	/**
 	 * zzl
-	 * 营业部上月贷款余额-其他Map
+	 * 营业部年初贷款余额-其他Map
 	 * @return
 	 */
 	public HashMap<String, String> getSDKQTSalesOffice(String date) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,sum(aa.xd_col7)/10000 xd_col7 from (select xd_col81,sum(xd_col7) as xd_col7,sum(xd_col6) xd_col6  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getSMonthDate(date)
+			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,sum(aa.xd_col7)/10000 xd_col7 from (select xd_col81,sum(xd_col7) as xd_col7,sum(xd_col6) xd_col6  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getYearDate(date)
 					+ "'  and xd_col2 not like '公司' and XD_COL22<>'05' and XD_COL166 not in('81320101')  and XD_COL7<>0 and xd_col72 not in('16','24','15','25','30','z01','38','45','46','47','48') group by XD_COL14,xd_col81) aa left join wnbank.s_loan_ryb bb on aa.xd_col81=bb.xd_col1 where aa.xd_col6<5000000 group by bb.xd_col2");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -1619,13 +1638,13 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	/**
 	 * zzl
-	 * 营业部上月对公贷款余额Map
+	 * 营业部年初对公贷款余额Map
 	 * @return
 	 */
 	public HashMap<String, String> getSDKDGSalesOffice(String date) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null, "select dg.cus_manager cus_manager,sum(LOAN_BALANCE)/10000 tj from (select dg.cus_manager cus_manager,sum(LOAN_AMOUNT) tj,sum(LOAN_BALANCE) LOAN_BALANCE  from wnbank.s_cmis_acc_loan dg where to_char(to_date(dg.load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getSMonthDate(date)
+			map = dmo.getHashMapBySQLByDS(null, "select dg.cus_manager cus_manager,sum(LOAN_BALANCE)/10000 tj from (select dg.cus_manager cus_manager,sum(LOAN_AMOUNT) tj,sum(LOAN_BALANCE) LOAN_BALANCE  from wnbank.s_cmis_acc_loan dg where to_char(to_date(dg.load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getYearDate(date)
 					+ "' and dg.cla<>'05' and account_status='1' and loan_balance<>'0' group by CUS_ID,dg.cus_manager) dg where dg.tj<10000000 group by dg.cus_manager");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -1653,13 +1672,13 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	/**
 	 * zzl
-	 * 城区网点上月农户贷款余额新增Map
+	 * 城区网点年初农户贷款余额新增Map
 	 * @return
 	 */
 	public HashMap<String, String> getSDKCQNHSalesOffice(String date) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,sum(aa.xd_col7)/10000 xd_col7 from (select xd_col81,sum(xd_col7) as xd_col7,sum(xd_col6) xd_col6  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getSMonthDate(date)
+			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,sum(aa.xd_col7)/10000 xd_col7 from (select xd_col81,sum(xd_col7) as xd_col7,sum(xd_col6) xd_col6  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getYearDate(date)
 					+ "' and xd_col72 in ('16','24','15','25','30','z01','38','45','46','47','48') and XD_COL22<>'05' and XD_COL166 not in('81320101') and XD_COL7<>0 and xd_col2 not like '%公司%' group by XD_COL14,xd_col81) aa left join wnbank.s_loan_ryb bb on aa.xd_col81=bb.xd_col1 and aa.xd_col6<1000000 group by bb.xd_col2");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -1687,13 +1706,13 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	/**
 	 * zzl
-	 * 城区网点上月其他贷款余额新增Map
+	 * 城区网点年初其他贷款余额新增Map
 	 * @return
 	 */
 	public HashMap<String, String> getSDKCQQTSalesOffice(String date) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,sum(aa.xd_col7)/10000 xd_col7 from (select xd_col81,sum(xd_col6) as xd_col6,sum(xd_col7) xd_col7  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getSMonthDate(date)
+			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,sum(aa.xd_col7)/10000 xd_col7 from (select xd_col81,sum(xd_col6) as xd_col6,sum(xd_col7) xd_col7  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getYearDate(date)
 					+ "' and xd_col72 not in ('16','24','15','25','30','z01','38','45','46','47','48') and XD_COL22<>'05' and XD_COL166 not in('81320101') and XD_COL7<>0 and xd_col2 not like '%公司%' group by XD_COL14,xd_col81 ) aa left join wnbank.s_loan_ryb bb on aa.xd_col81=bb.xd_col1 and aa.xd_col6<1000000 group by bb.xd_col2");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -1721,13 +1740,13 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	/**
 	 * zzl
-	 * 对公贷款余额100万以下Map
+	 * 对公贷款年初余额100万以下Map
 	 * @return
 	 */
 	public HashMap<String, String> getSDKDG100SalesOffice(String date) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null, "select dg.cus_manager cus_manager,sum(LOAN_BALANCE)/10000 tj from (select dg.cus_manager cus_manager,sum(LOAN_AMOUNT) tj,sum(LOAN_BALANCE) LOAN_BALANCE  from wnbank.s_cmis_acc_loan dg where to_char(to_date(dg.load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getSMonthDate(date)
+			map = dmo.getHashMapBySQLByDS(null, "select dg.cus_manager cus_manager,sum(LOAN_BALANCE)/10000 tj from (select dg.cus_manager cus_manager,sum(LOAN_AMOUNT) tj,sum(LOAN_BALANCE) LOAN_BALANCE  from wnbank.s_cmis_acc_loan dg where to_char(to_date(dg.load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getYearDate(date)
 					+ "' and dg.cla<>'05' and account_status='1' and loan_balance<>'0' group by CUS_ID,dg.cus_manager) dg where dg.tj<1000000 group by dg.cus_manager");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -1755,13 +1774,13 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	/**
 	 * zzl
-	 * 上月贷款余额-农户Map
+	 * 年初贷款余额-农户Map
 	 * @return
 	 */
 	public HashMap<String, String> getSDKNHSales(String date) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,aa.xd_col7 xd_col7 from (select xd_col81,sum(xd_col7)/10000 as xd_col7,sum(xd_col6)/10000 xd_col6  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getSMonthDate(date)
+			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,aa.xd_col7 xd_col7 from (select xd_col81,sum(xd_col7)/10000 as xd_col7,sum(xd_col6)/10000 xd_col6  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getYearDate(date)
 					+ "' and xd_col72 in ('16','24','15','25','30','z01','38','45','46','47','48') and XD_COL22<>'05' and XD_COL166 not in('81320101')  and XD_COL7<>0 and xd_col2 not like '%公司%' group by xd_col81) aa left join wnbank.s_loan_ryb bb on aa.xd_col81=bb.xd_col1");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -1789,13 +1808,13 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	/**
 	 * zzl
-	 * 上月贷款余额-其他Map
+	 * 年初贷款余额-其他Map
 	 * @return
 	 */
 	public HashMap<String, String> getSDKQTSales(String date) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,aa.xd_col7 xd_col7 from (select xd_col81,sum(xd_col7)/10000 as xd_col7  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getSMonthDate(date)
+			map = dmo.getHashMapBySQLByDS(null, "select bb.xd_col2 as xd_col2 ,aa.xd_col7 xd_col7 from (select xd_col81,sum(xd_col7)/10000 as xd_col7  from wnbank.s_loan_dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getYearDate(date)
 					+ "' and xd_col72 not in ('16','24','15','25','30','z01','38','45','46','47','48') and XD_COL22<>'05' and XD_COL166 not in('81320101')  and XD_COL7<>0 and xd_col2 not like '%公司%' group by xd_col81) aa left join wnbank.s_loan_ryb bb on aa.xd_col81=bb.xd_col1");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -1817,7 +1836,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			//得到客户经理的Map
 			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
 			//得到客户经理的任务数
-			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(F) from EXCEL_TAB_53 where year||'-'||month='" + date.substring(0, 7) + "' group by A");
+			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(F) from EXCEL_TAB_53 where year='" + date.substring(0, 4) + "' group by A");
 			if (rwMap.size() == 0) {
 				return "当前时间【" + date + "】没有上传任务数";
 			}
@@ -1898,7 +1917,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	/**
 	 * zzl
-	 * 上月贷款户数-农户Map
+	 * 年初贷款户数-农户Map
 	 * @return
 	 */
 	public HashMap<String, String> getSDKNHNewly(String date) {
@@ -1908,7 +1927,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					.getHashMapBySQLByDS(
 							null,
 							"select rr.xd_col2 xd_col2,dgxj.countxj countxj from (select dg.xd_col81 xd_col81,count(dg.xd_col81) countxj from( select distinct(xd_col16) xd_col16,xd_col81 xd_col81 from wnbank.s_loan_dk dk where xd_col7<>0 and xd_col22<>'05' and xd_col2 not like '%公司%' and xd_col166<>'81320101' and xd_col72 in('16','24','15','25','30','z01','38','45','46','47','48') and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
-									+ getSMonthDate(date) + "') dg group by dg.xd_col81) dgxj left join wnbank.s_loan_ryb rr on dgxj.xd_col81=rr.xd_col1");
+									+ getYearDate(date)+ "') dg group by dg.xd_col81) dgxj left join wnbank.s_loan_ryb rr on dgxj.xd_col81=rr.xd_col1");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1938,7 +1957,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	/**
 	 * zzl
-	 * 上月月贷款户数-其他Map
+	 * 年初贷款户数-其他Map
 	 * @return
 	 */
 	public HashMap<String, String> getSDKQTNewly(String date) {
@@ -1948,7 +1967,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					.getHashMapBySQLByDS(
 							null,
 							"select rr.xd_col2 xd_col2,dgxj.countxj countxj from (select dg.xd_col81 xd_col81,count(dg.xd_col81) countxj from( select distinct(xd_col16) xd_col16,xd_col81 xd_col81 from wnbank.s_loan_dk dk where xd_col7<>0 and xd_col22<>'05' and xd_col2 not like '%公司%' and xd_col166<>'81320101' and xd_col72 not in('16','24','15','25','30','z01','38','45','46','47','48') and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
-									+ getSMonthDate(date) + "') dg group by dg.xd_col81) dgxj left join wnbank.s_loan_ryb rr on dgxj.xd_col81=rr.xd_col1");
+									+ getYearDate(date) + "') dg group by dg.xd_col81) dgxj left join wnbank.s_loan_ryb rr on dgxj.xd_col81=rr.xd_col1");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1975,13 +1994,13 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	/**
 	 * zzl
-	 * 上月贷款户数-企业Map
+	 * 年初贷款户数-企业Map
 	 * @return
 	 */
 	public HashMap<String, String> getSDKDGNewly(String date) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null, "select dg.cus_manager cus_manager,count(dg.cus_manager) countxj from (select distinct(xx.cert_code),dg.cus_manager  from wnbank.s_cmis_acc_loan dg left join wnbank.s_cmis_cus_base xx on dg.cus_id=xx.cus_id  where to_char(to_date(dg.load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getSMonthDate(date)
+			map = dmo.getHashMapBySQLByDS(null, "select dg.cus_manager cus_manager,count(dg.cus_manager) countxj from (select distinct(xx.cert_code),dg.cus_manager  from wnbank.s_cmis_acc_loan dg left join wnbank.s_cmis_cus_base xx on dg.cus_id=xx.cus_id  where to_char(to_date(dg.load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + getYearDate(date)
 					+ "'and dg.cla<>'05' and account_status='1' and loan_balance<>'0')dg group by dg.cus_manager");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -2004,7 +2023,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			//得到客户经理的Map
 			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
 			//得到客户经理的任务数
-			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(K) from EXCEL_TAB_53 where year||'-'||month='" + date.substring(0, 7) + "' group by A");
+			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(K) from EXCEL_TAB_53 where year='" + date.substring(0, 4) + "' group by A");
 			if (rwMap.size() == 0) {
 				return "当前时间【" + date + "】没有上传任务数";
 			}
@@ -2108,7 +2127,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			//得到客户经理的Map
 			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
 			//得到客户经理的任务数
-			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(G) from EXCEL_TAB_53 where year||'-'||month='" + date.substring(0, 7) + "' group by A");
+			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(G) from EXCEL_TAB_53 where year='" + date.substring(0, 4) + "' group by A");
 			if (rwMap.size() == 0) {
 				return "当前时间【" + date + "】没有上传任务数";
 			}
@@ -2163,7 +2182,6 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	public String getKJDXScore(String id) {
 		String result = "";
 		try {
-//<<<<<<< HEAD
 //			// 查询所有未结束评分的客户经理
 //			HashVO[] vos = dmo.getHashVoArrayByDS(null,
 //					"select * from wn_managerdx_table where  state='评分中'");
@@ -2204,7 +2222,6 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 //				}
 //				dmo.executeBatchByDS(null, _sqllist);
 //				result = "当前考核计划结束成功";
-//=======
 			//首先，获取到需要参与考核的委派会计信息
 			HashVO[] kjVos = dmo.getHashVoArrayByDS(null, "SELECT * FROM V_PUB_USER_POST_1 WHERE POSTNAME='委派会计'");
 			//获取到委派会计的打分项

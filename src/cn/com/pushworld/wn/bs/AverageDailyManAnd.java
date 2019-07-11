@@ -18,7 +18,8 @@ import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
 public class AverageDailyManAnd {
 	private CommDMO dmo=new CommDMO();
 	private HashVO [] vo=null;
-	private YearAverageDailyManAnd year=new YearAverageDailyManAnd();
+	private YearAverageDailyManAnd year=new YearAverageDailyManAnd();//年初的余额
+	private MonthAverageDailyManAnd month=new MonthAverageDailyManAnd();//上月的余额
 	private String day=null;
 	/**
 	 * 计算和比较有效存款余额
@@ -28,17 +29,18 @@ public class AverageDailyManAnd {
 	public HashMap<String, String> getComputeMap(String date){
 		HashMap<String,String> map=new HashMap<String, String>();
 		String [] time=date.split(";");
-		day=time[4].toString();
+		day=time[6].toString();
 		try {
 			vo=dmo.getHashVoArrayByDS(null,"select code,name from v_sal_personinfo where STATIONKIND in ('乡镇客户经理','城区客户经理','乡镇网点副主任','城区网点副主任')");
 			HashMap<String,String> yearmap=year.getYearCount(date, vo);
+			HashMap<String,String> monthmap=month.getYearCount(date, vo);
 			InsertSQLBuilder insert=new InsertSQLBuilder("WN_RJ_CKYXHSTJ");
 			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_RJ_CKYXHSTJ");
 			InsertSQLBuilder insertB=new InsertSQLBuilder("WN_deposit_balance");//记录完成数做完成比用
 			InsertSQLBuilder insertYe=new InsertSQLBuilder("wn_ck_balance");//记录存款余额
 			HashVO [] hsvo=dmo.getHashVoArrayByDS(null,"select * from wn_ck_balance where date_time='"+time[1].toString()+"'");
 			if(hsvo.length>0){
-				dmo.executeUpdateByDS(null,"delete from wm_ck_balance where E='"+time[1].toString()+"'");
+				dmo.executeUpdateByDS(null,"delete from wn_ck_balance where E='"+time[1].toString()+"'");
 			}
 			List list=new ArrayList<String>();
 			HashMap <String,String> countMap=getCount(date);
@@ -52,23 +54,28 @@ public class AverageDailyManAnd {
 				dmo.executeUpdateByDS(null,"delete from WN_deposit_balance where date_time='"+time[1].toString()+"'");
 			}
 			//得到客户经理的任务数
-			HashMap<String,String> rwMap=dmo.getHashMapBySQLByDS(null, "select A,sum(B) from EXCEL_TAB_53 where year||'-'||month='"+time[1].toString().substring(0,7)+"' group by A");
+			HashMap<String,String> rwMap=dmo.getHashMapBySQLByDS(null, "select A,sum(C) from EXCEL_TAB_53 where year='"+time[1].toString().substring(0,4)+"' group by A");
 			//已计发jfmap
 			HashMap<String, String> jfmap=dmo.getHashMapBySQLByDS(null,"select B,sum(C) C from WN_RJ_CKYXHSTJ  group by B");
 			//未计发
 			HashMap<String, String> Wjfmap=dmo.getHashMapBySQLByDS(null,"select B,sum(D) D from WN_RJ_CKYXHSTJ group by B");
 			for(int i=0;i<vo.length;i++){
 				String id=dmo.getSequenceNextValByDS(null,"S_WN_RJ_CKYXHSTJ");
-				Double a,b=0.0;
+				Double a,b,c=0.0;
 				if(countMap.get(vo[i].getStringValue("name").trim())==null){
 					a=0.0;
 				}else{
 					a=Double.parseDouble(countMap.get(vo[i].getStringValue("name").trim()))/10000;
 				}
-				if(yearmap.get(vo[i].getStringValue("name").trim())==null){
+				if(monthmap.get(vo[i].getStringValue("name").trim())==null){
 					b=0.0;
 				}else{
-					b=Double.parseDouble(yearmap.get(vo[i].getStringValue("name").trim()).toString())/10000;
+					b=Double.parseDouble(monthmap.get(vo[i].getStringValue("name").trim()).toString())/10000;
+				}
+				if(yearmap.get(vo[i].getStringValue("name").trim())==null){
+					c=0.0;
+				}else{
+					c=Double.parseDouble(yearmap.get(vo[i].getStringValue("name").trim()).toString())/10000;
 				}
 				insert.putFieldValue("id",id);
 				insert.putFieldValue("A",vo[i].getStringValue("code"));
@@ -114,7 +121,7 @@ public class AverageDailyManAnd {
 				
 				list.add(insert.getSQL());
 				insertB.putFieldValue("name",vo[i].getStringValue("name"));
-				insertB.putFieldValue("passed",a-b);
+				insertB.putFieldValue("passed",a-c);
 				insertB.putFieldValue("task",rwMap.get(vo[i].getStringValue("name")));
 				insertB.putFieldValue("date_time",time[1].toString());
 				list.add(insertB.getSQL());
