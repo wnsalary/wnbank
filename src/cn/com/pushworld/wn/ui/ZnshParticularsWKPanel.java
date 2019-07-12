@@ -54,7 +54,6 @@ public class ZnshParticularsWKPanel  extends AbstractWorkPanel implements BillLi
 					String date_time=list.getQuickQueryPanel().getCompentRealValue("DATE_TIME");
 					date_time=date_time.substring(0,date_time.length()-1);
 					date_time=date_time.replace("年", "-").replace("月", "");
-					System.out.println("当前查询时间:"+date_time);
 					String str=service.getZNRate(date_time);
 					list.QueryData(list.getQuickQueryPanel().getQuerySQL());
 					MessageBox.show(this,str);

@@ -23,8 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import org.apache.log4j.Logger;
-
-
 public class ImportOneDayDate {
 	private static Logger log = Logger.getLogger(ImportOneDayDate.class);
 	private static Map<String, String> maxMap = new HashMap<String, String>();

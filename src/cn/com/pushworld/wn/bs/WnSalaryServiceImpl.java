@@ -21,6 +21,7 @@ import cn.com.infostrategy.to.common.HashVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
 import cn.com.infostrategy.ui.common.UIUtil;
+import cn.com.pushworld.wn.to.WnUtils;
 import cn.com.pushworld.wn.ui.WnSalaryServiceIfc;
 
 public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
@@ -140,7 +141,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		String str = null;
 		try {
 			InsertSQLBuilder insert = new InsertSQLBuilder("wn_BMPF_table");
-			HashVO[] vos = dmo.getHashVoArrayByDS(null, "select * from sal_target_list where type='部门定性指标'");
+			HashVO[] vos = dmo.getHashVoArrayByDS(null, "select * from sal_target_list where type='部门定性指标' AND (name LIKE '文明客户服务部%' OR name LIKE '党建工作%' OR name LIKE '内控合规%' OR name LIKE '安全保卫%')");
 			HashMap deptMap = getdeptName();
 			InsertSQLBuilder insertSQLBuilder = new InsertSQLBuilder("wn_BMPF_table");
 			List<String> list = new ArrayList<String>();
@@ -837,7 +838,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					String weight = vos[j].getStringValue("WEIGHTS");//获取到指标的考核权重
 					String khsm = vos[j].getStringValue("name");
 					String xiangmu = vos[j].getStringValue("CATALOG");
-					double koufen = 0.0;
+					double koufen = 100.0;
 					insert.putFieldValue("planid", id);
 					insert.putFieldValue("username", username);
 					insert.putFieldValue("usercode", usercode);
@@ -886,20 +887,25 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			HashVO[] vos = dmo.getHashVoArrayByDS(null, "select * from wn_managerdx_table where  state='评分中'");
 			if (vos.length <= 0) {
 				result = "当前考核计划结束成功";
-			} else {//尚未结束的考核人员,直接将考核人员的分数设置成0分
+			} else {//客户要求，当主任未完成对客户经理的考核时，保留对客户经理的评分
 				UpdateSQLBuilder update = new UpdateSQLBuilder("wn_managerdx_table");
 				List<String> _sqllist = new ArrayList<String>();
 				Map<String, Double> map=new HashMap<String, Double>();
 				for (int i = 0; i < vos.length; i++) {
 					String xiangmu = vos[i].getStringValue("xiangmu");
-					//					if("总分".equals(xiangmu)){continue;}
 					String fenzhi = vos[i].getStringValue("fenzhi");
 					String khsm = vos[i].getStringValue("khsm");
 					String usercode = vos[i].getStringValue("usercode");
 					String koufen=vos[i].getStringValue("koufen");
-					if(koufen==null || "".isEmpty() || Double.parseDouble(fenzhi)<Double.parseDouble(koufen)){
+//					if(koufen==null || "".isEmpty() || Double.parseDouble(fenzhi)<Double.parseDouble(koufen)){
+//						koufen=fenzhi;
+//					}
+					if(koufen==null || koufen.isEmpty()){
+						koufen="0.0";
+					}else  if(Double.parseDouble(fenzhi)<Double.parseDouble(koufen)){
 						koufen=fenzhi;
 					}
+					//计算每一位客户经理的总分
 					if(!map.containsKey(usercode)){
 						map.put(usercode, Double.parseDouble(koufen));
 					}else{
@@ -1084,33 +1090,37 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		}
 		return map;
 	}
-
+    /**
+     * ZPY
+     * 黔农E贷签约完成比计算
+     */
 	@Override
 	public String getQnedRate(String date_time) {
 		try {
-			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(P) from EXCEL_TAB_53 where year||'年'||month||'月'='" + date_time + "' group by A");
+			date_time = date_time.replace("年", "-").replace("月", "");
+			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(P) from EXCEL_TAB_53 where year='" + date_time.substring(0,4) + "' group by A");
 			if (rwMap.size() <= 0) {
 				return "当月【" + date_time + "】中没有数据,请更换查询时间";
 			}
 			//黔农E贷线上替代
 			InsertSQLBuilder insert = new InsertSQLBuilder("wn_qned_result");
-			date_time = date_time.replace("年", "-").replace("月", "");
-			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
-			HashMap<String, String> jlMap = dmo.getHashMapBySQLByDS(null, "SELECT E,COUNT(E) FROM V_qnedqy_zpy where date_time='" + date_time + "' GROUP BY E");
+			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,deptname from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
+			HashMap<String, String> jlMap = dmo.getHashMapBySQLByDS(null, "select aa.e name,count(aa.e) num from (select distinct(a) a,e  from wnsalarydb.excel_tab_1 where year='"+date_time.substring(0,4)+"') aa group by aa.e");
 			Set<String> keys = userMap.keySet();
 			List<String> sqllist = new ArrayList<String>();
-			DecimalFormat format = new DecimalFormat("#00.00");
+			DecimalFormat format = new DecimalFormat("#.000");
 			for (String key : keys) {
 				insert.putFieldValue("username", key);
 				insert.putFieldValue("date_time", getLastMonth(date_time) );
+				insert.putFieldValue("deptname", userMap.get(key));
 				double task = Double.parseDouble(rwMap.get(key) == null ? "0" : rwMap.get(key));
 				double passed = Double.parseDouble(jlMap.get(key) == null ? "0" : jlMap.get(key));
 				insert.putFieldValue("passed", passed);
 				insert.putFieldValue("task", task);
 				if (task == 0 || passed == 0) {
-					insert.putFieldValue("rate", "00.00");
+					insert.putFieldValue("rate", "0");
 				} else {
-					insert.putFieldValue("rate", format.format(passed / task * 100));
+					insert.putFieldValue("rate", format.format(passed/task));
 				}
 				sqllist.add(insert.getSQL());
 			}
@@ -1122,67 +1132,48 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	}
 
 	/**
+	 * ZPY
+	 * 黔农E贷线上替代完成比
 	 * date_time:2019-01-01
 	 */
 	@Override
 	public String getQnedtdRate(String date_time) {
 		String result = "";
 		try {
-			System.out.println("黔农E贷线上替代查询时间:" + date_time);
 			//对查询日期进行处理
-			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(Q) from EXCEL_TAB_53 where year||'-'||month='" + date_time + "'  group by A");
+			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(Q) from EXCEL_TAB_53 where year='" + date_time.substring(0,4) + "'  group by A");
 			if (rwMap.size() <= 0) {
 				return "当前考核月【" + date_time + "】缺少业务数据,请更换日期进行查询";
 			}
-			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
+			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,deptname from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
 			Set<String> keys = userMap.keySet();
 			String lastMonth = getSMonthDate(date_time);
+			String yearC = getYearC(date_time);
 			HashMap<String, String> currMonthData = dmo.getHashMapBySQLByDS(null, "SELECT a.mname mname, count(a.CARDNO) CARDNO   FROM (SELECT DISTINCT(CARDNO) CARDNO,MNAME FROM wn_qnedtd WHERE  date_time  LIKE '" + date_time + "%') a GROUP BY  a.mname");//当前考核月所做的绩效
-			HashMap<String, String> lastMonthData = dmo.getHashMapBySQLByDS(null, "SELECT a.mname mname, count(a.CARDNO) CARDNO   FROM (SELECT DISTINCT(CARDNO) CARDNO,MNAME FROM wn_qnedtd WHERE  date_time  LIKE '" + lastMonth + "%') a GROUP BY  a.mname");//上一个月所做的绩效
+			HashMap<String, String> lastMonthData = dmo.getHashMapBySQLByDS(null, "SELECT a.mname mname, count(a.CARDNO) CARDNO   FROM (SELECT DISTINCT(CARDNO) CARDNO,MNAME FROM wn_qnedtd WHERE  date_time  = '" + yearC + "') a GROUP BY  a.mname");//年初
 			InsertSQLBuilder insert = new InsertSQLBuilder("wn_qnedtd_result");
-			DecimalFormat format = new DecimalFormat("00.00");
+			DecimalFormat format = new DecimalFormat("#.000");
 			List<String> sqllist = new ArrayList<String>();
 			for (String key : keys) {
 				insert.putFieldValue("username", key);
+				insert.putFieldValue("deptname", userMap.get(key));
 				double task = Double.parseDouble(rwMap.get(key) == null ? "0" : rwMap.get(key));
 				insert.putFieldValue("task", task);
 				double curretData = Double.parseDouble(currMonthData.get(key) == null ? "0" : currMonthData.get(key));
 				double lastData = Double.parseDouble(lastMonthData.get(key) == null ? "0" : lastMonthData.get(key));
 				insert.putFieldValue("passed", (curretData - lastData));
-				if (task == 0 || (curretData - lastData) == 0) {
-					insert.putFieldValue("rate", "00.00");
+				if (task == 0 || (curretData - lastData) <= 0) {
+					insert.putFieldValue("rate", "0");
 				} else {
-					insert.putFieldValue("rate", format.format((curretData - lastData) / task * 100.0));
+					insert.putFieldValue("rate", format.format((curretData - lastData) / task));
 				}
-				insert.putFieldValue("date_time", getLastMonth(date_time) );
+				insert.putFieldValue("date_time", getLastMonth(date_time));
 				sqllist.add(insert.getSQL());
 			}
 			dmo.executeBatchByDS(null, sqllist);
-			//			InsertSQLBuilder insert = new InsertSQLBuilder("wn_qnedtd_result");
-			//			insert.putFieldValue("date_time", date_time);
-
-			//			String date = date_time.substring(0, 7);//获取到当前时间
-			//			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(Q) from EXCEL_TAB_53 where year||'-'||month='" + date + "' and A='" + username + "' group by A");
-			//			if (rwMap.size() <= 0) {
-			//				return "当前客户经理【" + username + "】在当前月【" + date + "】缺少业务数据,请更换日期进行查询";
-			//			}
-			//			String deleteSQL = "delete from wn_qnedtd_result where username='" + username + "' and date_time='" + date + "'";
-			//			InsertSQLBuilder insert = new InsertSQLBuilder("wn_qnedtd_result");
-			//			insert.putFieldValue("username", username);
-			//			insert.putFieldValue("date_time", date);
-			//			//获取到当前客户经理所做的任务数
-			//			String countString = dmo.getStringValueByDS(null, "select count(cardno) num from ( SELECT DISTINCT(cardno) cardno FROM wn_qnedtd WHERE mname='" + username + "' AND date_time='" + date_time + "')");
-			//			double count = Double.parseDouble(countString == null ? "0" : countString);
-			//			insert.putFieldValue("passed", count);
-			//			double task = Double.parseDouble(rwMap.get(username));
-			//			insert.putFieldValue("task", task);
-			//			insert.putFieldValue("rate", count / task);
-			//			List<String> sqlList = new ArrayList<String>();
-			//			sqlList.add(deleteSQL);
-			//			sqlList.add(insert.getSQL());
-			//			dmo.executeBatchByDS(null, sqlList);//
-						result = "查询成功";
+			result = "查询成功";
 		} catch (Exception e) {
+			result="查询失败";
 			e.printStackTrace();
 		}
 		return result;
@@ -1195,30 +1186,11 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	public String getsjRate(String date_time) {
 		String result = "";
 		try {
-//			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(O) from EXCEL_TAB_53 where year||'-'||month='" + date_time + "' and A='" + username + "' group by A");
-//			if (rwMap.size() <= 0) {
-//				return "当前客户经理【" + username + "】在当前月【" + date_time + "】缺少业务数据,请更换日期进行查询";
-//			}
-//			String deleteSQL = "delete from wn_sjyh_result where username='" + username + "' and date_time='" + date_time + "'";//
-//			InsertSQLBuilder insert = new InsertSQLBuilder("wn_sjyh_result");
-//			insert.putFieldValue("date_time", date_time);
-//			insert.putFieldValue("username", username);
-//			//获取到当前客户经理当月任务数
-//			double task = Double.parseDouble(rwMap.get(username));
-//			insert.putFieldValue("task", task);
-//			String countString = dmo.getStringValueByDS(null, "SELECT COUNT(*) FROM   V_sjyh  WHERE date_time='" + date_time + "' AND xd_col2='" + username + "'");
-//			double count = Double.parseDouble(countString == null ? "0" : countString);
-//			insert.putFieldValue("passed", count);
-//			insert.putFieldValue("rate", count / task);
-//			List<String> list = new ArrayList<String>();
-//			list.add(deleteSQL);
-//			list.add(insert.getSQL());
-//			dmo.executeBatchByDS(null, list);
 			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(O) from EXCEL_TAB_53 where year||'-'||month='" + date_time + "' group by A");
 			if (rwMap.size() <= 0) {
 				return "在当前月【" + date_time + "】缺少业务数据,请更换日期进行查询";
 			}
-			HashMap<String, String> userMap =dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
+			HashMap<String, String> userMap =dmo.getHashMapBySQLByDS(null, "select name,deptname from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
 			HashMap<String,String>jlMap = dmo.getHashMapBySQLByDS(null, "SELECT XD_COL2,count(A) FROM V_sjyh WHERE DATE_TIME='"+date_time+"' GROUP BY XD_COL2");
 			Set<String> keys = userMap.keySet();
 			InsertSQLBuilder insert = new InsertSQLBuilder("wn_sjyh_result");
@@ -1226,6 +1198,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			for (String key : keys) {
 				insert.putFieldValue("username", key);
 				insert.putFieldValue("date_time", getLastMonth(date_time));
+				insert.putFieldValue("deptname",userMap.get(key) );
 				double task=Double.parseDouble(rwMap.get(key)==null || rwMap.get(key).length()==0?"0":rwMap.get(key));
 				insert.putFieldValue("task", task);
 				double passed=Double.parseDouble(jlMap.get(key)==null?"0":jlMap.get(key));
@@ -1252,30 +1225,39 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	public String getZNRate(String date_time) {
 		String result = "";
 		try {
-			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(L) from EXCEL_TAB_53 where year||'-'||month='" + date_time + "' group by A");
+			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(L) from EXCEL_TAB_53 where year='" + date_time.substring(0,4) + "' group by A");
 			if (rwMap.size() <= 0) {
 				return "在当前月【" + date_time + "】缺少业务数据,请更换日期进行查询";
 			}
-			HashMap<String,String> jlMap = dmo.getHashMapBySQLByDS(null, "SELECT a.name,a.num num FROM (select bbbb.b name,count(bbbb.b)  num  from (select aaa.c as c,aaa.n as n from (select aa.c,count(aa.c) as n from (select b.b as b ,b.c as c,b.e as e from (select * from excel_tab_10 where year||'-'||month='" + date_time + "' ) a left join (select * from excel_tab_11 where year||'-'||month='" + date_time
-										+ "' and d='是' or d is null) b on b.c=a.c  where b.b is not null) aa left join (select a,(b+c) as num  from excel_tab_14 where year||'-'||month='" + date_time + "') bb on aa.b=bb.a where bb.num>=aa.e group by aa.c ) aaa left join (select c,count(c) as n from excel_tab_11 where year||'-'||month='" + date_time
-										+ "'  and d='是' or d is null group by c ) bbb on bbb.c=aaa.c where aaa.n>=bbb.n) aaaa left join (select b,c from excel_tab_10 where  year||'-'||month='" + date_time + "')  bbbb on aaaa.c=bbbb.c  WHERE bbbb.b NOT  IN ('何超','施宗华','陈举','余崇玺','李顺苍','朱锡刚','罗尧')   group by bbbb.b) a ");
+			HashMap<String,String> jlMap = dmo.getHashMapBySQLByDS(null, "select aaaa.b name,count(aaaa.c) num from (select aaa.b,aaa.c from (select a.b b,a.c c,b.num num from (select b,c from excel_tab_10 where year||'-'||month='"+date_time+"' ) a left join (select c,count(b) num from excel_tab_11 where year||'-'||month='"+date_time+"' group by c) b on b.c=a.c) aaa left join (select aa.b b,aa.c c,count(bb.a) num from (select a,b,c from excel_tab_10 where year||'-'||month='"+date_time+"' ) aa left join (select a.a,a.num,b.c,b.e from (select a,(b+c) num  from excel_tab_14 where year||'-'||month='"+date_time+"') a left join (select a,b ,c,d,e from excel_tab_11 where year ||'-'|| month='"+date_time+"' and d !='否') b on a.a=b.b where a.num>=b.e) bb on aa.c=bb.c  group by aa.b,aa.c)  bbb  on   aaa.b=bbb.b and aaa.c=bbb.c where aaa.num=bbb.num) aaaa group by aaaa.b");
 			InsertSQLBuilder insert = new InsertSQLBuilder("wn_znsh_result");
-			HashMap<String, String> userMap =dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
+			HashMap<String, String> userMap =dmo.getHashMapBySQLByDS(null, "select name,deptname from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
+			HashVO[] userVos = dmo.getHashVoArrayByDS(null, "select name,deptname,stationkind from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
 			Set<String> keys = userMap.keySet();
 			List<String> sqllist=new ArrayList<String>();
-			for (String key : keys) {
-				insert.putFieldValue("username", key);
-				double task=Double.parseDouble(rwMap.get(key)==null || rwMap.get(key).length()==0  ?"0":rwMap.get(key));
-				insert.putFieldValue("task", task);
-				double passed=Double.parseDouble(jlMap.get(key)==null?"0":jlMap.get(key));
-				insert.putFieldValue("passed", passed);
-			    DecimalFormat format=new DecimalFormat("00.00");
-				if(task==0 || passed==0){
-			    	insert.putFieldValue("rate", "00.00");
-			    }else{
-			    	insert.putFieldValue("rate", format.format(passed/task*100));
-			    }
+
+			DecimalFormat format=new DecimalFormat("#.00");
+			for (int i = 0; i < userVos.length; i++) {
+				String manager_name=userVos[i].getStringValue("name");
+				String manager_type=userVos[i].getStringValue("stationkind");
+				insert.putFieldValue("username", manager_name);
+				insert.putFieldValue("deptname", userVos[i].getStringValue("deptname"));
 				insert.putFieldValue("date_time", getLastMonth(date_time));
+				if("城区客户经理".equals(manager_type)){
+					insert.putFieldValue("task", 0.0);
+					insert.putFieldValue("passed", 0.0);
+					insert.putFieldValue("rate", 0.0);
+				}else{
+					double passed=Double.parseDouble(jlMap.get(manager_name)==null?"0":jlMap.get(manager_name));
+					double task=Double.parseDouble(rwMap.get(manager_name)==null || rwMap.get(manager_name).length()==0  ?"0":rwMap.get(manager_name));
+					insert.putFieldValue("passed",passed);
+					insert.putFieldValue("task", task);
+					if(passed==0|| task==0){
+						insert.putFieldValue("rate", 0.0);
+					}else{
+						insert.putFieldValue("rate",Double.parseDouble(format.format(passed/task)));
+					}
+				}
 				sqllist.add(insert.getSQL());
 			}
 			dmo.executeBatchByDS(null,sqllist);
@@ -1285,80 +1267,66 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		}
 		return result;
 	}
-
+    /**
+     * ZPY
+     * 特约、小微商户完成比计算
+     */
 	@Override
 	public String getTyxwRate(String date_time) {
 		String result = "";
 		try {
-			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null, "select A,sum(N) from EXCEL_TAB_53 where year||'-'||month='" + date_time + "' group by A");
+			HashMap<String, String> rwMap = dmo.getHashMapBySQLByDS(null,
+					"select A,sum(N) from EXCEL_TAB_53 where year||'-'||month='"
+							+ date_time + "' group by A");
 			if (rwMap.size() <= 0) {
 				return "在当前月【" + date_time + "】缺少业务数据,请更换日期进行查询";
 			}
-			List<String> wdList=Arrays.asList(new String[]{"西海信用社","人民南路分社","人民中路分社","营业部","草海信用社","龙凤分社","鸭子塘信用社","新区信用社"}) ;
-			List<String> sqlList=new ArrayList<String>();
-			HashMap<String, String> userMap =dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
+			List<String> sqlList = new ArrayList<String>();
+			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null,
+							"select name,deptname from v_sal_personinfo where stationkind  like '%客户经理%'");
 			InsertSQLBuilder insert = new InsertSQLBuilder("wn_tyxw_result");
 			Set<String> keys = userMap.keySet();
-			HashMap<String,String> deptMap = dmo.getHashMapBySQLByDS(null, "SELECT USERNAME,DEPTNAME FROM V_PUB_USER_POST_1");
-			DecimalFormat format=new  DecimalFormat("00.00");
-			for (String key : keys) {
-				insert.putFieldValue("username", key);
-				insert.putFieldValue("date_time", getLastMonth(date_time));
-				double task=Double.parseDouble(rwMap.get(key)==null|| rwMap.get(key).isEmpty()?"0":rwMap.get(key));
+			Map<String, Integer> tyxw = getTyxw(date_time);
+			DecimalFormat format = new DecimalFormat("#.00");
+			String task="";
+			for (String manager_name : keys) {//特约小微商户完成比查询
+				int num=tyxw.get(manager_name);
+				insert.putFieldValue("passed", num);
+				task=rwMap.get(manager_name)==null?"0":rwMap.get(manager_name);
 				insert.putFieldValue("task",task);
-                //判断客户属于城区还是乡镇
-				String wdName=deptMap.get(key);
-				String local="";
-				if(wdList.indexOf(wdName)!=-1){
-					local="城区";
+				insert.putFieldValue("username", manager_name);
+				if("0".equals(task)){
+					insert.putFieldValue("rate", "0.0");
 				}else{
-					local="乡镇";
+					insert.putFieldValue("rate", format.format( num/Double.parseDouble(task)));
 				}
-				double passed=getTyNum(local, key, date_time)+getXwNum(local, key, date_time);
-				System.out.println("key="+key+",小微="+getXwNum(local,key,date_time)+",特约="+getTyNum(local, key, date_time));
-				insert.putFieldValue("passed", passed);
-				if(passed==0 || task==0){
-					insert.putFieldValue("rate", "00.00");
-				}else{
-					insert.putFieldValue("rate", format.format(passed/task*100));
-				}
-				sqlList.add(insert.getSQL());
+				insert.putFieldValue("date_time", date_time);
+				insert.putFieldValue("deptname", userMap.get(manager_name));
 			}
 			dmo.executeBatchByDS(null, sqlList);
+			System.out.println("查询成功");
 			result = "查询成功";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return result;
 	}
-
-	private int getTyNum(String local, String username, String date_time) {//特约商户
-		int result = 0;
-		try {
-			String monthEnd = getLastMonth(date_time);
-			String count = dmo.getStringValueByDS(null, "select count(bb.mcht_id) num from (select a.a a ,b.b b from (select * from excel_tab_13 where b='" + local + "' and c='特约商户' and year||'-'||month='" + date_time + "') a left join (select  * from excel_tab_16 where year||'-'||month='" + date_time
-					+ "') b on a.d=b.a)  aa left join  (select a.mcht_id mcht_id,a.num num from (select mcht_id, sum(kbsxj_m+sbsxj_m+zqbsxj_m+zzbsxj_m) num from wnbank.t_dis_ifsp_intgr_busi_dtl_cxb  where mcht_prop='特约商户' and  to_char(to_date(day_id,'yyyy-mm-dd'),'yyyy-mm-dd')>='" + date_time + "-01" + "' and  to_char(to_date(day_id,'yyyy-mm-dd'),'yyyy-mm-dd')<='" + monthEnd
-					+ "'  group by mcht_id) a  where a.num>=10) bb on bb.mcht_id=aa.a where bb.mcht_id is  not NULL AND aa.b='" + username + "' group by aa.b");
-			result = Integer.parseInt(count == null ? "0" : count);
-		} catch (Exception e) {
+	   private Map<String, Integer> getTyxw(String date_time){
+		   HashMap<String, Integer> resultMap=new HashMap<String, Integer>();
+		   try {
+			   HashMap<String,String> xwMap = dmo.getHashMapBySQLByDS(null," select aa.b name,count(bb.a) num from (select a.a a ,b.b b from (select * from excel_tab_13 where  c='小微商户' and year||'-'||month='"+date_time+"') a left join (select  * from excel_tab_16 where year||'-'||month='"+date_time+"') b on a.d=b.a)  aa left join (select a,c from excel_tab_59 where year||'-'||month='"+date_time+"' and b='小微' AND c>=5) bb on bb.a=aa.a where bb.a is  not null group by aa.b");
+			   HashMap<String,String> tyMap = dmo.getHashMapBySQLByDS(null, "select aa.b name,count(bb.a) num from (select a.a a ,b.b b from (select * from excel_tab_13 where  c='特约商户' and year||'-'||month='"+date_time+"') a left join (select  * from excel_tab_16 where year||'-'||month='"+date_time+"') b on a.d=b.a)  aa left join  (select a,b,c from excel_tab_59 where year||'-'||month='"+date_time+"' and b='特约'  and c>=10) bb on bb.a=aa.a where bb.a is  not null group by aa.b");
+		       String[] manager_names = dmo.getStringArrayFirstColByDS(null, "SELECT name FROM v_sal_personinfo WHERE STATIONKIND LIKE '%客户经理%'");
+		       for (int i = 0; i < manager_names.length; i++) {
+				Integer xwNum=Integer.parseInt(xwMap.get(manager_names[i])==null?"0":xwMap.get(manager_names[i]));
+				Integer tyNum=Integer.parseInt(tyMap.get(manager_names[i])==null?"0":tyMap.get(manager_names[i]));
+			    resultMap.put(manager_names[i], xwNum+tyNum);
+		       }
+		   } catch (Exception e) {
 			e.printStackTrace();
 		}
-		return result;
-	}
-
-	private int getXwNum(String local, String username, String date_time) {//小微商户
-		int result = 0;
-		try {
-			String monthEnd = getLastMonth(date_time);
-			String count = (dmo.getStringValueByDS(null, "select count(bb.mcht_id) num from (select a.a a ,b.b b from (select * from excel_tab_13 where b='" + local + "' and c='小微商户' and year||'-'||month='" + date_time + "') a left join (select  * from excel_tab_16 where year||'-'||month='" + date_time
-					+ "') b on a.d=b.a)  aa left join  (select a.mcht_id mcht_id,a.num num from (select mcht_id, sum(kbsxj_m+sbsxj_m+zqbsxj_m+zzbsxj_m) num from wnbank.t_dis_ifsp_intgr_busi_dtl_cxb  where mcht_prop='小微商户' and  to_char(to_date(day_id,'yyyy-mm-dd'),'yyyy-mm-dd')>='" + date_time + "-01" + "' and  to_char(to_date(day_id,'yyyy-mm-dd'),'yyyy-mm-dd')<='" + monthEnd
-					+ "'  group by mcht_id) a  where a.num>=5) bb on bb.mcht_id=aa.a where bb.mcht_id is  not null and aa.b='" + username + "' group by aa.b  "));
-			result = Integer.parseInt(count == null ? "0" : count);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return result;
-	}
+		   return resultMap;
+	   }
 
 	public String getLastMonth(String date) {
 		String result = "";
@@ -2835,6 +2803,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		return result;
 	}
 
+	
 	/**
 	 * ZPY 客户经理等级评定计算(客户经理半年一评级)
 	 * 
@@ -2907,142 +2876,31 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		}
 		return "客户经理等级计算成功";
 	}
-
-	/**
-	 * ZPY 客户经理之黔农E贷线上替代
-	 * 
-	 * @return
-	 */
-	public HashMap<String, Double> qnedtdScore(int dateNum) {
-		HashMap<String, Double> resultMap = new HashMap<String, Double>();
+	private HashMap<String, Double> nmgCountScore(int dateNum) {
+		HashMap<String, Double> resultMap=new HashMap<String, Double>();
 		try {
-			String yearStartDate = getYearStartAndEnd(dateNum).get(0);
-			String checkDate = getYearStartAndEnd(dateNum).get(0);
-			// 获取到期客户经理的考核
-			String[] manager_names = dmo
-					.getStringArrayFirstColByDS(null,
-							"SELECT NAME FROM V_SAL_PERSONINFO WHERE POSITION LIKE '%客户经理%'");
-			HashMap<String, String> qnedtd = dmo
-					.getHashMapBySQLByDS(
-							null,
-							"SELECT USERNAME,sum(RATE) FROM WN_QNEDTD_RESULT WHERE DATE_TIME>='2019-01-01' AND DATE_TIME<='2019-06-30' GROUP BY USERNAME");
-			for (int i = 0; i < manager_names.length; i++) {
-				double rate = Double
-						.parseDouble(qnedtd.get(manager_names[i]) == null ? "0.0"
-								: qnedtd.get(manager_names[i]));
-				if (rate <= 0.0) {
-					resultMap.put(manager_names[i], 0.0);
-				} else {
-					resultMap.put(manager_names[i], rate/100.0 * 2.0 > 2 ? 2.0
-							: rate/100.0 * 2.0);
+			HashMap<String,String> manager_names = UIUtil.getHashMapBySQLByDS(null, "SELECT NAME,STATIONKIND FROM V_SAL_PERSONINFO  WHERE POSITION LIKE '%客户经理%'");
+			String date_time = getYearStartAndEnd(dateNum).get(1);
+			HashMap<String,String> taskNums = UIUtil.getHashMapBySQLByDS(null,"select a,sum(s) from excel_tab_53 where year='"+date_time.substring(0,4)+"' group by a");
+			HashMap<String, String> numMap=UIUtil.getHashMapBySQLByDS(null, "select  j, count(*) num from wnsalarydb.excel_tab_2 where YEAR='"+date_time.substring(0,4)+"'  and b is not null and  d is not null and e is not null and  g is not null and h is not null group by j");
+			Set<String> managerSet = manager_names.keySet();
+			DecimalFormat format=new DecimalFormat("#.00");
+			double score=0.0;
+			for (String manager_name : managerSet) {
+				String manager_type=manager_names.get(manager_name);
+				if("城区客户经理".equals(manager_type)){
+					resultMap.put(manager_name, 0.0);
+					continue;
 				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return resultMap;
-	}
-
-	/**
-	 * 客户经理评级:建档考核 新建档案占4分，计分方式为： 得分=年初至评分时点新建档案数/（年初新建档案任务数*评分时点月数/12）*4分。
-	 * 
-	 * @return
-	 */
-	public HashMap<String, Double> jdRate() {
-		HashMap<String, Double> resultMap = new HashMap<String, Double>();
-		try {
-			// 获取到年初时间
-			String yearStartDate = getYearStart();
-			SimpleDateFormat simple = new SimpleDateFormat("yyyy-mm-dd");
-			String currentDate = simple.format(new Date());
-			String checkDate = "";
-			if (currentDate.compareTo(getYearCenterDate()) >= 0
-					&& currentDate.compareTo(getYearEndDate()) < 0) {
-				checkDate = getYearCenterDate();
-			} else {
-				checkDate = getYearEndDate();
-			}
-			// //获取到建档评级考核数据
-			String gtjmSQL = "select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
-					+ yearStartDate
-					+ "' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
-					+ checkDate
-					+ "' and xd_col10 not in('未评级','等外','!$') and XD_COL4 in('206','908') group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";// 个体工商户、居民建档户数
-			String dwzgSQL = "select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
-					+ yearStartDate
-					+ "'and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
-					+ checkDate
-					+ "'and xd_col10 not in('未评级','等外','!$') and XD_COL4='907' group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";// 单位职工
-			String nhSQL = "select yb.xd_col2 xd_col2,zc.tj tj  from(select xx.xd_col96 xd_col96,count(xx.xd_col96) tj from (select XD_COL1,XD_COL96 from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
-					+ yearStartDate
-					+ "' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
-					+ checkDate
-					+ "' and xd_col10 not in('未评级','等外','!$') and XD_COL4='905') xx left join wnbank.S_LOAN_KHXXZCQK zc on xx.xd_col1=zc.xd_col1 where zc.XD_COL6!='0' group by xx.xd_col96)zc left join wnbank.s_loan_ryb yb on zc.xd_col96=yb.xd_col1";// 农户建档
-			String xwSQL = "select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
-					+ yearStartDate
-					+ "' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
-					+ checkDate
-					+ "' and xd_col10 not in('未评级','等外','!$') and XD_COL4='206' and XD_COL163 not in('05','03','06','01') group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";// 小微企业建档
-			HashMap<String, String> gtjmMap = dmo.getHashMapBySQLByDS(null,
-					gtjmSQL);
-			HashMap<String, String> dwzgMap = dmo.getHashMapBySQLByDS(null,
-					dwzgSQL);
-			HashMap<String, String> nhMap = dmo
-					.getHashMapBySQLByDS(null, nhSQL);
-			HashMap<String, String> xwMap = dmo
-					.getHashMapBySQLByDS(null, xwSQL);
-			// 获取到相应的人员信息
-			HashVO[] managerVos = dmo
-					.getHashVoArrayByDS(
-							null,
-							"SELECT CODE,NAME,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
-			for (int i = 0; i < managerVos.length; i++) {
-				String manager_name = managerVos[i].getStringValue("name");
-				double sum = 0;
-				sum = Double
-						.parseDouble(gtjmMap.get(manager_name) == null ? "0"
-								: gtjmMap.get(manager_name))
-						+ Double.parseDouble(dwzgMap.get(manager_name) == null ? "0"
-								: dwzgMap.get(manager_name))
-						+ Double.parseDouble(nhMap.get(manager_name) == null ? "0"
-								: nhMap.get(manager_name))
-						+ Double.parseDouble(xwMap.get(manager_name) == null ? "0"
-								: xwMap.get(manager_name));
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return resultMap;
-	}
-
-	/**
-	 * 客户经理评级之黔农E贷签约 WN_QNED_RESULT
-	 * 
-	 * @return
-	 */
-	public HashMap<String, Double> qnedRate(int dateNum) {
-		HashMap<String, Double> resultMap = new HashMap<String, Double>();
-		try {
-
-			String yearStartDate = getYearStartAndEnd(dateNum).get(0);
-			String checkDate = getYearStartAndEnd(dateNum).get(1);
-			String[] manager_names = dmo
-					.getStringArrayFirstColByDS(null,
-							"SELECT NAME FROM V_SAL_PERSONINFO WHERE POSITION  LIKE '%客户经理%'");
-			HashMap<String, String> qnedMap = dmo.getHashMapBySQLByDS(null,
-					"SELECT username , sum(RATE) FROM WN_QNED_RESULT   WHERE date_time>='"
-							+ yearStartDate + "' AND DATE_TIME<='" + checkDate
-							+ "' GROUP BY USERNAME");
-			for (int i = 0; i < manager_names.length; i++) {
-				String rate = qnedMap.get(manager_names[i]) == null ? "0.0"
-						: qnedMap.get(manager_names[i]);
-				if ("0.0".equals(rate)) {
-					resultMap.put(manager_names[i], 0.0);
-				} else {
-					resultMap.put(manager_names[i],
-							Double.parseDouble(rate)/100.0 * 2.0);
-				}
+				double task=Double.parseDouble(taskNums.get(manager_name)==null?"0":taskNums.get(manager_name));
+			    double num=Double.parseDouble(numMap.get(manager_name)==null?"0":numMap.get(manager_name));
+			    System.out.println("客户经理:"+manager_name+",农民工信息采集:实际完成"+num+",总任务数:"+task);
+			    if(task<=0||num<=0){
+			    	resultMap.put(manager_name, 0.0);
+			    }else{
+			    	score=Double.parseDouble(format.format(num/task*1.0));
+			    	resultMap.put(manager_name, score>=1.0?1.0:score);
+			    }
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -3051,434 +2909,709 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	}
 
 	// 到期贷款收回率考核
-
+    /**
+     * 客户经理之到期贷款收回率考核
+     * 为了方便测试，dmo执行容易出现空指针异常，暂时使用dmo。
+     * @param dateNum
+     * @return
+     */
 	public HashMap<String, Double> getDqdkshl(int dateNum) {
 		HashMap<String, Double> resultMap = new HashMap<String, Double>();
 		try {
 			// 到期贷款收回率考核首先获取到考核时间
-			SimpleDateFormat simple = new SimpleDateFormat("yyyy-mm-dd");
-			String currentDate = simple.format(new Date());
-			String checkDate = "";
-			if (currentDate.compareTo(getYearCenterDate()) >= 0
-					&& currentDate.compareTo(getYearEndDate()) < 0) {
-				checkDate = getYearCenterDate();
-			} else {
-				checkDate = getYearEndDate();
-			}
-			// 累计已收回金额
-			String addUpsql = "select bb.xd_col2 xd_col2,zj.hksum XD_COL7 from(select ye.xd_col81,sum(ye.hksum) hksum from(select dk.xd_col1 xd_col1,dk.xd_col81 xd_col81,sum(dk.XD_COL6) XD_COL6,sum(hk.hksum) hksum from(select XD_COL1 hkcode,sum(XD_COL5) hksum from wnbank.S_LOAN_hk where to_char(cast (cast (XD_COL4 as timestamp) as date),'yyyy-mm-dd')>='2019-04-01' and to_char(cast (cast (XD_COL4 as timestamp) as date),'yyyy-mm-dd')<='"
-					+ checkDate
-					+ "' group by XD_COL1) hk left join ( select XD_COL1,XD_COL81,XD_COL5,XD_COL6 from wnbank.S_LOAN_DK where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
-					+ checkDate
-					+ "') dk on hk.hkcode=dk.XD_COL1  where dk.XD_COL5>='2019-01-01' and dk.XD_COL5<='"
-					+ checkDate
-					+ "' group by dk.xd_col1,dk.xd_col81) ye where ye.XD_COL6<=1000000 group by ye.xd_col81) zj left join wnbank.s_loan_ryb bb on zj.xd_col81=bb.xd_col1";
-			// 1-3月累计收回
-			String month1_3 = "select B,D from excel_tab_44";
-			// 未收回金额Map
-			String callBackMoney = "select bb.xd_col2 xd_col2,dk.hj hj from (select dkxj.xd_col81 xd_col81,sum(dkxj.xd_col7) hj from(select XD_COL1 XD_COL1,XD_COL81 XD_COL81,sum(XD_COL6) XD_COL6,sum(XD_COL7) XD_COL7 from wnbank.S_LOAN_DK where XD_COL5>='2019-01-01' and XD_COL5<='"
-					+ checkDate
-					+ "' and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
-					+ checkDate
-					+ "' group by XD_COL1,XD_COL81) dkxj group by dkxj.XD_COL81 )dk left join wnbank.s_loan_ryb bb on dk.xd_col81=bb.xd_col1";
-			// 个人贷款贷款本金100万以下Map
-			String loanCapital = "select bb.xd_col2 xd_col2,zj.hksum XD_COL6 from(select ye.xd_col81,sum(ye.hksum) hksum from(select dk.xd_col1 xd_col1,dk.xd_col81 xd_col81,sum(dk.XD_COL6) XD_COL6,sum(hk.hksum) hksum from(select XD_COL1 hkcode,sum(XD_COL5) hksum from wnbank.S_LOAN_hk where to_char(cast (cast (XD_COL4 as timestamp) as date),'yyyy-mm-dd')>='2019-04-01' and to_char(cast (cast (XD_COL4 as timestamp) as date),'yyyy-mm-dd')<='"
-					+ checkDate
-					+ "' group by XD_COL1) hk left join (select XD_COL1,XD_COL81,XD_COL5,XD_COL6 from wnbank.S_LOAN_DK where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
-					+ checkDate
-					+ "') dk on hk.hkcode=dk.XD_COL1  where dk.XD_COL5>='2019-01-01' and dk.XD_COL5<='"
-					+ checkDate
-					+ "' group by dk.xd_col1,dk.xd_col81) ye where ye.XD_COL6<=1000000 group by ye.xd_col81) zj left join wnbank.s_loan_ryb bb on zj.xd_col81=bb.xd_col1";
-			// 1-3月客户经理已收回金额Map
-			String month1_3h = "select B,D from excel_tab_44";
-			// 对公贷款还款余额100万以下Map
-			String publicLoanhk = "select dg.cus_manager cus_manager,sum(hk.AMOUNTREPAID) AMOUNTREPAID from(select cus_manager cus_manager,CUS_ID CUS_ID from wnbank.s_cmis_acc_loan where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
-					+ checkDate
-					+ "' and cla<>'05' and account_status='1' and loan_balance<>'0' and LOAN_AMOUNT<=1000000 group by cus_manager,CUS_ID) dg left join  wnbank.S_CMIS_ACC_BILL_REPAY hk on hk.CUS_ID=dg.CUS_ID where to_char(to_date(DATEOFREPAYMENT,'yyyy-mm-dd'),'yyyy-mm-dd')>='2019-04-01' and to_char(to_date(DATEOFREPAYMENT,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
-					+ checkDate + "' group by dg.cus_manager";
-			// 对公贷款贷款本金100万以下Map
-			String publicLoan = "select dg.cus_manager cus_manager,sum(dg.LOAN_BALANCE) LOAN_BALANCE from (select cus_manager cus_manager,sum(LOAN_BALANCE) LOAN_BALANCE from wnbank.s_cmis_acc_loan where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
-					+ checkDate
-					+ "' and cla<>'05' and loan_balance<>'0' and account_status='1' and to_char(to_date(ORIG_EXPI_DATE,'yyyy-mm-dd'),'yyyy-mm-dd')>='2019-04-01' and to_char(to_date(ORIG_EXPI_DATE,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
-					+ checkDate
-					+ "' group by CUS_ID,cus_manager) dg where dg.LOAN_BALANCE<=1000000 group by dg.cus_manager";
-			// 执行对应的sql
-			HashMap<String, String> addUpsqlMap = dmo.getHashMapBySQLByDS(null,
-					addUpsql);// 累计已收回金额
-			HashMap<String, String> month1_3Map = dmo.getHashMapBySQLByDS(null,
-					month1_3);// 1-3月累计收回
-			HashMap<String, String> callBackMoneyMap = dmo.getHashMapBySQLByDS(
-					null, callBackMoney);// //未收回金额Map
-			HashMap<String, String> loanCapitalMap = dmo.getHashMapBySQLByDS(
-					null, loanCapital); // 个人贷款贷款本金100万以下Map
-			HashMap<String, String> month1_3hMap = dmo.getHashMapBySQLByDS(
-					null, month1_3h);// 1-3月客户经理已收回金额Map
-			HashMap<String, String> publicLoanhkMap = dmo.getHashMapBySQLByDS(
-					null, publicLoanhk);// 对公贷款还款余额100万以下Map
-			HashMap<String, String> publicLoanMap = dmo.getHashMapBySQLByDS(
-					null, publicLoan);// 对公贷款贷款本金100万以下Map
-
-			HashVO[] managerVos = dmo
-					.getHashVoArrayByDS(
-							null,
-							"SELECT CODE,NAME,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
-			for (int i = 0; i < managerVos.length; i++) {
-				String manager_name = managerVos[i].getStringValue("name");// 客户经理
-				/**
-				 * ([累计已收回金额]+[1-3月客户经理已收回金额])-
-				 * ([未收回金额]+[个人贷款贷款本金100万以下]+[1-3月客户经理已收回金额])*0.97 +
-				 * ([对公贷款还款余额100万以下]-[对公贷款贷款本金100万以下]*0.97)
-				 */
-				double addUpsqlMoney = Double.parseDouble(addUpsqlMap
-						.get(manager_name) == null ? "0" : addUpsqlMap
-						.get(manager_name));// 累计已收回金额
-				double month1_3Money = Double.parseDouble(month1_3Map
-						.get(manager_name) == null ? "0" : month1_3Map
-						.get(manager_name));// 1-3月累计收回
-				double callBackMoneyMoney = Double.parseDouble(callBackMoneyMap
-						.get(manager_name) == null ? "0" : callBackMoneyMap
-						.get(manager_name));// 未收回金额Map
-				double loanCapitalMoney = Double.parseDouble(loanCapitalMap
-						.get(manager_name) == null ? "0" : loanCapitalMap
-						.get(manager_name));// 个人贷款贷款本金100万以下Map
-				double month1_3hMoney = Double.parseDouble(month1_3hMap
-						.get(manager_name) == null ? "0" : month1_3hMap
-						.get(manager_name));
-				double publicLoanhkMoney = Double.parseDouble(publicLoanhkMap
-						.get(manager_name) == null ? "0" : publicLoanhkMap
-						.get(manager_name));
-				double publicLoanMoney = Double.parseDouble(publicLoanMap
-						.get(manager_name) == null ? "0" : publicLoanMap
-						.get(manager_name));
-				// 计算累计到期贷款本金
-				double publicLoanM = publicLoanMoney + callBackMoneyMoney
-						+ loanCapitalMoney + month1_3hMoney;
-				// 计算到期贷款收回本金
-				double publicLoanSHMoney = addUpsqlMoney + month1_3Money
-						+ publicLoanhkMoney;
-
-				if (publicLoanM == 0.0) {// 累计收回本金为0
-					resultMap.put(manager_name, 0.0);
-					continue;
-				}
-				double rate = publicLoanSHMoney / publicLoanM;
-				if (rate < 0.97) {
-					resultMap.put(manager_name, 0.0);
-
-				} else {
-					double score = 2.0 + (rate - 0.97) / 0.001;
-					resultMap.put(manager_name, score > 5 ? 5 : score);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return resultMap;
-	}
-
-	// 当年新增不良贷款
-	public HashMap<String, Double> getDnxzbldk(int dateNum) {
-		HashMap<String, Double> resultMap = new HashMap<String, Double>();
-		try {
-			// 获取到年初和考核日期
-			String yearStartDate = getYearStartAndEnd(dateNum).get(0);
-			String checkDate = getYearStartAndEnd(dateNum).get(0);
-            
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return resultMap;
-	}
-
-	// 收回存量不良贷款
-	public HashMap<String, Double> getshcl(int dateNum) {
-		HashMap<String, Double> resultMap = new HashMap<String, Double>();
-		try {
-           String yearStartDate=getYearStartAndEnd(dateNum).get(0);
-           String check_date=getYearStartAndEnd(dateNum).get(1);
-           String[] manager_names = dmo.getStringArrayFirstColByDS(null, "SELECT name FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
-		   HashMap<String,String> blMap = dmo.getHashMapBySQLByDS(null, "SELECT name,sum(BFB) FROM V_WN_STOCK_LOAN WHERE date_time>='"+yearStartDate+"' AND date_time<='"+check_date+"' GROUP BY name");
-		   for (int i = 0; i < manager_names.length; i++) {
-			double rate=Double.parseDouble(blMap.get(manager_names[i])==null?"0.0":blMap.get(manager_names[i]));
-			if(rate<=0){
-				resultMap.put(manager_names[i], 0.0);
-			}else if(rate>=1){
-				resultMap.put(manager_names[i], 5.0);
-			}else {
-				resultMap.put(manager_names[i], 5.0*rate);
-			}
-		}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return resultMap;
-	}
-
-	/**
-	 * 客户经理等级评定之贷款客户手机银行开户覆盖率
-	 * 
-	 * @param dateNum
-	 * @return
-	 */
-	public HashMap<String, Double> getDKsjyh(int dateNum) {
-		HashMap<String, Double> resultMap = new HashMap<String, Double>();
-		try {
-
 			String yearStartDate = getYearStartAndEnd(dateNum).get(0);
 			String checkDate = getYearStartAndEnd(dateNum).get(1);
-			// 首先计算建档明细
-			String gtjmSQL = "select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
-					+ yearStartDate
-					+ "' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
-					+ checkDate
-					+ "' and xd_col10 not in('未评级','等外','!$') and XD_COL4 in('206','908') group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";// 个体工商户、居民建档户数
-			String dwzgSQL = "select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
-					+ yearStartDate
-					+ "'and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
-					+ checkDate
-					+ "'and xd_col10 not in('未评级','等外','!$') and XD_COL4='907' group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";// 单位职工
-			String nhSQL = "select yb.xd_col2 xd_col2,zc.tj tj  from(select xx.xd_col96 xd_col96,count(xx.xd_col96) tj from (select XD_COL1,XD_COL96 from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
-					+ yearStartDate
-					+ "' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
-					+ checkDate
-					+ "' and xd_col10 not in('未评级','等外','!$') and XD_COL4='905') xx left join wnbank.S_LOAN_KHXXZCQK zc on xx.xd_col1=zc.xd_col1 where zc.XD_COL6!='0' group by xx.xd_col96)zc left join wnbank.s_loan_ryb yb on zc.xd_col96=yb.xd_col1";// 农户建档
-			String xwSQL = "select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
-					+ yearStartDate
-					+ "' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
-					+ checkDate
-					+ "' and xd_col10 not in('未评级','等外','!$') and XD_COL4='206' and XD_COL163 not in('05','03','06','01') group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";// 小微企业建档
+			//1-3月份累计已收回
+			HashMap<String,String> dsMonth1_3Map = UIUtil.getHashMapBySQLByDS(null, "select B,D from excel_tab_44");
+			//获取到对私贷款收回到期贷款本金
+			HashMap<String, String> dsBackUpMoneyMap = UIUtil
+					.getHashMapBySQLByDS(null,"select bb.xd_col2 xd_col2,zj.hksum zh from(select ye.xd_col81,sum(ye.hksum) hksum from(select dk.xd_col1 xd_col1,dk.xd_col81 xd_col81,sum(dk.XD_COL6) XD_COL6,sum(hk.hksum) hksum from(select XD_COL1 hkcode,sum(XD_COL5) hksum from wnbank.S_LOAN_hk where to_char(cast (cast (XD_COL4 as timestamp) as date),'yyyy-mm-dd')>='2019-04-01' and to_char(cast (cast (XD_COL4 as timestamp) as date),'yyyy-mm-dd')<='"+checkDate+"' group by XD_COL1) hk  left join (select XD_COL1,XD_COL81,XD_COL5,XD_COL6 from wnbank.S_LOAN_DK where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"+checkDate+"')dk on hk.hkcode=dk.XD_COL1  where dk.XD_COL5>='"+yearStartDate+"' and dk.XD_COL5<='"+checkDate+"' group by dk.xd_col1,dk.xd_col81) ye  group by ye.xd_col81) zj left join wnbank.s_loan_ryb bb on zj.xd_col81=bb.xd_col1");
 
-			String sjyh = "select b.xd_col2 name,a.card_no num from (select bbbbb.xd_col96,count(aaaaa.card_no) card_no from (select aaa.card_no card_no,aaa.manager_no manager_no from (select distinct(aa.card_no) card_no,aa.manager_no manager_no from (select a.a card_no,a.b manager_no,a.c c,b.b d from  (select * from excel_tab_12 where c!='否' and year||'-'||month='"
-					+ checkDate.substring(checkDate.lastIndexOf("-"))
-					+ "') a  left join (select * from excel_tab_49  where  year||'-'||month='[指标考核时间]') b on a.a=b.b where b.a is not null order by a.a) aa) aaa  where (to_char(sysdate,'yyyy')-substr(aaa.card_no,7,4))<=45) aaaaa left join (select xd_col7,xd_col96 from wnbank.s_loan_khxx where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='[考核的月末日期]')  bbbbb on bbbbb.xd_col7=aaaaa.card_no  group by bbbbb.xd_col96) a left join wnbank.s_loan_ryb b on b.xd_col1=a.xd_col96";
-
-			HashMap<String, String> gtjmMap = dmo.getHashMapBySQLByDS(null,
-					gtjmSQL);
-			HashMap<String, String> dwzgMap = dmo.getHashMapBySQLByDS(null,
-					dwzgSQL);
-			HashMap<String, String> nhMap = dmo
-					.getHashMapBySQLByDS(null, nhSQL);
-			HashMap<String, String> xwMap = dmo
-					.getHashMapBySQLByDS(null, xwSQL);
-			HashMap<String, String> shyhMap = dmo.getHashMapBySQLByDS(null,
-					sjyh);
-			HashVO[] managerVos = dmo
-					.getHashVoArrayByDS(
-							null,
-							"SELECT CODE,NAME,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
-			// 获取到手机银行开户数据
-			for (int i = 0; i < managerVos.length; i++) {
-				String manager_name = managerVos[i].getStringValue("name");// 获取导客户经理姓名
-				double jdSum = 0;
-				jdSum = Double
-						.parseDouble(gtjmMap.get(manager_name) == null ? "0"
-								: gtjmMap.get(manager_name))
-						+ Double.parseDouble(dwzgMap.get(manager_name) == null ? "0"
-								: dwzgMap.get(manager_name))
-						+ Double.parseDouble(nhMap.get(manager_name) == null ? "0"
-								: nhMap.get(manager_name))
-						+ Double.parseDouble(xwMap.get(manager_name) == null ? "0"
-								: xwMap.get(manager_name));
-				if (jdSum == 0) {
-					resultMap.put(manager_name, 0.0);
-					continue;
-				}
-				double route = Double.parseDouble(shyhMap.get(manager_name))
-						/ jdSum;
-				if (route == 0.2) {
-					resultMap.put(manager_name, 2.0);
-				} else if (route > 0.2) {
-					resultMap.put(manager_name,
-							2 + (route - 0.20) / 0.001 * 0.1 > 3 ? 3.0
-									: 0.20 + (route - 0.20) / 0.001 * 0.1);
-				} else {
-					resultMap.put(manager_name,
-							2 - (0.20 - route) / 0.001 * 0.2 < 0 ? 0.00
-									: 2 - (0.20 - route) / 0.001 * 0.2);
-				}
-				resultMap.put(manager_name, route);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return resultMap;
-	}
-
-	
-	/**
-	 * WN_ZNSH_RESULT 客户经理等级评定之助农商户维护考核 
-	 * @param dateNum
-	 * @return
-	 */
-	public HashMap<String, Double> getZnsh(int dateNum) {
-		HashMap<String, Double> resultMap = new HashMap<String, Double>();
-		try {
-			String[] managerNames = dmo
-					.getStringArrayFirstColByDS(null,
-							"SELECT NAME FROM V_SAL_PERSONINFO WHERE STATIONKIND IN ('乡镇客户经理','副主任兼职客户经理')");
-			String yearStartDate = getYearStartAndEnd(dateNum).get(0);
-			String date_time = getYearStartAndEnd(dateNum).get(1);// 考核月日期
-			HashMap<String, String> managerRate = dmo.getHashMapBySQLByDS(null,
-					"SELECT USERNAME,sum(RATE) FROM WN_ZNSH_RESULT WHERE DATE_TIME >='"
-							+ yearStartDate + "' AND DATE_TIME<='" + date_time
-							+ "' GROUP BY USERNAME");
-			for (int i = 0; i < managerNames.length; i++) {
-				double rate = Double.parseDouble(managerRate
-						.get(managerNames[i]) == null ? "0.00" : managerRate
-						.get(managerNames[i]));
-				if (rate >= 100.0) {
-					resultMap.put(managerNames[i], 3.0);
-				} else {
-					resultMap.put(managerNames[i], rate/100.0 * 3.0);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return resultMap;
-	}
-
-	// 存款有效户数提升
-	public HashMap<String, Double> getCKyxhs(int dateNum) {
-		HashMap<String, Double> resultMap = new HashMap<String, Double>();
-		try {
-			// 获取到当前日期
-			String yearStart = getYearStartAndEnd(dateNum).get(0);// 获取到年初时间
-			String check_date = getYearStartAndEnd(dateNum).get(1);// 获取到考核时间
-			Map<String, String> ckhsMap = dmo.getHashMapBySQLByDS(null,
-					"SELECT name,sum(BFB) FROM V_WN_DEPOSIT_NUMBER  WHERE date_time >='"
-							+ yearStart + "' AND date_time<='" + check_date
-							+ "' GROUP BY name");
-			HashMap<String, String> manager_names = dmo
+			// 累计未收回金额
+			HashMap<String, String> dsMoneyMap = UIUtil
 					.getHashMapBySQLByDS(
 							null,
-							"SELECT name,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%';");
-			Set<String> manager_sets = manager_names.keySet();
-			for (String manager_name : manager_sets) {
-				String manager_type=manager_names.get(manager_name);
-                double score=0;
-                if(manager_type.equals("城区客户经理")){
-                	score=4.0;
-                }else{
-                	score=3.0;
-                }
-                double rate=Double.parseDouble(ckhsMap.get(manager_name)==null?"0.0":ckhsMap.get(manager_name));
-                if(rate>=1){
-                	resultMap.put(manager_name, score);
-                }else if(rate<=0) {
-                	resultMap.put(manager_name, 0.0);
-                }else {
-                	resultMap.put(manager_name, score*rate);
-                }
+							"select bb.xd_col2 xd_col2,dk.hj XD_COL7 from (select dkxj.xd_col81 xd_col81,sum(dkxj.xd_col7) hj from(select XD_COL1 XD_COL1,XD_COL81 XD_COL81,sum(XD_COL6) XD_COL6,sum(XD_COL7) XD_COL7 from wnbank.S_LOAN_DK where  XD_COL5>='"+yearStartDate+"' and XD_COL5<='"+checkDate+"' and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"+checkDate+"' group by XD_COL1,XD_COL81) dkxj group by dkxj.XD_COL81 )dk left join wnbank.s_loan_ryb bb on dk.xd_col81=bb.xd_col1");
+
+			// 获取到对公累计收回到期贷款本金
+			HashMap<String, String> dgBackUpMoneyMap = UIUtil
+					.getHashMapBySQLByDS(
+							null,
+							"SELECT b.name,a.AMOUNTREPAID FROM (select dg.cus_manager cus_manager,sum(hk.AMOUNTREPAID) AMOUNTREPAID from(select cus_manager cus_manager,CUS_ID CUS_ID from wnbank.s_cmis_acc_loan where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+									+ checkDate
+									+ "' and cla<>'05' and account_status='1' and loan_balance<>'0'  group by cus_manager,CUS_ID) dg left join  wnbank.S_CMIS_ACC_BILL_REPAY hk on hk.CUS_ID=dg.CUS_ID where to_char(to_date(DATEOFREPAYMENT,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
+									+ yearStartDate
+									+ "' and to_char(to_date(DATEOFREPAYMENT,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
+									+ checkDate
+									+ "' group by dg.cus_manager) a LEFT JOIN (V_SAL_PERSONINFO) b ON a.cus_manager=b.code");
+			HashMap<String, String> dgMoneyMap = UIUtil
+					.getHashMapBySQLByDS(
+							null,
+							"SELECT b.NAME,a.LOAN_BALANCE FROM (select dg.cus_manager cus_manager,sum(dg.LOAN_BALANCE) LOAN_BALANCE from (select cus_manager cus_manager,sum(LOAN_BALANCE) LOAN_BALANCE from wnbank.s_cmis_acc_loan where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+									+ checkDate
+									+ "' and cla<>'05' and loan_balance<>'0' and account_status='1' and to_char(to_date(ORIG_EXPI_DATE,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
+									+ yearStartDate
+									+ "' and to_char(to_date(ORIG_EXPI_DATE,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
+									+ checkDate
+									+ "' group by CUS_ID,cus_manager) dg  group by dg.cus_manager) a LEFT JOIN V_SAL_PERSONINFO b ON a.cus_manager=b.code");
+			String[] managers_names = UIUtil
+					.getStringArrayFirstColByDS(null,
+							"SELECT NAME FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+			DecimalFormat format=new DecimalFormat("#.00");
+			for (int i = 0; i < managers_names.length; i++) {
+				double dsBackUpMoney = Double.parseDouble(dsBackUpMoneyMap
+						.get(managers_names[i]) == null || dsBackUpMoneyMap.get(managers_names[i]).equals("")  ? "0.0"
+						: dsBackUpMoneyMap.get(managers_names[i]));
+				double dsMoney = Double.parseDouble(dsMoneyMap
+						.get(managers_names[i]) == null || dsMoneyMap.get(managers_names[i]).equals("") ?  "0.0" : dsMoneyMap
+						.get(managers_names[i]));
+				double dgBackUpMoney = Double.parseDouble(dgBackUpMoneyMap
+						.get(managers_names[i]) == null ||dgBackUpMoneyMap.get(managers_names[i]).equals("")? "0.0"
+						: dgBackUpMoneyMap.get(managers_names[i]));
+				double dgMoney = Double.parseDouble(dgMoneyMap
+						.get(managers_names[i]) == null ||dgMoneyMap.get(managers_names[i]).equals("") ? "0.0" : dgMoneyMap
+						.get(managers_names[i]));
+                double dsMonth1_3=Double.parseDouble(dsMonth1_3Map.get(managers_names[i])==null ||dsMonth1_3Map.get(managers_names[i]).equals("") ? "0.0":dsMonth1_3Map.get(managers_names[i]));
+				double dgdsMoney = dsMoney+dsBackUpMoney+dsMonth1_3+dgMoney;//应收回本金
+				double backUpMoney = dsBackUpMoney + dgBackUpMoney+dsMonth1_3;//实际收回
+                System.out.println("客户经理:"+managers_names[i]+",对私累计未收回="+dsBackUpMoney+",对私应收="+dsMoney+",对公收回="+dgBackUpMoney+",对公应收="+dgMoney+"1-3月份累计收回:"+dsMonth1_3);
+				if (backUpMoney == 0) {
+					resultMap.put(managers_names[i], 0.0);
+					continue;
+				}
+				if (dgdsMoney == 0) {
+					resultMap.put(managers_names[i], 0.0);
+					continue;
+				}
+				double rate =Double.parseDouble(format.format(backUpMoney / dgdsMoney));
+				if (rate < 0.97) {
+					resultMap.put(managers_names[i], 0.0);
+				}else if(rate==0.97){
+					resultMap.put(managers_names[i], 2.0);
+				}else{
+					double score =Double.parseDouble(format.format(2 + (rate - 0.97) / 0.001 * 0.1));
+					resultMap.put(managers_names[i],  score>=5.0?5.0:score);
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return resultMap;
 	}
+	
+		/**
+		 * 客户经理绩效考核之当年新增不良贷款
+		 * 为了方便测试，使用dmo查询出现空指针异常，暂时使用dmo查询，以后出现异常，在进行更正
+		 * @param dateNum
+		 * @return
+		 */
+		public HashMap<String, Double> getDnxzbldk(int dateNum) {
+			HashMap<String, Double> resultMap = new HashMap<String, Double>();
+			try {
+				// 获取到年初和考核日期
+				String checkDate = getYearStartAndEnd(dateNum).get(1);
+				// 计算新增不良贷款容忍额度
+				HashMap<String, String> tolerateMoneyMap =UIUtil
+						.getHashMapBySQLByDS(
+								null,
+								"SELECT b.xd_col2,a.money FROM (SELECT xd_col81,sum(xd_col7) money FROM WNBANK.S_LOAN_DK WHERE TO_CHAR(TO_DATE(LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+										+ checkDate
+										+ "' AND xd_col7>0 GROUP BY xd_col81) a LEFT JOIN (WNBANK.S_LOAN_RYB) b ON a.xd_col81=b.xd_col1");
+				// 计算新增不良贷款余额
+				HashMap<String, String> addTolerateMoneyMap = UIUtil
+						.getHashMapBySQLByDS(
+								null,
+								"SELECT bb.xd_col2,aa.money FROM (SELECT a.xd_col81,sum(a.xd_col7) money FROM (SELECT xd_col1,xd_col7,xd_col81 FROM WNBANK.s_loan_dk WHERE TO_CHAR(TO_DATE(LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+										+ checkDate
+										+ "' AND XD_COL22 IN ('03','04') AND xd_col7>0) a LEFT JOIN (SELECT xd_col1,xd_col7,XD_COL81 FROM WNBANK.S_LOAN_DK WHERE TO_CHAR(TO_DATE(LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+										+ WnUtils.getYearEnd(checkDate)
+										+ "' AND xd_col22 IN ('01','02') AND xd_col7>0) b ON a.xd_col1=b.xd_col1 WHERE b.xd_col1 IS NOT NULL GROUP BY a.xd_col81) aa LEFT JOIN (WNBANK.S_LOAN_RYB) bb ON aa.xd_col81=bb.xd_col1");
+				String[] manager_names = UIUtil
+						.getStringArrayFirstColByDS(null,
+								"SELECT NAME FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+				double rate = 0.0;
+				if (checkDate.indexOf("06-30") != -1) {
+					rate = 0.004;
+				} else if (checkDate.indexOf("12-31") != -1) {
+					rate = 0.008;
+				}
+				DecimalFormat format=new DecimalFormat("#.00");
+				for (int i = 0; i < manager_names.length; i++) {
+					double tolerateMoney = Double.parseDouble(tolerateMoneyMap
+							.get(manager_names[i]) == null ? "0.0"
+							: tolerateMoneyMap.get(manager_names[i]))
+							* rate;// 新增不良贷款容忍额度
+					if (tolerateMoney <= 0) {
+						resultMap.put(manager_names[i], 0.0);
+						continue;
+					}
+					double addTolerateMoney = Double
+							.parseDouble(addTolerateMoneyMap.get(manager_names[i]) == null ? "0.0"
+									: addTolerateMoneyMap.get(manager_names[i]));
+					System.out.println("客户经理:"+manager_names[i]+",容忍度:"+tolerateMoney+",新增不良贷款:"+addTolerateMoney);
+					if (addTolerateMoney <= 0) {
+						resultMap.put(manager_names[i], 3.0);
+						continue;
+					}
+					double score =Double.parseDouble(format.format((tolerateMoney - addTolerateMoney)
+							/ tolerateMoney * 3.0));
+					if(score<=0.0 ){
+						resultMap.put(manager_names[i], 0.0);
+					}else if(score>=3.0){
+						resultMap.put(manager_names[i], 3.0);
+					}else{
+					    resultMap.put(manager_names[i],Double.parseDouble(format.format(score)));
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return resultMap;
+		}
 
-	// 存款有效户数余额提升
-	/**
-	 * 存款有效户数余额提升
-	 * V_WN_DEPOSIT_BALANCE
-	 * @param dateNum
-	 * @return
-	 */
-	public HashMap<String, Double> getCKyxhsye(int dateNum) {
-		HashMap<String, Double> resultMap = new HashMap<String, Double>();
-		try {
-             String yearStartDate = getYearStartAndEnd(dateNum).get(0);
-             String check_date = getYearStartAndEnd(dateNum).get(1);
-             HashMap<String, String> manager_names = dmo.getHashMapBySQLByDS(null, "SELECT name,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
-             HashMap<String,String> ckyeMap = dmo.getHashMapBySQLByDS(null, "SELECT  name,sum(bfb) FROM V_WN_DEPOSIT_BALANCE WHERE date_time>='"+yearStartDate+"' AND date_time<='"+check_date+"' GROUP BY name");
-		     Set<String> managerSet = manager_names.keySet();
-		     for (String manager_name : managerSet) {
-				String manager_type=manager_names.get(manager_name);
+
+		// 收回存量不良贷款
+		/**
+		 * 客户经理等级评定之收回存量不良贷款
+		 * 为了方便测试，dmo查询结果为空，暂时使用dmo对sql进行查询，如果以后遇到问题，在进行更改
+		 * @param dateNum
+		 * @return
+		 */
+		public HashMap<String, Double> getshcl(int dateNum) {
+			HashMap<String, Double> resultMap = new HashMap<String, Double>();
+			try {
+				String yearStartDate = getYearStartAndEnd(dateNum).get(0);
+				String check_date = getYearStartAndEnd(dateNum).get(1);
+				// 实际收回不良贷款
+				HashMap<String, String> backUpMoneyMap = UIUtil
+						.getHashMapBySQLByDS(
+								null,
+								"SELECT bb.xd_col2,aa.money FROM (SELECT b.xd_col81 xd_col81,sum(a.xd_col5) money FROM (SELECT xd_col1,XD_COL5 FROM WNBANK.S_LOAN_HK WHERE TO_CHAR(TO_DATE(LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
+										+ check_date
+										+ "'  AND TO_CHAR(TO_DATE(LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
+										+ yearStartDate
+										+ "'  AND XD_COL16 IN ('03','04')  AND xd_col5>0) a LEFT JOIN (SELECT xd_col1,XD_COL81 FROM WNBANK.S_LOAN_DK WHERE TO_CHAR(TO_DATE(LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+										+ check_date
+										+ "') b ON a.xd_col1=b.xd_col1 GROUP BY b.xd_col81) aa LEFT JOIN (WNBANK.S_LOAN_RYB) bb ON aa.xd_col81=bb.xd_col1");
+				// 存量不良贷款金额
+				HashMap<String, String> clMoneyMap = UIUtil
+						.getHashMapBySQLByDS(
+								null,
+								"SELECT bbb.xd_col2,aaa.money FROM (SELECT aa.xd_col81,sum(aa.xd_col7) money FROM (SELECT xd_col1,xd_col7,XD_COL81 FROM WNBANK.S_LOAN_DK WHERE  TO_CHAR(TO_DATE(LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+										+ check_date
+										+ "' AND XD_COL22 IN ('03','04')) aa LEFT JOIN (SELECT xd_col1,xd_col7,XD_COL81 FROM WNBANK.S_LOAN_DK WHERE  TO_CHAR(TO_DATE(LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')='"
+										+ WnUtils.getYearEnd(check_date)
+										+ "' AND XD_COL22 IN ('03','04')) bb ON aa.xd_col1=bb.xd_col1 WHERE bb.xd_col1 IS NOT NULL GROUP BY aa.xd_col81) aaa LEFT JOIN (WNBANK.S_LOAN_RYB) bbb ON aaa.xd_col81=bbb.xd_col1");
+				String[] manager_names = UIUtil
+						.getStringArrayFirstColByDS(null,
+								"SELECT NAME FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+				double rate = 0.0;
+				if (check_date.indexOf("06-30") != -1) {
+					rate = 0.2;
+				} else   {
+					rate = 0.4;
+				}
+				DecimalFormat format=new DecimalFormat("#.00");
+				for (int i = 0; i < manager_names.length; i++) {
+					double backUpMoney = Double.parseDouble(backUpMoneyMap
+							.get(manager_names[i]) == null ? "0.0" : backUpMoneyMap
+							.get(manager_names[i]));
+					if (backUpMoney <= 0) {
+						resultMap.put(manager_names[i], 0.0);
+						continue;
+					}
+					double clMoney = Double.parseDouble(clMoneyMap
+							.get(manager_names[i]) == null ? "0.0" : clMoneyMap
+							.get(manager_names[i]));
+					System.out.println("客户经理:"+manager_names[i]+",收回存量："+backUpMoney+",存量不良:"+clMoney);
+					if (clMoney <= 0.0) {
+						resultMap.put(manager_names[i], 0.0);
+						continue;
+					}
+					double score =Double.parseDouble(format.format(backUpMoney / (clMoney * rate)));
+					if(score<=0){
+						resultMap.put(manager_names[i], 0.0);
+					}else if(score>=5.0){
+						resultMap.put(manager_names[i], 5.0);
+					}else{
+					    resultMap.put(manager_names[i], score);
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return resultMap;
+		}
+
+		/**
+		 * 客户经理等级评定之贷款客户手机银行开户覆盖率
+		 * 城区和乡镇:3分
+		 * @param dateNum
+		 * @return
+		 */
+		public HashMap<String, Double> getDKsjyh(int dateNum) {
+			HashMap<String, Double> resultMap = new HashMap<String, Double>();
+			try {
+
+				String yearStartDate = getYearStartAndEnd(dateNum).get(0);
+				String checkDate = getYearStartAndEnd(dateNum).get(1);
+				// 首先计算建档明细
+				String gtjmSQL = "select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
+						+ yearStartDate
+						+ "' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
+						+ checkDate
+						+ "' and xd_col10 not in('未评级','等外','!$') and XD_COL4 in('206','908') group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";// 个体工商户、居民建档户数
+				String dwzgSQL = "select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
+						+ yearStartDate
+						+ "'and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
+						+ checkDate
+						+ "'and xd_col10 not in('未评级','等外','!$') and XD_COL4='907' group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";// 单位职工
+				String nhSQL = "select yb.xd_col2 xd_col2,zc.tj tj  from(select xx.xd_col96 xd_col96,count(xx.xd_col96) tj from (select XD_COL1,XD_COL96 from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
+						+ yearStartDate
+						+ "' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
+						+ checkDate
+						+ "' and xd_col10 not in('未评级','等外','!$') and XD_COL4='905') xx left join wnbank.S_LOAN_KHXXZCQK zc on xx.xd_col1=zc.xd_col1 where zc.XD_COL6!='0' group by xx.xd_col96)zc left join wnbank.s_loan_ryb yb on zc.xd_col96=yb.xd_col1";// 农户建档
+				String xwSQL = "select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"
+						+ yearStartDate
+						+ "' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
+						+ checkDate
+						+ "' and xd_col10 not in('未评级','等外','!$') and XD_COL4='206' and XD_COL163 not in('05','03','06','01') group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";// 小微企业建档
+
+				String sjyh = "select b.xd_col2 name,a.card_no num from (select bbbbb.xd_col96,count(aaaaa.card_no) card_no from (select aaa.card_no card_no,aaa.manager_no manager_no from (select distinct(aa.card_no) card_no,aa.manager_no manager_no from (select a.a card_no,a.b manager_no,a.c c,b.b d from  (select * from excel_tab_12 where c!='否' and year||'-'||month='"
+						+ checkDate.substring(0,checkDate.lastIndexOf("-"))
+						+ "') a  left join (select * from excel_tab_49  where  year||'-'||month='"+checkDate.substring(0,checkDate.lastIndexOf("-"))+"') b on a.a=b.b where b.a is not null order by a.a) aa) aaa  where (to_char(sysdate,'yyyy')-substr(aaa.card_no,7,4))<=45) aaaaa left join (select xd_col7,xd_col96 from wnbank.s_loan_khxx where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"+checkDate+"')  bbbbb on bbbbb.xd_col7=aaaaa.card_no  group by bbbbb.xd_col96) a left join wnbank.s_loan_ryb b on b.xd_col1=a.xd_col96";
+				HashMap<String, String> gtjmMap = UIUtil.getHashMapBySQLByDS(null,
+						gtjmSQL);
+				HashMap<String, String> dwzgMap = UIUtil.getHashMapBySQLByDS(null,
+						dwzgSQL);
+				HashMap<String, String> nhMap = UIUtil
+						.getHashMapBySQLByDS(null, nhSQL);
+				HashMap<String, String> xwMap = UIUtil
+						.getHashMapBySQLByDS(null, xwSQL);
+				HashMap<String, String> shyhMap = UIUtil.getHashMapBySQLByDS(null,
+						sjyh);
+				HashVO[] managerVos = UIUtil
+						.getHashVoArrayByDS(
+								null,
+								"SELECT CODE,NAME,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+				// 获取到手机银行开户数据
+				DecimalFormat format=new DecimalFormat("#.000");
+				DecimalFormat scoreformat=new DecimalFormat("#.00");
 				double score=0.0;
-				if(manager_type.equals("城区客户经理")){
-					score=4.0;
-				}else{
-					score=3.0;
+				for (int i = 0; i < managerVos.length; i++) {
+					String manager_name = managerVos[i].getStringValue("name");// 获取导客户经理姓名
+					double jdSum = 0;
+					jdSum = Double
+							.parseDouble(gtjmMap.get(manager_name) == null ? "0"
+									: gtjmMap.get(manager_name))
+							+ Double.parseDouble(dwzgMap.get(manager_name) == null ? "0"
+									: dwzgMap.get(manager_name))
+							+ Double.parseDouble(nhMap.get(manager_name) == null ? "0"
+									: nhMap.get(manager_name))
+							+ Double.parseDouble(xwMap.get(manager_name) == null ? "0"
+									: xwMap.get(manager_name));
+					if (jdSum == 0) {
+						resultMap.put(manager_name, 0.0);
+						continue;
+					}
+					
+				    if(shyhMap.get(manager_name)==null){
+				    	resultMap.put(manager_name, 0.0);
+				    }
+				    
+				    //手机银行开户数
+				    double sjyhNum=Double.parseDouble(shyhMap.get(manager_name)==null?"0":shyhMap.get(manager_name));
+					double route =Double.parseDouble(format.format(sjyhNum/jdSum));
+					System.out.println("客户经理姓名:"+manager_name+",建档户数:"+jdSum+",手机银行开户:"+sjyhNum+",完成比率:"+route);
+					if (route == 0.2) {
+						resultMap.put(manager_name, 2.0);
+					} else if (route > 0.2) {
+						score=2 + (route - 0.20) / 0.001 * 0.1 > 3 ? 3.0
+								: 2 + (route - 0.20) / 0.001 * 0.1;
+						resultMap.put(manager_name,
+							 Double.parseDouble(scoreformat.format(score)));
+					} else {
+						score=2 - (0.20 - route) / 0.001 * 0.2 < 0 ? 0.00
+								: 2 - (0.20 - route) / 0.001 * 0.2;
+						resultMap.put(manager_name,
+							 Double.parseDouble(scoreformat.format(score)));
+					}
 				}
-				double rate=Double.parseDouble(ckyeMap.get(manager_name)==null?"0.0":ckyeMap.get(manager_name));
-				if(rate==0){
-					resultMap.put(manager_name, 0.0);
-				}else if(rate>=1){
-					resultMap.put(manager_name, score);
-				}else{
-					resultMap.put(manager_name, score*rate);
-				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			return resultMap;
 		}
-		return resultMap;
-	}
-
-	/**
-	 *  贷款余额新增
-	 *  [V_WN_LOAN_BALANCE]
-	 * @return
-	 */
-	public HashMap<String, Double> getDKyexz(int dateNum) {
-		HashMap<String, Double> resultMap = new HashMap<String, Double>();
-		try {
-			String yearStartDate=getYearStartAndEnd(dateNum).get(0);
-			String check_date=getYearStartAndEnd(dateNum).get(1);
-			String[] managers = dmo.getStringArrayFirstColByDS(null, "SELECT name FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
-		    HashMap<String,String> ckyeMap = dmo.getHashMapBySQLByDS(null, "SELECT  name,sum(bfb) FROM V_WN_LOAN_BALANCE WHERE date_time>='"+yearStartDate+"' AND date_time<='"+check_date+"' GROUP BY name");
-		    for (int i = 0; i < managers.length; i++) {
-				double rate=Double.parseDouble(ckyeMap.get(managers[i])==null?"0.0":ckyeMap.get(managers[i]));
-				if(rate<=0){
-					resultMap.put(managers[i],0.0 );
-				}else if(rate>=1){
-					resultMap.put(managers[i], 3.0);
-				}else{
-					resultMap.put(managers[i], 3.0*rate);
+		/**
+		 * WN_ZNSH_RESULT 客户经理等级评定之助农商户维护考核
+		 * 声明:因为测试过程中，dmo中的方法无法执行成功，暂时使用dmo中的方法，日后出现问题，记得改正。
+		 * 乡镇:3分，城区不考核此项
+		 * @param dateNum
+		 * @return
+		 */
+		public HashMap<String, Double> getZnsh(int dateNum) {
+			HashMap<String, Double> resultMap = new HashMap<String, Double>();
+			try {
+				HashMap<String, String> managerNamesMap = UIUtil
+						.getHashMapBySQLByDS(null,
+								"SELECT NAME,STATIONKIND FROM V_SAL_PERSONINFO  WHERE POSITION LIKE '%客户经理%'");
+				Set<String> managerNames = managerNamesMap.keySet();
+				String yearStartDate = getYearStartAndEnd(dateNum).get(0);
+				String date_time = getYearStartAndEnd(dateNum).get(1);// 考核月日期
+				
+				HashMap<String, String> managerRateMap =UIUtil.getHashMapBySQLByDS(null, "select aaaa.b name,count(aaaa.c) num from (select aaa.b,aaa.c from (select a.b b,a.c c,b.num num from (select b,c from excel_tab_10 where year||'-'||month='"+date_time.substring(0,7)+"' ) a left join (select c,count(b) num from excel_tab_11 where year||'-'||month='"+date_time.substring(0,7)+"' group by c) b on b.c=a.c) aaa left join (select aa.b b,aa.c c,count(bb.a) num from (select a,b,c from excel_tab_10 where year||'-'||month='"+date_time.substring(0,7)+"' ) aa left join (select a.a,a.num,b.c,b.e from (select a,(b+c) num  from excel_tab_14 where year||'-'||month='"+date_time.substring(0,7)+"') a left join (select a,b ,c,d,e from excel_tab_11 where year ||'-'|| month='"+date_time.substring(0,7)+"' and d !='否') b on a.a=b.b where a.num>=b.e) bb on aa.c=bb.c  group by aa.b,aa.c)  bbb  on   aaa.b=bbb.b and aaa.c=bbb.c where aaa.num=bbb.num) aaaa group by aaaa.b");
+				HashMap<String,String>  gridNumMap = UIUtil.getHashMapBySQLByDS(null, "SELECT b,COUNT(C) FROM EXCEL_TAB_10 WHERE year||'-'||month='"+date_time.substring(0,7)+"' GROUP BY b");
+				DecimalFormat format=new DecimalFormat("#.00");
+				for (String manager_name : managerNames) {
+					String manager_type=managerNamesMap.get(manager_name);
+					if("城区客户经理".equals(manager_type)){
+						resultMap.put(manager_name, 0.0);
+						continue;
+					}
+					double managerRate =Double.parseDouble(managerRateMap.get(manager_name)==null?"0":managerRateMap.get(manager_name));//客户经理达标网格数
+					double gridNum=Double.parseDouble(gridNumMap.get(manager_name)==null?"0":gridNumMap.get(manager_name));//客户经理累计网格数
+					if(gridNum==0){
+						resultMap.put(manager_name, gridNum);
+						continue;
+					}
+					System.out.println("客户经理:"+manager_name+",完成网格数:"+managerRate+",网格总数:"+gridNum+",完成比:"+(managerRate/gridNum));
+					double score=( managerRate / gridNum ) * 3.0;
+					resultMap.put(manager_name,Double.parseDouble(format.format(score)));
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			return resultMap;
 		}
-		return resultMap;
-	}
+		
+		/**
+		 * 存款有效户数余额提升 V_WN_DEPOSIT_BALANCE
+		 * 为了方便测试，dmo查询出的sql为null，暂时使用dmo查询sql，以后遇见bug在更正 
+		 * 城区4分，乡镇3分
+		 * @param dateNum
+		 * @return
+		 */
+		public HashMap<String, Double> getCKyxhsye(int dateNum) {
+			HashMap<String, Double> resultMap = new HashMap<String, Double>();
+			try {
+				String yearStartDate = getYearStartAndEnd(dateNum).get(0);
+				String check_date = getYearStartAndEnd(dateNum).get(1);
+				HashMap<String, String> manager_names = UIUtil
+						.getHashMapBySQLByDS(null,
+								"SELECT name,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+				HashMap<String, String> ckyeMap = UIUtil.getHashMapBySQLByDS(null,
+						"SELECT  name,sum(bfb) FROM V_WN_DEPOSIT_BALANCE WHERE  date_time='" + check_date
+								+ "' GROUP BY name");
+				Set<String> managerSet = manager_names.keySet();
+				DecimalFormat format=new DecimalFormat("#.00");
+				double fullscore=0.0;
+				for (String manager_name : managerSet) {
+					String manager_type = manager_names.get(manager_name);
+					double rate = Double
+							.parseDouble(ckyeMap.get(manager_name) == null || ckyeMap.get(manager_name).equals("")? "0.0"
+									: ckyeMap.get(manager_name));
+					System.out.println("客户经理:"+manager_name+",存款余额新增完成比:"+rate);
+					if("城区客户经理".equals(manager_type)){
+						fullscore=4.0;
+					}else{
+						fullscore=3.0;
+					}
+					if (rate <= 0) {
+						resultMap.put(manager_name, 0.0);
+					} else if (rate >= 1) {
+						resultMap.put(manager_name, fullscore);
+					} else {
+						resultMap.put(manager_name, Double.parseDouble(format.format(fullscore * rate)));
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return resultMap;
+		}
+		
 
-	/**
-	 * 贷款户数新增
-	 * [V_WN_DEPOSIT_NUMBER]
-	 * @return
-	 */
-	public HashMap<String, Double> getDKhsxz(int dateNum) {
-		HashMap<String, Double> resultMap = new HashMap<String, Double>();
-		try {
-              String yearStartDate=getYearStartAndEnd(dateNum).get(0);
-              String check_date=getYearStartAndEnd(dateNum).get(1);
-              HashMap<String,String> manager_names = dmo.getHashMapBySQLByDS(null, "SELECT name,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
-		      HashMap<String,String> dkhsMap = dmo.getHashMapBySQLByDS(null,"SELECT name,sum(BFB) FROM V_WN_DEPOSIT_NUMBER WHERE DATE_TIME>='"+yearStartDate+"' AND DATE_TIME<='"+check_date+"' GROUP BY NAME" );
-		      Set<String> managerSet = manager_names.keySet();
-		      for (String manager_name : managerSet) {
-				String manager_type=manager_names.get(manager_name);
+
+		/**
+		 * 客户经理评级之存款有效户数提升
+		 * 为了方便测试，dmo查询出的结果为null值，暂时使用dmo对sql进行查询，以后出现异常在更正
+		 * 乡镇5分，城区4分
+		 * @param dateNum
+		 * @return
+		 */
+		public HashMap<String, Double> getCKyxhs(int dateNum) {
+			HashMap<String, Double> resultMap = new HashMap<String, Double>();
+			try {
+				// 获取到当前日期
+				String yearStart = getYearStartAndEnd(dateNum).get(0);// 获取到年初时间
+				String check_date = getYearStartAndEnd(dateNum).get(1);// 获取到考核时间
+				Map<String, String> ckhsMap = UIUtil.getHashMapBySQLByDS(null,
+						"SELECT name,bfb FROM V_WN_DEPOSIT_NUMBER  WHERE  date_time='" + check_date
+								+ "'");
+				HashMap<String, String> manager_names = UIUtil
+						.getHashMapBySQLByDS(
+								null,
+								"SELECT name,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+				Set<String> manager_sets = manager_names.keySet();
+				DecimalFormat format=new DecimalFormat("#.00");
+				double score = 0;
+				double fullscore=0.0;
+				for (String manager_name : manager_sets) {
+					String manager_type = manager_names.get(manager_name);
+					
+					if (manager_type.equals("城区客户经理")) {
+						fullscore = 4.0;
+					} else {
+						fullscore = 5.0;
+					}
+					double rate = Double.parseDouble(ckhsMap.get(manager_name) == null || ckhsMap.get(manager_name).equals("")? "0.0": ckhsMap.get(manager_name));
+					System.out.println("客户经理姓名:"+manager_name+",存款户数新增完成比:"+rate);
+					if (rate >= 1.0) {
+						resultMap.put(manager_name, score);
+					} else if (rate <= 0) {
+						resultMap.put(manager_name, 0.0);
+					} else {
+						score=Double.parseDouble(format.format(fullscore* rate));
+						resultMap.put(manager_name,score>=fullscore?fullscore:score);
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return resultMap;
+		}
+		
+		/**
+		 * 贷款余额新增 [V_WN_LOAN_BALANCE]
+		 * 为了方便测试,dmo查询出的结果为空值，暂时使用dmo进行测试，以后遇见异常在进行更正。
+		 * 城区和乡镇:3分
+		 * @return
+		 */
+		public HashMap<String, Double> getDKyexz(int dateNum) {
+			HashMap<String, Double> resultMap = new HashMap<String, Double>();
+			try {
+				String yearStartDate = getYearStartAndEnd(dateNum).get(0);
+				String check_date = getYearStartAndEnd(dateNum).get(1);
+				String[] managers = UIUtil
+						.getStringArrayFirstColByDS(null,
+								"SELECT name FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+				HashMap<String, String> ckyeMap = UIUtil.getHashMapBySQLByDS(null,
+						"SELECT  name,bfb FROM V_WN_LOAN_BALANCE WHERE date_time='" + check_date
+								+ "'");
+				DecimalFormat format=new DecimalFormat("#.00");
+				for (int i = 0; i < managers.length; i++) {
+					double rate = Double
+							.parseDouble(ckyeMap.get(managers[i]) == null || ckyeMap.get(managers[i]).equals("")? "0.0"
+									: ckyeMap.get(managers[i]));
+					System.out.println("客户经理:"+managers[i]+",贷款余额新增完成比:"+rate);
+					if (rate <= 0) {
+						resultMap.put(managers[i], 0.0);
+					} else if (rate >= 1) {
+						resultMap.put(managers[i], 3.0);
+					} else {
+						resultMap.put(managers[i], Double.parseDouble(format.format(3.0 * rate)));
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return resultMap;
+		}
+		
+		/**
+		 * 贷款户数新增 [V_WN_DEPOSIT_NUMBER]
+		 * 为了方便测试，dmo在进行查询时会出现空指针异常，暂时使用dmo来进行查询，以后出现bug在改正
+		 * 城区5分:乡镇:3分
+		 * @return
+		 */
+		public HashMap<String, Double> getDKhsxz(int dateNum) {
+			HashMap<String, Double> resultMap = new HashMap<String, Double>();
+			try {
+				String yearStartDate = getYearStartAndEnd(dateNum).get(0);
+				String check_date = getYearStartAndEnd(dateNum).get(1);
+				HashMap<String, String> manager_names = UIUtil
+						.getHashMapBySQLByDS(null,
+								"SELECT name,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+				HashMap<String, String> dkhsMap = UIUtil.getHashMapBySQLByDS(null,
+						"SELECT name,BFB FROM V_WN_LOANS_NEWLY WHERE  DATE_TIME='" + check_date
+								+ "'");
+				Set<String> managerSet = manager_names.keySet();
+				DecimalFormat format=new DecimalFormat("#.00");
+				double score = 0.0;
+				double fullScore=0.0;
+				for (String manager_name : managerSet) {
+					String manager_type = manager_names.get(manager_name);
+					if ("城区客户经理".equals(manager_type)) {
+						fullScore = 5.0;
+					} else {
+						fullScore = 3.0;
+					}
+					double rate = Double
+							.parseDouble(dkhsMap.get(manager_name) == null  || dkhsMap.get(manager_name).equals("") ? "0.0"
+									: dkhsMap.get(manager_name));
+					System.out.println("客户经理:"+manager_name+",贷款户数完成比:"+rate);
+					if (rate <= 0) {
+						resultMap.put(manager_name, 0.0);
+					} else if (rate >= 1) {
+						resultMap.put(manager_name, fullScore);
+					} else {
+						score=fullScore*rate>=fullScore?fullScore:fullScore*rate;
+						resultMap.put(manager_name, Double.parseDouble(format.format(score)));
+					}
+				}
+				;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return resultMap;
+		}
+		
+
+		/**
+		 * 客户经理评级之新建档案
+		 * 城区:4分，乡镇2分
+		 * 为了方便测试，dmo执行sql查询时，会出现空指针异常的情况，暂时使用dmo。暂时无法测试，原因为:目标任务表中缺少建档任务
+		 * @return
+		 */
+		public HashMap<String, Double> jdRate(int dateNum) {
+			HashMap<String, Double> resultMap = new HashMap<String, Double>();
+			try {
+				// 获取到年初时间
+				String yearStartDate=getYearStartAndEnd(dateNum).get(0);
+				String checkDate=getYearStartAndEnd(dateNum).get(1);
+//				////获取到建档评级考核数据
+				String nhSQL = "select yb.xd_col2 xd_col2,zc.tj tj  from(select xx.xd_col96 xd_col96,count(xx.xd_col96) tj from (select XD_COL1,XD_COL96 from wnbank.s_loan_khxx where   to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"
+						+ checkDate
+						+ "'  and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"+yearStartDate+"' and xd_col10 not in('未评级','等外','!$') and XD_COL4='905') xx left join wnbank.S_LOAN_KHXXZCQK zc on xx.xd_col1=zc.xd_col1 where zc.XD_COL6!='0' group by xx.xd_col96)zc left join wnbank.s_loan_ryb yb on zc.xd_col96=yb.xd_col1";// 农户建档
+				////个体工商户、居民建档
+	            String gjSQL="select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where  to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"+checkDate+"' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"+yearStartDate+"' and    xd_col10 not in('未评级','等外','!$') and XD_COL4 in('206','908') group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";
+				////单位职工建档
+	            String dwSQL="select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where  to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"+checkDate+"'and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"+yearStartDate+"' and  xd_col10 not in('未评级','等外','!$') and XD_COL4='907' group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";
+				////小微企业建档
+	            String xwSQL="select yb.xd_col2 xd_col2,xx.tj tj from (select XD_COL96 XD_COL96,count(XD_COL96) tj from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='[考核月初日期]' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')<='"+checkDate+"' and to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm-dd')>='"+yearStartDate+"' and xd_col10 not in('未评级','等外','!$') and XD_COL4='206' and XD_COL163 not in('05','03','06','01') group by XD_COL96)xx left join wnbank.s_loan_ryb yb on xx.xd_col96=yb.xd_col1";
+	            HashMap<String, String> nhMap=UIUtil.getHashMapBySQLByDS(null, nhSQL);
+	            HashMap<String,String> gjMap = UIUtil.getHashMapBySQLByDS(null, gjSQL);
+	            HashMap<String,String> dwMap = UIUtil.getHashMapBySQLByDS(null, dwSQL);
+	            HashMap<String,String> xwMap = UIUtil.getHashMapBySQLByDS(null, xwSQL);
+	    		// 获取到相应的人员信息
+				HashVO[] managerVos = UIUtil
+						.getHashVoArrayByDS(
+								null,
+								"SELECT NAME,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+	            HashMap<String,String> jobNums = UIUtil.getHashMapBySQLByDS(null, "SELECT A,sum(R) FROM EXCEL_TAB_53 WHERE year='"+checkDate.substring(0,4)+"' GROUP BY A");//按照考核的工作量来做
+				DecimalFormat format=new DecimalFormat("#.00");
 				double score=0.0;
-				if("城区客户经理".equals(manager_type)){
-					score=5.0;
-				}else{
-					score=4.0;
+				double fullScore=0.0;
+				for (int i = 0; i < managerVos.length; i++) {
+					String manager_type=managerVos[i].getStringValue("STATIONKIND");
+					String manager_name=managerVos[i].getStringValue("NAME");
+					double  jobNum=Double.parseDouble(jobNums.get(manager_name)==null?"0.0":jobNums.get(manager_name));
+					if(jobNum==0){
+						resultMap.put(manager_name, 0.0);
+						continue;
+					}
+					if(manager_type.equals("城区客户经理")){//所有建档都需要考虑
+						double  sum=Double.parseDouble(nhMap.get(manager_name)==null?"0":nhMap.get(manager_name))
+								+Double.parseDouble(gjMap.get(manager_name)==null?"0":gjMap.get(manager_name))
+								+Double.parseDouble(dwMap.get(manager_name)==null?"0":dwMap.get(manager_name))
+								+Double.parseDouble(xwMap.get(manager_name)==null?"0":xwMap.get(manager_name));
+						fullScore=4.0;
+						score=sum/jobNum*fullScore;
+						System.out.println("客户经理:"+manager_name+",建档户数:"+sum);
+					}else{
+						double nhNum=Double.parseDouble(nhMap.get(manager_name)==null?"0":nhMap.get(manager_name));
+						fullScore=2.0;
+						score=nhNum/jobNum*fullScore;
+						System.out.println("客户经理:"+manager_name+",农户建档户数:"+nhNum);
+					}
+					System.out.println("客户经理:"+manager_name+",考核得分:"+score);
+					if(score<=0){
+						resultMap.put(manager_name, 0.0);
+					}else if(score>=fullScore){
+						resultMap.put(manager_name, fullScore);
+					}else {
+						resultMap.put(manager_name, Double.parseDouble(format.format(score)));
+					}
 				}
-				double rate=Double.parseDouble(dkhsMap.get(manager_name)==null?"0.0":dkhsMap.get(manager_name));
-				if(rate<=0){
-					resultMap.put(manager_name, 0.0);
-				}else if(rate>=1){
-					resultMap.put(manager_name, score);
-				}else{
-					resultMap.put(manager_name, score*rate);
-				}
-			};
-		} catch (Exception e) {
-			e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return resultMap;
 		}
-		return resultMap;
-	}
+		
 
+		/**
+		 * 客户经理评级之黔农E贷签约 WN_QNED_RESULT
+		 * 城区和乡镇分值:2分
+		 * @return
+		 */
+		public HashMap<String, Double> qnedRate(int dateNum) {
+			HashMap<String, Double> resultMap = new HashMap<String, Double>();
+			try {
+				String yearStartDate = getYearStartAndEnd(dateNum).get(0);
+				String checkDate = getYearStartAndEnd(dateNum).get(1);
+				String[] manager_names = UIUtil
+						.getStringArrayFirstColByDS(null,
+								"SELECT NAME FROM V_SAL_PERSONINFO WHERE POSITION  LIKE '%客户经理%'");
+				HashMap<String, String> qnedMap = UIUtil.getHashMapBySQLByDS(null,
+						"SELECT username,RATE FROM WN_QNED_RESULT   WHERE  DATE_TIME='" + checkDate
+								+ "'");
+				DecimalFormat decimal=new DecimalFormat("#.00");
+				double score=0.0;
+				for (int i = 0; i < manager_names.length; i++) {
+					String rate = qnedMap.get(manager_names[i]) == null ? "0.0"
+							: qnedMap.get(manager_names[i]);
+					System.out.println("客户经理:"+manager_names[i]+",完成比:"+rate);
+					if ("0.0".equals(rate)) {
+						resultMap.put(manager_names[i], 0.0);
+					} else {
+						score=Double.parseDouble(rate)*2.0>=2.0?2.0:Double.parseDouble(rate)*2.0;
+						resultMap.put(manager_names[i],
+								Double.parseDouble(decimal.format(score)));
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return resultMap;
+		}
+		
+		/**
+		 * ZPY 客户经理之黔农E贷线上替代
+		 * 为了方便测试，dmo执行sql出现空指针异常，暂时使用dmo执行sql查询，以后出现异常在更正。
+		 * @return
+		 */
+		public HashMap<String, Double> qnedtdScore(int dateNum) {
+			HashMap<String, Double> resultMap = new HashMap<String, Double>();
+			try {
+				String yearStartDate = getYearStartAndEnd(dateNum).get(0);
+				String checkDate = getYearStartAndEnd(dateNum).get(1);
+				// 获取到期客户经理的考核
+				String[] manager_names = UIUtil
+						.getStringArrayFirstColByDS(null,
+								"SELECT NAME FROM V_SAL_PERSONINFO WHERE POSITION LIKE '%客户经理%'");
+				HashMap<String, String> qnedtd = UIUtil
+						.getHashMapBySQLByDS(
+								null,
+								"SELECT USERNAME,RATE FROM WN_QNEDTD_RESULT WHERE DATE_TIME='"+checkDate+"'");
+				DecimalFormat format=new DecimalFormat("#.00");
+				for (int i = 0; i < manager_names.length; i++) {
+					double rate = Double
+							.parseDouble(qnedtd.get(manager_names[i]) == null ? "0.0"
+									: qnedtd.get(manager_names[i]));
+					if (rate <= 0.0) {
+						resultMap.put(manager_names[i], 0.0);
+					} else {
+						resultMap.put(manager_names[i],
+							Double.parseDouble(format.format(rate  * 2.0 > 2 ? 2.0 : rate  * 2.0)));
+					}
+					System.out.println("客户经理:"+manager_names[i]+",黔农E贷线上替代完成比:"+rate);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return resultMap;
+		}
 	// 获取年初时间
 	public String getYearStart() {
 		SimpleDateFormat simple = new SimpleDateFormat("yyyy");
@@ -3490,7 +3623,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		}
 		return yearStartDate;
 	}
-
+    
+	
 	// 获取到年中时间
 	public String getYearCenterDate() {
 		String result = "";
@@ -3535,33 +3669,28 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		return results;
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
 	public List<String> getYearStartAndEnd(int dateNum) {
 		List<String> list = new ArrayList<String>();
 		String[] currentDate = getCurrentDate();
 		String year = "";
 		String month = "";
 		String day = "";
-		if (dateNum != 0) {// 上半年
+		if (dateNum == 0) {// 上半年
 			year = currentDate[0];
 			month = "06";
 			day = "30";
 		} else {
-			year = String.valueOf(Integer.parseInt(year) - 1);
+			year = String.valueOf(Integer.parseInt(currentDate[0]) - 1);
 			month = "12";
 			day = "31";
 		}
-		String yearStartDate = year + "-" + "01-01";
-		String checkDate = year + "-" + month + "-" + day;
+		String yearStartDate = year + "-" + "01-01";//获取到考核年的年初日期
+		String checkDate = year + "-" + month + "-" + day;//获取到年末日期
 		list.add(yearStartDate);
 		list.add(checkDate);
+		list.add(String.valueOf(Integer.parseInt(year))+"-12-31");
 		return list;
 	}
-
-	
 	
 
 }

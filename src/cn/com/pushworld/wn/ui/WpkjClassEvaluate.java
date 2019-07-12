@@ -2,7 +2,6 @@ package cn.com.pushworld.wn.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import cn.com.infostrategy.ui.common.AbstractWorkPanel;
 import cn.com.infostrategy.ui.common.MessageBox;
 import cn.com.infostrategy.ui.common.UIUtil;

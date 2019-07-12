@@ -51,7 +51,6 @@ public class SjyhkhParticularsWKPanel extends AbstractWorkPanel implements Actio
 //				}
 				String data[][]=UIUtil.getStringArrayByDS(null,list.getQuickQueryPanel().getQuerySQL());
 				if(data.length<=0){
-					
 					WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil.lookUpRemoteService(WnSalaryServiceIfc.class);
 					String date_time=list.getQuickQueryPanel().getCompentRealValue("DATE_TIME");
 					date_time=date_time.substring(0,date_time.length()-1);

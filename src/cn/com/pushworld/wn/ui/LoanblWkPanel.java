@@ -17,12 +17,13 @@ import cn.com.infostrategy.ui.mdata.BillListDialog;
 import cn.com.infostrategy.ui.mdata.BillListHtmlHrefEvent;
 import cn.com.infostrategy.ui.mdata.BillListHtmlHrefListener;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
+import cn.com.pushworld.wn.to.WnUtils;
 import freemarker.template.SimpleDate;
 
 public class LoanblWkPanel extends AbstractWorkPanel implements ActionListener,
 		BillListHtmlHrefListener, ChangeListener {
 
-	private BillListPanel listPanel, listPanel1, listPanel2, listPanel3;
+	private BillListPanel listPanel, listPanel1, listPanel2, listPanel3,listPanel4;
 	private WLTTabbedPane tab = null;
 
 	@Override
@@ -33,12 +34,14 @@ public class LoanblWkPanel extends AbstractWorkPanel implements ActionListener,
 		listPanel.repaintBillListButton();
 		listPanel1 = new BillListPanel("V_WN_DQDKSHL_ZPY_Q01");// 到期贷款收回率考核
 		listPanel1.addBillListHtmlHrefListener(this);
+		listPanel1.getQuickQueryPanel().addBillQuickActionListener(this);
 		listPanel1.repaintBillListButton();
 		listPanel2 = new BillListPanel("V_WN_DNXZBLDK_ZPY_Q01");//当年新增不良贷款
 		listPanel2.getQuickQueryPanel().addBillQuickActionListener(this);
 		listPanel2.addBillListHtmlHrefListener(this);
 		listPanel3=new BillListPanel("V_WN_SHBWBL_ZPY_Q01");//收回不良贷款
 		listPanel3.repaintBillListButton();
+		listPanel4=new BillListPanel("WN_FIVECLASS_CODE1");
 		tab=new WLTTabbedPane();
 		tab.addTab("收回存量不良贷款", listPanel);
 		tab.addTab("到期贷款收回率考核", listPanel1);
@@ -67,12 +70,44 @@ public class LoanblWkPanel extends AbstractWorkPanel implements ActionListener,
 						+ querySQL
 						+ ") a left join (select * from wnbank.s_loan_dk where xd_col22 in ('03','04') and to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"
 						+ lastYearEnd
-						+ "') b on b.xd_col1=a.xd_col1 where b.xd_col1 is not null and a.xd_col7>0";
+						+ "') b on b.xd_col1=a.xd_col1 where b.xd_col1 is not null and a.xd_col7>0 and a.XD_COL1 in (select xd_col1 from wnbank.s_loan_hk where LOAD_DATES like '"+date_time.replace("年", "").replace("月", "").replace(";", "")+"%' )";
 				listPanel.QueryData(allSQL);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		} else if (event.getSource() == listPanel2.getQuickQueryPanel()) {
+		} else  if(event.getSource()==listPanel1.getQuickQueryPanel()){
+			try {
+				String manager_name=listPanel1.getQuickQueryPanel().getRealValueAt("KHJL");
+				String dqDate=listPanel1.getQuickQueryPanel().getRealValueAt("XD_COL5");
+				String  load_dates=listPanel1.getQuickQueryPanel().getRealValueAt("LOAD_DATES");
+				String query_sql="select * from V_WN_DQDKSHL where 1=1 ";
+				//listPanel1.getQuickQueryPanel().getRealValueAt("XD_COL22")
+				BillVO[] fiveClassSelect = listPanel4.getSelectedBillVOs();
+				if(manager_name!=null &!"".equals(manager_name)){
+					query_sql=query_sql+" and KHJL like '%"+manager_name+"%'";
+				}
+				if(load_dates!=null&!"".equals(load_dates)){
+					load_dates=load_dates.replace("年", "-").replace("月", "").replace(";", "");
+					query_sql=query_sql+" and load_dates like '"+load_dates+"%'";
+				}
+				if(dqDate!=null & !"".equals(dqDate)){
+					if(dqDate.contains("年")){//
+					String monthStart=dqDate.replace("年", "-").replace("月", "").replace(";", "")+"-01";
+					String monthEnd=WnUtils.getMonthEnd(monthStart);
+					query_sql=query_sql+" and XD_COL5>='"+monthStart+"' and XD_COL5<='"+monthEnd+"' ";
+						
+					}else {
+						dqDate=dqDate.replace(";", "");
+						query_sql=query_sql+" and xd_col5<='"+dqDate+"'";
+					}
+				}
+				listPanel1.QueryData(query_sql);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		else if (event.getSource() == listPanel2.getQuickQueryPanel()) {
 			try {
               String querySQL=listPanel2.getQuickQueryPanel().getQuerySQL();
               System.out.println("当年新增不良贷款:"+querySQL);
@@ -118,5 +153,5 @@ public class LoanblWkPanel extends AbstractWorkPanel implements ActionListener,
 	public void stateChanged(ChangeEvent e) {
 
 	}
-
+   
 }
