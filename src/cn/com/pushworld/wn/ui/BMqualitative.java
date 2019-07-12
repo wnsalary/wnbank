@@ -80,7 +80,7 @@ public class BMqualitative extends AbstractWorkPanel implements ActionListener, 
 			//判断当前考计划中是否存在打分项
 			final BillVO vo = listPanel.getSelectedBillVO();
 			if(vo==null){
-				MessageBox.show(this,"请选中一条状态为【评分中】的计划进行操作！！！");
+				MessageBox.show(this,"请选中一条状态为【未生成】的计划进行操作！！！");
 				return;
 			} 
 			final String id = vo.getStringValue("id");//获取当前计划的id

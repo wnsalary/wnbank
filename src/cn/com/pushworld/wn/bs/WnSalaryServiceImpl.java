@@ -2300,16 +2300,19 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				HashMap<String,String> map = getNhjdMap(date);
 				for(String str:userMap.keySet()){
 					Double count=0.0;
-					if(map.get(str)==null){
+					Double rwcount=0.0;
+					if(map.get(str)==null||map.get(str).equals("")){
 						count=0.0;
 					}else{
 						count=Double.parseDouble(map.get(str));
-					}if(rwMap.get(str)=="0"){
-						continue;
+					}if(rwMap.get(str).equals("0")||rwMap.get(str)==null||rwMap.get(str).equals("")){
+						rwcount=0.0;
+					}else{
+						rwcount = Double.parseDouble(rwMap.get(str));
 					}
 					insert.putFieldValue("name",str);
 					insert.putFieldValue("passed",count);
-					insert.putFieldValue("task",rwMap.get(str));
+					insert.putFieldValue("task",rwcount);
 					insert.putFieldValue("date_time",date);
 					list.add(insert.getSQL());
 				}
@@ -2317,7 +2320,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				result = "查询成功！";
 			} catch (Exception e) {
 				e.printStackTrace();
-				result = "查询失败！";
+				result = "查询失败！请联系管理员！";
 			}
 			return result;
 	}
