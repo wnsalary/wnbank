@@ -20,6 +20,7 @@ import cn.com.infostrategy.bs.common.ServerEnvironment;
 import cn.com.infostrategy.to.common.HashVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
+import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.pushworld.wn.ui.WnSalaryServiceIfc;
 
 public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
@@ -2838,53 +2839,63 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	public String managerLevelCompute(int dateNum) {
 		try {
 			InsertSQLBuilder insert = new InsertSQLBuilder("WN_MANAGERDXSCORE");
-			HashVO[] managerInfos = dmo
+			HashVO[] managerInfos = UIUtil
 					.getHashVoArrayByDS(
 							null,
-							"SELECT CODE,NAME,STATIONKIND FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
+							"SELECT CODE,NAME,STATIONKIND,DEPTNAME FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
 			// 获取客户经理每一项考核得分情况
-			HashMap<String, Double> dqdkshl = getDqdkshl(dateNum);// 到期贷款收回率考核
-			HashMap<String, Double> dnxzbldk = getDnxzbldk(dateNum);// 当年新增不良贷款
+//			HashMap<String, Double> dqdkshl = getDqdkshl(dateNum);// 到期贷款收回率考核
+//			HashMap<String, Double> dnxzbldk = getDnxzbldk(dateNum);// 当年新增不良贷款
+			
 			HashMap<String, Double> shcl = getshcl(dateNum);// 收回存量不良贷款
-			HashMap<String, Double> dKsjyh = getDKsjyh(dateNum);// 贷款手机银行客户覆盖率
-			HashMap<String, Double> znsh = getZnsh(dateNum);// 助农商户维护
-			HashMap<String, Double> cKyxhs = getCKyxhs(dateNum);// 存款有效户数提升
-			HashMap<String, Double> cKyxhsye = getCKyxhsye(dateNum);// 存款有效户数余额提升
-			HashMap<String, Double> dKyexz = getDKyexz(dateNum);// 贷款余额新增
-			HashMap<String, Double> dKhsxz = getDKhsxz(dateNum);// 贷款户数新增
-			HashMap<String, Double> jdRate = jdRate();// 新建档案
-			HashMap<String, Double> qnedRate = qnedRate(dateNum);// 黔农E贷签约
-			HashMap<String, Double> qnedtdScore = qnedtdScore(dateNum);// 黔农E贷线上替代
-			double sum = 0;
-			List<String> _sqlList = new ArrayList<String>();
-			for (int i = 0; i < managerInfos.length; i++) {
-				String manager_name = managerInfos[i].getStringValue("name");// 获取到客户经理姓名
-				sum = dqdkshl.get(manager_name) + dnxzbldk.get(manager_name)
-						+ shcl.get(manager_name) + dKsjyh.get(manager_name)
-						+ znsh.get(manager_name) + cKyxhs.get(manager_name)
-						+ cKyxhsye.get(manager_name) + dKyexz.get(manager_name)
-						+ dKhsxz.get(manager_name) + jdRate.get(manager_name)
-						+ qnedRate.get(manager_name)
-						+ qnedtdScore.get(manager_name);
-				insert.putFieldValue("MANAEGER_NAME", manager_name);
-				insert.putFieldValue("DQDKSHL", dqdkshl.get(manager_name));// 到期贷款收回率
-				insert.putFieldValue("DNXZBLDK", dnxzbldk.get(manager_name));// 当年新增不良贷款
-				insert.putFieldValue("SHCLBLDK", shcl.get(manager_name));// 收回存量不良贷款
-				insert.putFieldValue("DKKHSJFGL", dKsjyh.get(manager_name));// 贷款手机银行客户覆盖率
-				insert.putFieldValue("ZNSHWH", znsh.get(manager_name));// 助农商户维护
-				insert.putFieldValue("CKYXHS", cKyxhs.get(manager_name));// 存款有效户数提升
-				insert.putFieldValue("CKYXHSTS", cKyxhsye.get(manager_name));
-				insert.putFieldValue("DKYEXZ", dKyexz.get(manager_name));// 贷款余额新增
-				insert.putFieldValue("DKHSXZ", dKhsxz.get(manager_name));// 贷款户数新增
-				insert.putFieldValue("XJDA", jdRate.get(manager_name));// 建档户数新增
-				insert.putFieldValue("QNEDQY", qnedRate.get(manager_name));// 黔农E贷签约
-				insert.putFieldValue("QNEDXSTD", qnedtdScore.get(manager_name));// 黔农E贷线上替代
-				insert.putFieldValue("SCORESUM", sum);// 总分
-				insert.putFieldValue("DATE_TIME", new SimpleDateFormat(
-						"yyyy-MM-dd").format(new Date()));
-				_sqlList.add(insert.getSQL());
+			Set<String> keySet = shcl.keySet();
+			for (String manager_name : keySet) {
+				System.out.println("客户经理:"+manager_name+",收回存量不良考核得分:"+shcl.get(manager_name));
 			}
-			dmo.executeBatchByDS(null, _sqlList);
+//			HashMap<String, Double> dKsjyh = getDKsjyh(dateNum);//贷款手机银行客户覆盖率 计算ok
+//			HashMap<String, Double> znsh = getZnsh(dateNum);// 助农商户维护 计算ok
+//			HashMap<String, Double> cKyxhs = getCKyxhs(dateNum);// 存款有效户数提升 计算ok
+			
+//			HashMap<String, Double> cKyxhsye = getCKyxhsye(dateNum);// 存款有效户数余额提升 计算ok
+			
+//			HashMap<String, Double> dKyexz = getDKyexz(dateNum);// 贷款余额新增 计算ok
+//			HashMap<String, Double> dKhsxz = getDKhsxz(dateNum);// 贷款户数新增 计算ok
+//			HashMap<String, Double> jdRate = jdRate(dateNum);// 新建档案 计算ok
+//			HashMap<String, Double> qnedRate = qnedRate(dateNum);// 黔农E贷签约 计算ok
+//			HashMap<String, Double> qnedtdScore = qnedtdScore(dateNum);// 黔农E贷线上替代 计算ok
+//			HashMap<String, Double> nmgCountScoreMap=nmgCountScore(dateNum);//农民工信息采集 计算ok
+			double sum = 0;
+//			List<String> _sqlList = new ArrayList<String>();
+//			for (int i = 0; i < managerInfos.length; i++) {
+//				String manager_name = managerInfos[i].getStringValue("name");// 获取到客户经理姓名
+//				sum = dqdkshl.get(manager_name) + dnxzbldk.get(manager_name)
+//						+ shcl.get(manager_name) + dKsjyh.get(manager_name)
+//						+ znsh.get(manager_name) + cKyxhs.get(manager_name)
+//						+ cKyxhsye.get(manager_name) + dKyexz.get(manager_name)
+//						+ dKhsxz.get(manager_name) + jdRate.get(manager_name)
+//						+ qnedRate.get(manager_name)
+//						+ qnedtdScore.get(manager_name)+nmgCountScoreMap.get(manager_name);
+//				insert.putFieldValue("MANAEGER_NAME", manager_name);
+//				insert.putFieldValue("DQDKSHL", dqdkshl.get(manager_name));// 到期贷款收回率
+//				insert.putFieldValue("DNXZBLDK", dnxzbldk.get(manager_name));// 当年新增不良贷款
+//				insert.putFieldValue("SHCLBLDK", shcl.get(manager_name));// 收回存量不良贷款
+//				insert.putFieldValue("DKKHSJFGL", dKsjyh.get(manager_name));// 贷款手机银行客户覆盖率
+//				insert.putFieldValue("ZNSHWH", znsh.get(manager_name));// 助农商户维护
+//				insert.putFieldValue("CKYXHS", cKyxhs.get(manager_name));// 存款有效户数提升
+//				insert.putFieldValue("CKYXHSTS", cKyxhsye.get(manager_name));
+//				insert.putFieldValue("DKYEXZ", dKyexz.get(manager_name));// 贷款余额新增
+//				insert.putFieldValue("DKHSXZ", dKhsxz.get(manager_name));// 贷款户数新增
+//				insert.putFieldValue("XJDA", jdRate.get(manager_name));// 建档户数新增
+//				insert.putFieldValue("QNEDQY", qnedRate.get(manager_name));// 黔农E贷签约
+//				insert.putFieldValue("QNEDXSTD", qnedtdScore.get(manager_name));// 黔农E贷线上替代
+//			insert.putFieldValue("MANAGER_LEVEL", nmgCountScoreMap.get(manager_name));// 黔农E贷线上替代
+//				insert.putFieldValue("SCORESUM", sum);// 总分
+//				insert.putFieldValue("DATE_TIME", new SimpleDateFormat(
+//						"yyyy-MM-dd").format(new Date()));
+//				insert.putFieldValue("WN_CORP", managerInfos[i].getStringValue("deptname"));
+//				_sqlList.add(insert.getSQL());
+//			}
+//			dmo.executeBatchByDS(null, _sqlList);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return "客户经理等级评定事失败";
