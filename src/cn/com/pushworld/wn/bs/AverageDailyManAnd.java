@@ -40,7 +40,7 @@ public class AverageDailyManAnd {
 			InsertSQLBuilder insertYe=new InsertSQLBuilder("wn_ck_balance");//¼ÇÂ¼´æ¿îÓà¶î
 			HashVO [] hsvo=dmo.getHashVoArrayByDS(null,"select * from wn_ck_balance where date_time='"+time[1].toString()+"'");
 			if(hsvo.length>0){
-				dmo.executeUpdateByDS(null,"delete from wn_ck_balance where E='"+time[1].toString()+"'");
+				dmo.executeUpdateByDS(null,"delete from wn_ck_balance where date_time='"+time[1].toString()+"'");
 			}
 			List list=new ArrayList<String>();
 			HashMap <String,String> countMap=getCount(date);

@@ -600,7 +600,12 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	public String getCKChange() {
 		String xx=null;
 		Date date = new Date();
+		Calendar scal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
+		scal.setTime(date);
+		scal.add(Calendar.MONTH, -2);//取当前日期的后一天. 
+		scal.set(Calendar.DAY_OF_MONTH,scal.getActualMaximum(Calendar.DATE));
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		String smonth = df.format(scal.getTime());//上月的月数
 		Calendar cal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
 		cal.setTime(date);
 		cal.add(Calendar.MONTH, -1);//取当前日期的后一天. 
@@ -616,7 +621,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			//考核月的客户证件和客户经理号map
 			HashMap<String, String> kmap = dmo.getHashMapBySQLByDS(null, "select XD_COL1,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + kmonth + "' and XD_COL7 is not null and XD_COL96 is not null");
 			//上月的客户证件和客户经理号map
-			HashMap<String, String> smap = dmo.getHashMapBySQLByDS(null, "select XD_COL1,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='2018-12-31' and XD_COL7 is not null and XD_COL96 is not null");
+			HashMap<String, String> smap = dmo.getHashMapBySQLByDS(null, "select XD_COL1,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"+smonth+"' and XD_COL7 is not null and XD_COL96 is not null");
 			int a=0;
 			for (String str : kmap.keySet()) {
 				if (kmap.get(str).equals(smap.get(str))) {
