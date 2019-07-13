@@ -20,6 +20,7 @@ import cn.com.infostrategy.bs.common.ServerEnvironment;
 import cn.com.infostrategy.to.common.HashVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
+import cn.com.infostrategy.to.mdata.jepfunctions.GetDateDifference;
 import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.pushworld.wn.to.WnUtils;
 import cn.com.pushworld.wn.ui.WnSalaryServiceIfc;
@@ -1152,7 +1153,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			HashMap<String, String> currMonthData = dmo.getHashMapBySQLByDS(null, "SELECT a.mname mname, count(a.CARDNO) CARDNO   FROM (SELECT DISTINCT(CARDNO) CARDNO,MNAME FROM wn_qnedtd WHERE  date_time  LIKE '" + date_time + "%') a GROUP BY  a.mname");//当前考核月所做的绩效
 			HashMap<String, String> lastMonthData = dmo.getHashMapBySQLByDS(null, "SELECT a.mname mname, count(a.CARDNO) CARDNO   FROM (SELECT DISTINCT(CARDNO) CARDNO,MNAME FROM wn_qnedtd WHERE  date_time  = '" + yearC + "') a GROUP BY  a.mname");//年初
 			InsertSQLBuilder insert = new InsertSQLBuilder("wn_qnedtd_result");
-			DecimalFormat format = new DecimalFormat("#.000");
+			DecimalFormat format = new DecimalFormat("0.000");
 			List<String> sqllist = new ArrayList<String>();
 			for (String key : keys) {
 				insert.putFieldValue("username", key);
@@ -1203,11 +1204,11 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				insert.putFieldValue("task", task);
 				double passed=Double.parseDouble(jlMap.get(key)==null?"0":jlMap.get(key));
 				insert.putFieldValue("passed", passed);
-				DecimalFormat format=new DecimalFormat("00.00");
+				DecimalFormat format=new DecimalFormat("0.00");
 				if(task==0 || passed==0){
-					insert.putFieldValue("rate", "00.00");
+					insert.putFieldValue("rate", "0");
 				}else{
-					insert.putFieldValue("rate",format.format(passed/task*100) );
+					insert.putFieldValue("rate",format.format(passed/task) );
 				}
 				list.add(insert.getSQL());
 			}
@@ -1287,7 +1288,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			InsertSQLBuilder insert = new InsertSQLBuilder("wn_tyxw_result");
 			Set<String> keys = userMap.keySet();
 			Map<String, Integer> tyxw = getTyxw(date_time);
-			DecimalFormat format = new DecimalFormat("#.00");
+			DecimalFormat format = new DecimalFormat("0.000");
 			String task="";
 			for (String manager_name : keys) {//特约小微商户完成比查询
 				int num=tyxw.get(manager_name);
@@ -1300,11 +1301,11 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				}else{
 					insert.putFieldValue("rate", format.format( num/Double.parseDouble(task)));
 				}
-				insert.putFieldValue("date_time", date_time);
+				insert.putFieldValue("date_time", getLastMonth(date_time));
 				insert.putFieldValue("deptname", userMap.get(manager_name));
+				sqlList.add(insert.getSQL());
 			}
 			dmo.executeBatchByDS(null, sqlList);
-			System.out.println("查询成功");
 			result = "查询成功";
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -2776,7 +2777,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				map = dmo.getHashMapBySQLByDS(null, "select a.username,b.c/100*10 from v_pub_user_post_1 a,(select deptname,sum(koufen)/2 as c from (select * from WN_BMPF_TABLE where (to_char(to_date(pftime,'yyyy-mm-dd'),'yyyy-mm')='"+String.valueOf((Integer.valueOf(year)-1))+"-09' or to_char(to_date(pftime,'yyyy-mm-dd'),'yyyy-mm')='"+String.valueOf((Integer.valueOf(year)-1))+"-09') and xiangmu='文明客户服务部' and state='评分结束') group by deptname) b where a.deptname=b.deptname ");	
 			}
 		} catch (Exception e) {
-			
+			e.printStackTrace();
 		}
 		return map;
 	}
@@ -2818,58 +2819,72 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 							null,
 							"SELECT CODE,NAME,STATIONKIND,DEPTNAME FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
 			// 获取客户经理每一项考核得分情况
-//			HashMap<String, Double> dqdkshl = getDqdkshl(dateNum);// 到期贷款收回率考核
-//			HashMap<String, Double> dnxzbldk = getDnxzbldk(dateNum);// 当年新增不良贷款
-			
-			HashMap<String, Double> shcl = getshcl(dateNum);// 收回存量不良贷款
-			Set<String> keySet = shcl.keySet();
-			for (String manager_name : keySet) {
-				System.out.println("客户经理:"+manager_name+",收回存量不良考核得分:"+shcl.get(manager_name));
-			}
-//			HashMap<String, Double> dKsjyh = getDKsjyh(dateNum);//贷款手机银行客户覆盖率 计算ok
-//			HashMap<String, Double> znsh = getZnsh(dateNum);// 助农商户维护 计算ok
-//			HashMap<String, Double> cKyxhs = getCKyxhs(dateNum);// 存款有效户数提升 计算ok
-			
-//			HashMap<String, Double> cKyxhsye = getCKyxhsye(dateNum);// 存款有效户数余额提升 计算ok
-			
-//			HashMap<String, Double> dKyexz = getDKyexz(dateNum);// 贷款余额新增 计算ok
-//			HashMap<String, Double> dKhsxz = getDKhsxz(dateNum);// 贷款户数新增 计算ok
-//			HashMap<String, Double> jdRate = jdRate(dateNum);// 新建档案 计算ok
-//			HashMap<String, Double> qnedRate = qnedRate(dateNum);// 黔农E贷签约 计算ok
-//			HashMap<String, Double> qnedtdScore = qnedtdScore(dateNum);// 黔农E贷线上替代 计算ok
-//			HashMap<String, Double> nmgCountScoreMap=nmgCountScore(dateNum);//农民工信息采集 计算ok
+			HashMap<String, Double> dqdkshlMap = getDqdkshl(dateNum);// 到期贷款收回率考核
+			HashMap<String, Double> dnxzbldkMap = getDnxzbldk(dateNum);// 当年新增不良贷款
+			HashMap<String, Double> shclMap = getshcl(dateNum);// 收回存量不良贷款
+			HashMap<String, Double> dKsjyhMap = getDKsjyh(dateNum);//贷款手机银行客户覆盖率 计算ok
+			HashMap<String, Double> znshMap = getZnsh(dateNum);// 助农商户维护 计算ok
+			HashMap<String, Double> cKyxhsMap = getCKyxhs(dateNum);// 存款有效户数提升 计算ok
+			HashMap<String, Double> cKyxhsyeMap = getCKyxhsye(dateNum);// 存款有效户数余额提升 计算ok
+			HashMap<String, Double> dKyexzMap = getDKyexz(dateNum);// 贷款余额新增 计算ok
+			HashMap<String, Double> dKhsxzMap = getDKhsxz(dateNum);// 贷款户数新增 计算ok
+			HashMap<String, Double> jdRateMap = jdRate(dateNum);// 新建档案 计算ok
+			HashMap<String, Double> qnedRateMap = qnedRate(dateNum);// 黔农E贷签约 计算ok
+			HashMap<String, Double> qnedtdScoreMap = qnedtdScore(dateNum);// 黔农E贷线上替代 计算ok
+			HashMap<String, Double> nmgCountScoreMap=nmgCountScore(dateNum);//农民工信息采集 计算ok
 			double sum = 0;
-//			List<String> _sqlList = new ArrayList<String>();
-//			for (int i = 0; i < managerInfos.length; i++) {
-//				String manager_name = managerInfos[i].getStringValue("name");// 获取到客户经理姓名
-//				sum = dqdkshl.get(manager_name) + dnxzbldk.get(manager_name)
-//						+ shcl.get(manager_name) + dKsjyh.get(manager_name)
-//						+ znsh.get(manager_name) + cKyxhs.get(manager_name)
-//						+ cKyxhsye.get(manager_name) + dKyexz.get(manager_name)
-//						+ dKhsxz.get(manager_name) + jdRate.get(manager_name)
-//						+ qnedRate.get(manager_name)
-//						+ qnedtdScore.get(manager_name)+nmgCountScoreMap.get(manager_name);
-//				insert.putFieldValue("MANAEGER_NAME", manager_name);
-//				insert.putFieldValue("DQDKSHL", dqdkshl.get(manager_name));// 到期贷款收回率
-//				insert.putFieldValue("DNXZBLDK", dnxzbldk.get(manager_name));// 当年新增不良贷款
-//				insert.putFieldValue("SHCLBLDK", shcl.get(manager_name));// 收回存量不良贷款
-//				insert.putFieldValue("DKKHSJFGL", dKsjyh.get(manager_name));// 贷款手机银行客户覆盖率
-//				insert.putFieldValue("ZNSHWH", znsh.get(manager_name));// 助农商户维护
-//				insert.putFieldValue("CKYXHS", cKyxhs.get(manager_name));// 存款有效户数提升
-//				insert.putFieldValue("CKYXHSTS", cKyxhsye.get(manager_name));
-//				insert.putFieldValue("DKYEXZ", dKyexz.get(manager_name));// 贷款余额新增
-//				insert.putFieldValue("DKHSXZ", dKhsxz.get(manager_name));// 贷款户数新增
-//				insert.putFieldValue("XJDA", jdRate.get(manager_name));// 建档户数新增
-//				insert.putFieldValue("QNEDQY", qnedRate.get(manager_name));// 黔农E贷签约
-//				insert.putFieldValue("QNEDXSTD", qnedtdScore.get(manager_name));// 黔农E贷线上替代
-//			insert.putFieldValue("MANAGER_LEVEL", nmgCountScoreMap.get(manager_name));// 黔农E贷线上替代
-//				insert.putFieldValue("SCORESUM", sum);// 总分
-//				insert.putFieldValue("DATE_TIME", new SimpleDateFormat(
-//						"yyyy-MM-dd").format(new Date()));
-//				insert.putFieldValue("WN_CORP", managerInfos[i].getStringValue("deptname"));
-//				_sqlList.add(insert.getSQL());
-//			}
-//			dmo.executeBatchByDS(null, _sqlList);
+			DecimalFormat decimal=new DecimalFormat("#.00");
+			List<String> _sqlList = new ArrayList<String>();
+			double dqdkshl,dnxzbldk,shcl,dKsjyh,znsh,cKyxhs,cKyxhsye,dKyexz,dKhsxz,jdRate,qnedRate,qnedtdScore,nmgCountScore;
+			for (int i = 0; i < managerInfos.length; i++) {
+				String manager_name = managerInfos[i].getStringValue("name");// 获取到客户经理姓名
+				dqdkshl=dqdkshlMap.get(manager_name)==null?0:dqdkshlMap.get(manager_name);//到期贷款收回率
+				dnxzbldk=dnxzbldkMap.get(manager_name)==null?0:dnxzbldkMap.get(manager_name);//当年新增不良贷款考核
+				shcl=shclMap.get(manager_name)==null?0.0:shclMap.get(manager_name);//收回存量
+				dKsjyh=dKsjyhMap.get(manager_name)==null?0:dKsjyhMap.get(manager_name);//贷款手机银行客户覆盖率
+				znsh=znshMap.get(manager_name)==null?0:znshMap.get(manager_name);//助农商户维护
+				cKyxhs=cKyxhsMap.get(manager_name)==null?0:cKyxhsMap.get(manager_name);//存款有效户数提升
+				cKyxhsye=cKyxhsyeMap.get(manager_name)==null?0:cKyxhsyeMap.get(manager_name);//存款有效户数余额提升
+				dKyexz=dKyexzMap.get(manager_name)==null?0:dKyexzMap.get(manager_name);//贷款余额新增
+				dKhsxz=dKhsxzMap.get(manager_name)==null?0:dKhsxzMap.get(manager_name);//贷款户数新增
+				jdRate=jdRateMap.get(manager_name)==null?0:jdRateMap.get(manager_name);//建档评级
+				qnedRate=qnedRateMap.get(manager_name)==null?0:qnedRateMap.get(manager_name);//黔农E贷签约
+				qnedtdScore=qnedtdScoreMap.get(manager_name)==null?0:qnedtdScoreMap.get(manager_name);
+				nmgCountScore=nmgCountScoreMap.get(manager_name)==null?0:nmgCountScoreMap.get(manager_name);
+				sum = dqdkshl
+						+ dnxzbldk
+						+ shcl
+						+ dKsjyh
+						+ znsh
+						+ cKyxhs
+						+ cKyxhsye
+						+ dKyexz
+						+ dKhsxz
+						+ jdRate
+						+ qnedRate
+						+ qnedtdScore
+						+nmgCountScore;
+				insert.putFieldValue("MANAEGER_NAME", manager_name);
+				insert.putFieldValue("DQDKSHL", dqdkshl);// 到期贷款收回率
+				insert.putFieldValue("DNXZBLDK", dnxzbldk);// 当年新增不良贷款
+				insert.putFieldValue("SHCLBLDK", shcl);// 收回存量不良贷款
+				insert.putFieldValue("DKKHSJFGL", dKsjyh);// 贷款手机银行客户覆盖率
+				insert.putFieldValue("ZNSHWH", znsh);// 助农商户维护
+				insert.putFieldValue("CKYXHS", cKyxhs);// 存款有效户数提升
+				insert.putFieldValue("CKYXHSTS", cKyxhsye);
+				insert.putFieldValue("DKYEXZ", dKyexz);// 贷款余额新增
+				insert.putFieldValue("DKHSXZ", dKhsxz);// 贷款户数新增
+				insert.putFieldValue("XJDA", jdRate);// 建档户数新增
+				insert.putFieldValue("QNEDQY", qnedRate);// 黔农E贷签约
+				insert.putFieldValue("QNEDXSTD", qnedtdScore);// 黔农E贷线上替代
+			    insert.putFieldValue("MANAGER_LEVEL", nmgCountScoreMap.get(manager_name));// 黔农E贷线上替代
+				insert.putFieldValue("SCORESUM", Double.parseDouble(decimal.format(sum)));// 总分
+				insert.putFieldValue("DATE_TIME", new SimpleDateFormat(
+						"yyyy-MM-dd").format(new Date()));
+				insert.putFieldValue("WN_CORP", managerInfos[i].getStringValue("deptname"));
+				_sqlList.add(insert.getSQL());
+			}
+			UIUtil.executeBatchByDS(null, _sqlList);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return "客户经理等级评定事失败";
@@ -2957,7 +2972,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			String[] managers_names = UIUtil
 					.getStringArrayFirstColByDS(null,
 							"SELECT NAME FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
-			DecimalFormat format=new DecimalFormat("#.00");
+			DecimalFormat format=new DecimalFormat("0.0000");
 			for (int i = 0; i < managers_names.length; i++) {
 				double dsBackUpMoney = Double.parseDouble(dsBackUpMoneyMap
 						.get(managers_names[i]) == null || dsBackUpMoneyMap.get(managers_names[i]).equals("")  ? "0.0"
@@ -3035,7 +3050,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				} else if (checkDate.indexOf("12-31") != -1) {
 					rate = 0.008;
 				}
-				DecimalFormat format=new DecimalFormat("#.00");
+				DecimalFormat format=new DecimalFormat("0.0000");
 				for (int i = 0; i < manager_names.length; i++) {
 					double tolerateMoney = Double.parseDouble(tolerateMoneyMap
 							.get(manager_names[i]) == null ? "0.0"
@@ -3082,6 +3097,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			try {
 				String yearStartDate = getYearStartAndEnd(dateNum).get(0);
 				String check_date = getYearStartAndEnd(dateNum).get(1);
+				String yearLastEnd=getYearStartAndEnd(dateNum).get(2);
 				// 实际收回不良贷款
 				HashMap<String, String> backUpMoneyMap = UIUtil
 						.getHashMapBySQLByDS(
@@ -3097,21 +3113,17 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				HashMap<String, String> clMoneyMap = UIUtil
 						.getHashMapBySQLByDS(
 								null,
-								"SELECT bbb.xd_col2,aaa.money FROM (SELECT aa.xd_col81,sum(aa.xd_col7) money FROM (SELECT xd_col1,xd_col7,XD_COL81 FROM WNBANK.S_LOAN_DK WHERE  TO_CHAR(TO_DATE(LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')='"
-										+ check_date
-										+ "' AND XD_COL22 IN ('03','04')) aa LEFT JOIN (SELECT xd_col1,xd_col7,XD_COL81 FROM WNBANK.S_LOAN_DK WHERE  TO_CHAR(TO_DATE(LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')='"
-										+ WnUtils.getYearEnd(check_date)
-										+ "' AND XD_COL22 IN ('03','04')) bb ON aa.xd_col1=bb.xd_col1 WHERE bb.xd_col1 IS NOT NULL GROUP BY aa.xd_col81) aaa LEFT JOIN (WNBANK.S_LOAN_RYB) bbb ON aaa.xd_col81=bbb.xd_col1");
+								"SELECT B.XD_COL2, A.XD_COL7 FROM (SELECT XD_COL81,SUM(XD_COL7) XD_COL7 FROM WNBANK.S_LOAN_DK WHERE TO_CHAR(TO_DATE(LOAD_DATES,'YYYY-MM-DD'),'YYYY-MM-DD')='"+yearLastEnd+"' AND XD_COL7>0 AND XD_COL22 IN ('03','04') GROUP BY XD_COL81) A LEFT JOIN (WNBANK.S_LOAN_RYB ) B ON A.XD_COL81=B.XD_COL1");
 				String[] manager_names = UIUtil
 						.getStringArrayFirstColByDS(null,
 								"SELECT NAME FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
 				double rate = 0.0;
 				if (check_date.indexOf("06-30") != -1) {
-					rate = 0.2;
+					rate = 0.1;
 				} else   {
-					rate = 0.4;
+					rate = 0.2;
 				}
-				DecimalFormat format=new DecimalFormat("#.00");
+				DecimalFormat format=new DecimalFormat("0.0000");
 				for (int i = 0; i < manager_names.length; i++) {
 					double backUpMoney = Double.parseDouble(backUpMoneyMap
 							.get(manager_names[i]) == null ? "0.0" : backUpMoneyMap
@@ -3688,7 +3700,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		String checkDate = year + "-" + month + "-" + day;//获取到年末日期
 		list.add(yearStartDate);
 		list.add(checkDate);
-		list.add(String.valueOf(Integer.parseInt(year))+"-12-31");
+		list.add(String.valueOf(Integer.parseInt(year)-1)+"-12-31");
 		return list;
 	}
 	

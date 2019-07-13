@@ -49,6 +49,8 @@ public class TyxwParticularsWKPanel   extends AbstractWorkPanel implements BillL
 					MessageBox.show(this,str);
 					list.QueryData(list.getQuickQueryPanel().getQuerySQL());
 				}else{
+					//输出查询语句
+					System.out.println("特约、小微商户查询sql:"+list.getQuickQueryPanel().getQuerySQL());
 					list.QueryData(list.getQuickQueryPanel().getQuerySQL());
 				}
 			} catch (Exception e2) {
