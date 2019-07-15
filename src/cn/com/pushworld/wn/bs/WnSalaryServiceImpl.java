@@ -2260,6 +2260,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 	@Override
 	public String getNhjdHs(String date) {
+			Double month = Double.parseDouble(date.substring(5,7));
 			String result = null;
 			try {
 				InsertSQLBuilder insert=new InsertSQLBuilder("WN_NHJD_WCB");
@@ -2267,27 +2268,30 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				//得到客户经理的map
 				HashMap<String, String> userMap=dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
 				//得到客户经理的任务数
-				String sql="select A,sum(R) from EXCEL_TAB_53 where year||'-'||month='"+date+"' group by A";
+				String sql="select A,sum(R)*'"+month+"' from EXCEL_TAB_53 where year||'-'||month='"+date+"' group by A";
 				HashMap<String,String> rwMap=dmo.getHashMapBySQLByDS(null, sql);
 				if(rwMap.size()==0){
-					return "当前时间【"+date+"】没有上传任务数";
+					return "当前指标没有上传任务数！";
 				}
 				HashMap<String,String> map = getNhjdMap(date);
 				for(String str:userMap.keySet()){
 					Double count=0.0;
 					Double rwcount=0.0;
 					if(map.get(str)==null||map.get(str).equals("")){
-						count=0.0;
+						continue;
 					}else{
 						count=Double.parseDouble(map.get(str));
 					}if(rwMap.get(str).equals("0")||rwMap.get(str)==null||rwMap.get(str).equals("")){
-						rwcount=0.0;
+						continue;
 					}else{
 						rwcount = Double.parseDouble(rwMap.get(str));
 					}
 					insert.putFieldValue("name",str);
+					System.out.println(str);
 					insert.putFieldValue("passed",count);
+					System.out.println(count);
 					insert.putFieldValue("task",rwcount);
+					System.out.println(rwcount);
 					insert.putFieldValue("date_time",date);
 					list.add(insert.getSQL());
 				}
@@ -2306,9 +2310,10 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	 */
 
 	private HashMap<String, String> getNhjdMap(String date) {
+		String year = date.substring(0, 4);
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null, "select yb.xd_col2 xd_col2,zc.tj tj  from(select xx.xd_col96 xd_col96,count(xx.xd_col96) tj from (select XD_COL1,XD_COL96 from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm')='"+date+"'  and xd_col10 not in('未评级','等外','!$') and XD_COL4='905') xx left join wnbank.S_LOAN_KHXXZCQK zc on xx.xd_col1=zc.xd_col1 where zc.XD_COL6='1' group by xx.xd_col96)zc left join wnbank.s_loan_ryb yb on zc.xd_col96=yb.xd_col1");
+			map = dmo.getHashMapBySQLByDS(null, "select yb.xd_col2 xd_col2,zc.tj tj  from(select xx.xd_col96 xd_col96,count(xx.xd_col96) tj from (select XD_COL1,XD_COL96 from wnbank.s_loan_khxx where to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm')>='"+year+"-01' and  to_char(cast (cast (xd_col3 as timestamp) as date),'yyyy-mm')<='"+date+"'  and xd_col10 not in('未评级','等外','!$') and XD_COL4='905') xx left join wnbank.S_LOAN_KHXXZCQK zc on xx.xd_col1=zc.xd_col1 where zc.XD_COL6='1' group by xx.xd_col96)zc left join wnbank.s_loan_ryb yb on zc.xd_col96=yb.xd_col1");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -157,7 +157,7 @@ public class JDFKMhuizong extends AbstractWorkPanel implements ActionListener {
 					list.clear();
 				}
 			}
-			if (list.size() > 0) {
+			if (list.size() >= 0) {
 				UIUtil.executeBatchByDS(null, list);
 			} else {
 				MessageBox.show("当前选中数据已经提交,请重新选择");
