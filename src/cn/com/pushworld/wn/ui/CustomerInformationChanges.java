@@ -1,5 +1,6 @@
 package cn.com.pushworld.wn.ui;
 
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -22,6 +23,8 @@ import cn.com.infostrategy.ui.common.MessageBox;
 import cn.com.infostrategy.ui.common.SplashWindow;
 import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.infostrategy.ui.common.WLTButton;
+import cn.com.infostrategy.ui.mdata.BillCardDialog;
+import cn.com.pushworld.salary.ui.paymanage.RefDialog_Month;
 
 /**
  * 
@@ -65,9 +68,14 @@ public class CustomerInformationChanges extends AbstractWorkPanel implements Act
 	}
 
 	private void getChange() {
+		final String date = getDate();
+		if (TBUtil.isEmpty(date)) {
+			return;
+		}
+		String [] dates=date.split(";");
 		try {
 			WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil.lookUpRemoteService(WnSalaryServiceIfc.class);
-			String str=service.getChange();
+			String str=service.getChange(dates[0].toString(),dates[1].toString());
 			MessageBox.show(this,str);
 		}  catch (Exception e) {
 			MessageBox.show(this,"客户经理信息变更失败");
@@ -75,9 +83,14 @@ public class CustomerInformationChanges extends AbstractWorkPanel implements Act
 		}
 	}
 	private void getChangeCK() {
+		final String date = getDate();
+		if (TBUtil.isEmpty(date)) {
+			return;
+		}
+		String [] dates=date.split(";");
 		try {
 			WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil.lookUpRemoteService(WnSalaryServiceIfc.class);
-			String str=service.getCKChange();
+			String str=service.getCKChange(dates[0].toString(),dates[1].toString());
 			MessageBox.show(this,str);
 		}  catch (Exception e) {
 			MessageBox.show(this,"客户经理信息变更失败");
@@ -101,4 +114,22 @@ public class CustomerInformationChanges extends AbstractWorkPanel implements Act
 		df.format(cal2.getTime());
 		System.out.println("-1>>>>"+df.format(cal2.getTime()));
 	}
+	/**
+	 * 
+	 * @param _parent
+	 * @return
+	 * 选择日期
+	 */
+	private String getDate() {
+		BillCardDialog cd=new BillCardDialog(this,"选择日期区间","WN_QJ_DATE_CODE1",600,200);
+        cd.setSaveBtnVisiable(false);
+		cd.setVisible(true);
+        if(cd.getCloseType()==-1){
+        	return null;
+        }
+		String qdate=cd.getBillcardPanel().getRealValueAt("DQDATE_TIME");
+		String hdate=cd.getBillcardPanel().getRealValueAt("XGDATE_TIME");
+		return qdate+";"+hdate;	
+	}
+
 }

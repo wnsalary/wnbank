@@ -34,12 +34,12 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc{
 	 * zzl[贷款客户经理信息更新]
 	 * @return
 	 */
-	public String getChange();
+	public String getChange(String date1,String date2);
 	/**
 	 * zzl[存款客户经理信息更新]
 	 * @return
 	 */
-	public String getCKChange();
+	public String getCKChange(String date1,String date2);
 
 	/**
 	 * zpy[2019-05-22]

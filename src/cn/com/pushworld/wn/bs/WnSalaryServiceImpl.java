@@ -419,7 +419,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	 * zzl[2019-4-28]
 	 * 每个月的客户经理对应的贷款需要调整，故需要修改上月的基数。
 	 */
-	public String getChange() {
+	public String getChange(String date1,String date2) {
 		String xx=null;
 		Date date = new Date();
 		Calendar scal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
@@ -441,9 +441,9 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			//客户经理的信息表map
 			HashMap<String, String> map = dmo.getHashMapBySQLByDS(null, "select xd_col1,xd_col2 from wnbank.s_loan_ryb");
 			//考核月的客户证件和客户经理号map
-			HashMap<String, String> kmap = dmo.getHashMapBySQLByDS(null, "select distinct(dk.xd_col1),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + kmonth + "'");
+			HashMap<String, String> kmap = dmo.getHashMapBySQLByDS(null, "select distinct(dk.xd_col1),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + date1 + "'");
 			//上月的客户证件和客户经理号map
-			HashMap<String, String> smap = dmo.getHashMapBySQLByDS(null, "select distinct(dk.xd_col1),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + smonth + "'");
+			HashMap<String, String> smap = dmo.getHashMapBySQLByDS(null, "select distinct(dk.xd_col1),dk.XD_COL81 from wnbank.s_loan_dk dk where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + date2 + "'");
 			int a=0;
 			for (String str : kmap.keySet()) {
 				if (kmap.get(str).equals(smap.get(str))) {
@@ -599,7 +599,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	 * 
 	 */
 	@Override
-	public String getCKChange() {
+	public String getCKChange(String date1,String date2) {
 		String xx=null;
 		Date date = new Date();
 		Calendar scal = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
@@ -621,9 +621,9 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			//客户经理的信息表map
 			HashMap<String, String> map = dmo.getHashMapBySQLByDS(null, "select xd_col1,xd_col2 from wnbank.s_loan_ryb");
 			//考核月的客户证件和客户经理号map
-			HashMap<String, String> kmap = dmo.getHashMapBySQLByDS(null, "select XD_COL1,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + kmonth + "' and XD_COL7 is not null and XD_COL96 is not null");
+			HashMap<String, String> kmap = dmo.getHashMapBySQLByDS(null, "select XD_COL1,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + date1 + "' and XD_COL7 is not null and XD_COL96 is not null");
 			//上月的客户证件和客户经理号map
-			HashMap<String, String> smap = dmo.getHashMapBySQLByDS(null, "select XD_COL1,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"+smonth+"' and XD_COL7 is not null and XD_COL96 is not null");
+			HashMap<String, String> smap = dmo.getHashMapBySQLByDS(null, "select XD_COL1,XD_COL96 from wnbank.S_LOAN_KHXX where to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"+date2+"' and XD_COL7 is not null and XD_COL96 is not null");
 			int a=0;
 			for (String str : kmap.keySet()) {
 				if (kmap.get(str).equals(smap.get(str))) {
