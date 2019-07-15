@@ -2897,7 +2897,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			HashMap<String,String> manager_names = UIUtil.getHashMapBySQLByDS(null, "SELECT NAME,STATIONKIND FROM V_SAL_PERSONINFO  WHERE POSITION LIKE '%客户经理%'");
 			String date_time = getYearStartAndEnd(dateNum).get(1);
 			HashMap<String,String> taskNums = UIUtil.getHashMapBySQLByDS(null,"select a,sum(s) from excel_tab_53 where year='"+date_time.substring(0,4)+"' group by a");
-			HashMap<String, String> numMap=UIUtil.getHashMapBySQLByDS(null, "select  j, count(*) num from wnsalarydb.excel_tab_2 where YEAR='"+date_time.substring(0,4)+"'  and b is not null and  d is not null and e is not null and  g is not null and h is not null group by j");
+			HashMap<String, String> numMap=UIUtil.getHashMapBySQLByDS(null, "select j,count(a) from excel_tab_66 where  year='"+date_time.substring(0,4)+"' and  b is not null and  d is not null and e is not null and  g is not null and h is not null  group by j ");
 			Set<String> managerSet = manager_names.keySet();
 			DecimalFormat format=new DecimalFormat("#.00");
 			double score=0.0;
@@ -2927,6 +2927,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
     /**
      * 客户经理之到期贷款收回率考核
      * 为了方便测试，dmo执行容易出现空指针异常，暂时使用dmo。
+     * 城区和乡镇:5
      * @param dateNum
      * @return
      */
@@ -3018,6 +3019,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		 * 客户经理绩效考核之当年新增不良贷款
 		 * 为了方便测试，使用dmo查询出现空指针异常，暂时使用dmo查询，以后出现异常，在进行更正
 		 * @param dateNum
+		 * 乡镇和城区:3分
 		 * @return
 		 */
 		public HashMap<String, Double> getDnxzbldk(int dateNum) {
@@ -3089,6 +3091,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		/**
 		 * 客户经理等级评定之收回存量不良贷款
 		 * 为了方便测试，dmo查询结果为空，暂时使用dmo对sql进行查询，如果以后遇到问题，在进行更改
+		 * 城区和乡镇:5分
 		 * @param dateNum
 		 * @return
 		 */
@@ -3566,18 +3569,20 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 						.getStringArrayFirstColByDS(null,
 								"SELECT NAME FROM V_SAL_PERSONINFO WHERE POSITION  LIKE '%客户经理%'");
 				HashMap<String, String> qnedMap = UIUtil.getHashMapBySQLByDS(null,
-						"SELECT username,RATE FROM WN_QNED_RESULT   WHERE  DATE_TIME='" + checkDate
-								+ "'");
+						"select c,count(b)  from excel_tab_65 where year='"+checkDate.substring(0,4)+"' group by c");
+				HashMap<String,String> taskNum = UIUtil.getHashMapBySQLByDS(null, "select a,sum(q) from excel_tab_53 where year ='"+checkDate.substring(0,4)+"' group by  a");
 				DecimalFormat decimal=new DecimalFormat("#.00");
 				double score=0.0;
+				double  num,tasknum,rate =0;
 				for (int i = 0; i < manager_names.length; i++) {
-					String rate = qnedMap.get(manager_names[i]) == null ? "0.0"
-							: qnedMap.get(manager_names[i]);
-					System.out.println("客户经理:"+manager_names[i]+",完成比:"+rate);
-					if ("0.0".equals(rate)) {
+					  num =Double.parseDouble( qnedMap.get(manager_names[i]) == null ? "0.0"
+							: qnedMap.get(manager_names[i]));
+					  tasknum=Double.parseDouble(taskNum.get(manager_names[i])==null?"0.0":taskNum.get(manager_names[i]));
+					System.out.println("客户经理:"+manager_names[i]+",完成任务数:"+qnedMap.get(manager_names[i])+",任务总数:"+tasknum);
+					if (num==0||tasknum==0) {
 						resultMap.put(manager_names[i], 0.0);
 					} else {
-						score=Double.parseDouble(rate)*2.0>=2.0?2.0:Double.parseDouble(rate)*2.0;
+						score=num/tasknum*2.0>=2.0?2.0:num/tasknum*2.0;
 						resultMap.put(manager_names[i],
 								Double.parseDouble(decimal.format(score)));
 					}
