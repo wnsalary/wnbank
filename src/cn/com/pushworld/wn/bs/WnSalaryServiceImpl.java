@@ -450,7 +450,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					continue;
 				} else {
 					a=a+1;
-					update.setWhereCondition("to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + smonth + "' and xd_col1='" + str + "'");
+					update.setWhereCondition("to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='" + date2 + "' and xd_col1='" + str + "'");
 					update.putFieldValue("XD_COL81", kmap.get(str));
 					sb.append(smonth + "贷款号为[" + str + "]客户经理为[" + map.get(smap.get(str)) + "]与考核月的客户经理信息不符，故修改客户经理为[" + map.get(kmap.get(str)) + "]"+System.getProperty("line.separator"));
 					list.add(update.getSQL());
@@ -630,7 +630,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					continue;
 				} else {
 					a=a+1;
-					update.setWhereCondition("to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='2018-12-31' and xd_col1='" + str + "'");
+					update.setWhereCondition("to_char(to_date(load_dates,'yyyy-mm-dd'),'yyyy-mm-dd')='"+date2+"' and xd_col1='" + str + "'");
 					update.putFieldValue("XD_COL81", kmap.get(str));
 					list.add(update.getSQL());
 					sb.append("2018-12-31客户号为[" + str + "]客户经理为[" + map.get(smap.get(str)) + "]与考核月的客户经理信息不符，故修改客户经理为[" + map.get(kmap.get(str)) + "]  \n");
