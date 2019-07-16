@@ -169,7 +169,7 @@ public class GydxWKPanel extends AbstractWorkPanel implements BillTreeSelectList
 				MessageBox.show(this, "保存完成");
 				pfTime=UIUtil.getStringValueByDS(null, "SELECT max(PFTIME) FROM wn_gydx_table WHERE USERCODE='"+gyusercode+"'");	
 				
-				String sql="select * from wn_gydx_table where usercode='"+gyusercode+"' and pftime='"+pfTime+"' and state='评分中'";
+				String sql="select * from wn_gydx_table where usercode='"+gyusercode+"' and pftime='"+pfTime+"' and state='评分中' order by khsm asc";
 				billListPanel_User_check.QueryData(sql);
 			}else {
 				MessageBox.show(this,sb.toString());

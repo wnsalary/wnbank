@@ -839,7 +839,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					String weight = vos[j].getStringValue("WEIGHTS");//获取到指标的考核权重
 					String khsm = vos[j].getStringValue("name");
 					String xiangmu = vos[j].getStringValue("CATALOG");
-					double koufen = 100.0;
+					double koufen = 0.0;
 					insert.putFieldValue("planid", id);
 					insert.putFieldValue("username", username);
 					insert.putFieldValue("usercode", usercode);

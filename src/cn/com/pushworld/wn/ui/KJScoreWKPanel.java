@@ -164,7 +164,6 @@ public class KJScoreWKPanel extends AbstractWorkPanel implements ActionListener,
 	public void onBillListSelectChanged(BillListSelectionEvent e) {
         if(e.getSource()==billListPanel_User_Post){
         	try {
-        		MessageBox.show(this,"开始做完");
         		BillVO vo = billListPanel_User_Post.getSelectedBillVO();
             	String usercode=vo.getStringValue("usercode");
             	String pftime=UIUtil.getStringValueByDS(null, "select max(pftime) from wn_kjscore_table where usercode='"+usercode+"'");
