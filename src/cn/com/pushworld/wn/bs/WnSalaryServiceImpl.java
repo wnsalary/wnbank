@@ -2899,7 +2899,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	private HashMap<String, Double> nmgCountScore(int dateNum) {
 		HashMap<String, Double> resultMap=new HashMap<String, Double>();
 		try {
-			HashMap<String,String> manager_names = UIUtil.getHashMapBySQLByDS(null, "SELECT NAME,STATIONKIND FROM V_SAL_PERSONINFO  WHERE POSITION LIKE '%客户经理%'");
+			HashMap<String,String> manager_names = UIUtil.getHashMapBySQLByDS(null, "SELECT NAME,STATIONKIND FROM V_SAL_PERSONINFO  WHERE STATIONKIND LIKE '%客户经理%'");
 			String date_time = getYearStartAndEnd(dateNum).get(1);
 			HashMap<String,String> taskNums = UIUtil.getHashMapBySQLByDS(null,"select a,sum(s) from excel_tab_53 where year='"+date_time.substring(0,4)+"' group by a");
 			HashMap<String, String> numMap=UIUtil.getHashMapBySQLByDS(null, "select j,count(a) from excel_tab_66 where  year='"+date_time.substring(0,4)+"' and  b is not null and  d is not null and e is not null and  g is not null and h is not null  group by j ");
@@ -3274,7 +3274,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			try {
 				HashMap<String, String> managerNamesMap = UIUtil
 						.getHashMapBySQLByDS(null,
-								"SELECT NAME,STATIONKIND FROM V_SAL_PERSONINFO  WHERE POSITION LIKE '%客户经理%'");
+								"SELECT NAME,STATIONKIND FROM V_SAL_PERSONINFO  WHERE STATIONKIND LIKE '%客户经理%'");
 				Set<String> managerNames = managerNamesMap.keySet();
 				String yearStartDate = getYearStartAndEnd(dateNum).get(0);
 				String date_time = getYearStartAndEnd(dateNum).get(1);// 考核月日期
@@ -3572,10 +3572,10 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				String checkDate = getYearStartAndEnd(dateNum).get(1);
 				String[] manager_names = UIUtil
 						.getStringArrayFirstColByDS(null,
-								"SELECT NAME FROM V_SAL_PERSONINFO WHERE POSITION  LIKE '%客户经理%'");
+								"SELECT NAME FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
 				HashMap<String, String> qnedMap = UIUtil.getHashMapBySQLByDS(null,
 						"select c,count(b)  from excel_tab_65 where year='"+checkDate.substring(0,4)+"' group by c");
-				HashMap<String,String> taskNum = UIUtil.getHashMapBySQLByDS(null, "select a,sum(q) from excel_tab_53 where year ='"+checkDate.substring(0,4)+"' group by  a");
+				HashMap<String,String> taskNum = UIUtil.getHashMapBySQLByDS(null, "select a,sum(p) from excel_tab_53 where year ='"+checkDate.substring(0,4)+"' group by  a");
 				DecimalFormat decimal=new DecimalFormat("#.00");
 				double score=0.0;
 				double  num,tasknum,rate =0;
@@ -3611,7 +3611,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				// 获取到期客户经理的考核
 				String[] manager_names = UIUtil
 						.getStringArrayFirstColByDS(null,
-								"SELECT NAME FROM V_SAL_PERSONINFO WHERE POSITION LIKE '%客户经理%'");
+								"SELECT NAME FROM V_SAL_PERSONINFO WHERE STATIONKIND LIKE '%客户经理%'");
 				HashMap<String, String> qnedtd = UIUtil
 						.getHashMapBySQLByDS(
 								null,

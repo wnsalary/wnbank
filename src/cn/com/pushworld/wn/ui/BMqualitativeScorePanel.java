@@ -239,7 +239,10 @@ public class BMqualitativeScorePanel extends AbstractWorkPanel implements BillTr
 			String maxTime=UIUtil.getStringValueByDS(null, "select MAX(PFTIME) FROM WN_BMPF_TABLE");
 			if ("客户服务部".equals(deptName)) {
 				billListPanel_Dept_check.queryDataByCondition("1=1 and deptname='" + selectedDeptName + "' and xiangmu like '文明客户服务部%'  and PFTIME='"+maxTime+"' ", "fenzhi");
+				
+				System.out.println("查询的SQL:"+billListPanel_Dept_check.getQuickQueryPanel().getQuerySQL());
 				String state=UIUtil.getStringValueByDS(null, "select state from WN_BMPF_TABLE WHERE deptname='" + selectedDeptName + "' and xiangmu like '文明客户服务部%'  and PFTIME='"+maxTime+"' AND  ROWNUM=1");
+				
 			    if("评分结束".equals(state)){
 			    	billListPanel_Dept_check.setItemEditable("KOUFEN", false);
 			    	billListPanel_Dept_check.setItemEditable("mention", false);
