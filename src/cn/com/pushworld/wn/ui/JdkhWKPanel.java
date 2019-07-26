@@ -7,18 +7,17 @@ import cn.com.infostrategy.ui.common.AbstractWorkPanel;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
 
 public class JdkhWKPanel extends AbstractWorkPanel implements ActionListener {
-     private BillListPanel listPanel;
+	private BillListPanel listPanel;
+
 	@Override
 	public void initialize() {
-		listPanel=new BillListPanel("V_JDKH_ZPY_Q01");
+		listPanel = new BillListPanel("V_JDKH_ZPY_Q01");
 		this.add(listPanel);
 	}
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
-		
 	}
-
-	
 
 }

@@ -20,7 +20,8 @@ import cn.com.infostrategy.ui.mdata.BillCardDialog;
 import cn.com.infostrategy.ui.mdata.BillCardPanel;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
 
-public class CsbShangbaoHuizong extends AbstractWorkPanel implements ActionListener {
+public class CsbShangbaoHuizong extends AbstractWorkPanel implements
+		ActionListener {
 	/**
 	 * 
 	 */
@@ -35,14 +36,15 @@ public class CsbShangbaoHuizong extends AbstractWorkPanel implements ActionListe
 		list_01 = new BillListPanel("WN_CSBHZ_01_CODE1");
 		btn_submit = new WLTButton("提交");
 		btn_submit.addActionListener(this);
-		list_01.addBatchBillListButton(new WLTButton[] { btn_submit, btn_del, btn_edit });
+		list_01.addBatchBillListButton(new WLTButton[] { btn_submit, btn_del,
+				btn_edit });
 		list_01.repaintBillListButton();
 		btn_del = list_01.getBillListBtn("$列表直接删除");
 		btn_del.addActionListener(this);
 		btn_edit = list_01.getBillListBtn("$列表弹出编辑");
 		btn_edit.addActionListener(this);
 		list_01.setVisible(true);
-		list_01.getQuickQueryPanel().addBillQuickActionListener(this);//获取到快速查询事件
+		list_01.getQuickQueryPanel().addBillQuickActionListener(this);// 获取到快速查询事件
 		this.add(list_01);
 	}
 
@@ -60,8 +62,9 @@ public class CsbShangbaoHuizong extends AbstractWorkPanel implements ActionListe
 	}
 
 	private void QuickQuery() {
-		String condition = " 1=1 " + list_01.getQuickQueryPanel().getQuerySQLCondition();//获取到查询条件
-		String GY_Name = ClientEnvironment.getInstance().getLoginUserCode();//获取到当前柜员的号
+		String condition = " 1=1 "
+				+ list_01.getQuickQueryPanel().getQuerySQLCondition();// 获取到查询条件
+		String GY_Name = ClientEnvironment.getInstance().getLoginUserCode();// 获取到当前柜员的号
 		condition = condition + " and  GY_ID='" + GY_Name + "'";
 		System.out.println(condition);
 		list_01.QueryDataByCondition(condition);
@@ -80,7 +83,8 @@ public class CsbShangbaoHuizong extends AbstractWorkPanel implements ActionListe
 		} else {
 			BillCardPanel cardpanel = new BillCardPanel("WN_CSBHZ_01_CODE1");
 			cardpanel.setBillVO(billvo);
-			BillCardDialog dialog = new BillCardDialog(list_01, "编辑", cardpanel, WLTConstants.BILLDATAEDITSTATE_UPDATE);
+			BillCardDialog dialog = new BillCardDialog(list_01, "编辑",
+					cardpanel, WLTConstants.BILLDATAEDITSTATE_UPDATE);
 			dialog.setVisible(true);
 			list_01.refreshCurrSelectedRow();
 		}
@@ -101,7 +105,8 @@ public class CsbShangbaoHuizong extends AbstractWorkPanel implements ActionListe
 				String state = selected[i].getStringValue("state");
 				String id = selected[i].getStringValue("ID");
 				if ("已退回".equals(state.trim()) || "未提交".equals(state.trim())) {
-					String sql = "delete from WN_CSBHZ_01 where id='" + id + "'";
+					String sql = "delete from WN_CSBHZ_01 where id='" + id
+							+ "'";
 					list.add(sql);
 				} else {
 					if ("".equals(notId.trim())) {
@@ -112,40 +117,42 @@ public class CsbShangbaoHuizong extends AbstractWorkPanel implements ActionListe
 				}
 			}
 			if (list.size() >= 1) {
-				int check = MessageBox.showOptionDialog(this, "确定删除数据吗？", "提示", new String[] { "确定", "取消" }, 1);
+				int check = MessageBox.showOptionDialog(this, "确定删除数据吗？", "提示",
+						new String[] { "确定", "取消" }, 1);
 				if (check == 0) {
 					UIUtil.executeBatchByDS(null, list);
-				}else{
+				} else {
 					return;
 				}
 			}
-			if(notId!=null&!"".equals(notId)){
-				MessageBox.show(list_01,"ID为【"+notId+"】状态已经改变，无法删除！！！");
+			if (notId != null & !"".equals(notId)) {
+				MessageBox.show(list_01, "ID为【" + notId + "】状态已经改变，无法删除！！！");
 			}
 			list_01.refreshCurrData();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//		String status = billvo.getStringValue("state");
-		//		if (status.equals("已提交")) {
-		//			MessageBox.show(list_01, "此数据已经提交不可删除！");
-		//			return;
-		//		} else {
-		//			String creater = billvo.getStringValue("GY_ID");
-		//			if (!id.equals(creater)) {
-		//				MessageBox.show(list_01, "非本人创建的记录无权进行删除.");
-		//				return;
-		//			}
-		//			int k = MessageBox.showConfirmDialog(list_01, "您确定要删除吗?");
-		//			if (k == 0) {
-		//				try {
-		//					UIUtil.executeUpdateByDS(null, "delete from WN_CSBHZ_01 where id=" + billvo.getPkValue());
-		//					list_01.removeSelectedRow();
-		//				} catch (Exception e) {
-		//					e.printStackTrace();
-		//				}
-		//			}
-		//		}
+		// String status = billvo.getStringValue("state");
+		// if (status.equals("已提交")) {
+		// MessageBox.show(list_01, "此数据已经提交不可删除！");
+		// return;
+		// } else {
+		// String creater = billvo.getStringValue("GY_ID");
+		// if (!id.equals(creater)) {
+		// MessageBox.show(list_01, "非本人创建的记录无权进行删除.");
+		// return;
+		// }
+		// int k = MessageBox.showConfirmDialog(list_01, "您确定要删除吗?");
+		// if (k == 0) {
+		// try {
+		// UIUtil.executeUpdateByDS(null, "delete from WN_CSBHZ_01 where id=" +
+		// billvo.getPkValue());
+		// list_01.removeSelectedRow();
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// }
 
 	}
 
@@ -157,13 +164,16 @@ public class CsbShangbaoHuizong extends AbstractWorkPanel implements ActionListe
 				return;
 			}
 			String state = billvo.getStringValue("state");
-			if (state.equals("未提交")||state.equals("已退回")) {
+			if (state.equals("未提交") || state.equals("已退回")) {
 				int k = MessageBox.showConfirmDialog(list_01, "您确定要提交给委派会计吗?");
 				if (k != 0) {
 					return;
 				}
-				String date=new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-				UIUtil.executeUpdateByDS(null, "update WN_CSBHZ_01 set state='已提交' , SJ_DATE='"+date+"' where id =" + billvo.getPkValue());
+				String date = new SimpleDateFormat("yyyy-MM-dd")
+						.format(new Date());
+				UIUtil.executeUpdateByDS(null,
+						"update WN_CSBHZ_01 set state='已提交' , SJ_DATE='" + date
+								+ "' where id =" + billvo.getPkValue());
 				list_01.refreshCurrSelectedRow();
 				MessageBox.show(list_01, "提交成功!");
 			} else if (state.equals("已提交")) {

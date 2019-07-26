@@ -9,17 +9,17 @@ import cn.com.infostrategy.ui.mdata.BillListPanel;
 import cn.com.infostrategy.ui.mdata.listcomp.QuickSearchDialog;
 
 public class XzwcnmgWKPanel extends AbstractWorkPanel implements ActionListener {
-   
+
 	private BillListPanel listPanel;
+
 	@Override
 	public void initialize() {
-		listPanel=new BillListPanel("V_XZWCNMG_ZPY_Q01");
+		listPanel = new BillListPanel("V_XZWCNMG_ZPY_Q01");
 		this.add(listPanel);
 	}
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
 	}
-
-	
 
 }

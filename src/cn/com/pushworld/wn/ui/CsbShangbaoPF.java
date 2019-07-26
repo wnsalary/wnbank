@@ -20,80 +20,87 @@ import cn.com.infostrategy.ui.mdata.BillCardDialog;
 import cn.com.infostrategy.ui.mdata.BillCardPanel;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
 
-public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener{
+public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener {
 
-	private BillListPanel listPanel=null;
-	private WLTButton updateButton,vertifyButton,vertifyBatchButton,backBatchButton;
+	private BillListPanel listPanel = null;
+	private WLTButton updateButton, vertifyButton, vertifyBatchButton,
+			backBatchButton;
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
-	    if(e.getSource()==updateButton){//修改
-	    	updateData();
-	    }else if(e.getSource()==vertifyButton){//批复
-	    	vertifyData();
-	    }else if(e.getSource()==vertifyBatchButton){//批量审核
-	    	vertifyBatchData();
-	    }else if(e.getSource()==backBatchButton){//批量退回
-	    	backBatchData();
-	    }else if(e.getSource()==listPanel.getQuickQueryPanel()){
-	    	QuickQuery();
-	    }
+		if (e.getSource() == updateButton) {// 修改
+			updateData();
+		} else if (e.getSource() == vertifyButton) {// 批复
+			vertifyData();
+		} else if (e.getSource() == vertifyBatchButton) {// 批量审核
+			vertifyBatchData();
+		} else if (e.getSource() == backBatchButton) {// 批量退回
+			backBatchData();
+		} else if (e.getSource() == listPanel.getQuickQueryPanel()) {
+			QuickQuery();
+		}
 	}
 
-	private void QuickQuery() {//查询出的结果只能是柜员已经提交 已退回 已批复
+	private void QuickQuery() {// 查询出的结果只能是柜员已经提交 已退回 已批复
 		try {
-			String condition = "1=1 " + listPanel.getQuickQueryPanel().getQuerySQLCondition();
+			String condition = "1=1 "
+					+ listPanel.getQuickQueryPanel().getQuerySQLCondition();
 			String state = "未提交";
 			condition = condition + " and STATE !='" + state + "'";
 			listPanel.QueryDataByCondition(condition);
 		} catch (Exception e) {
-             e.printStackTrace();
+			e.printStackTrace();
 		}
 	}
 
-	private void updateData() {//修改数据
-		try{
+	private void updateData() {// 修改数据
+		try {
 			BillVO billvo = listPanel.getSelectedBillVO();
 			if (billvo == null) {
 				MessageBox.show(listPanel, "请选中一条数据！！！");
 				return;
 			}
-			String state = billvo.getStringValue("state");//获取到选中数据的状态
+			String state = billvo.getStringValue("state");// 获取到选中数据的状态
 			if ("已审核".equals(state) || "已退回".equals(state)) {
-				BillCardPanel cardpanel = new BillCardPanel("WN_CSBHZ_01_ZPY_Q01");
+				BillCardPanel cardpanel = new BillCardPanel(
+						"WN_CSBHZ_01_ZPY_Q01");
 				cardpanel.setBillVO(billvo);
-				BillCardDialog dialog = new BillCardDialog(listPanel, "编辑", cardpanel, WLTConstants.BILLDATAEDITSTATE_UPDATE);
+				BillCardDialog dialog = new BillCardDialog(listPanel, "编辑",
+						cardpanel, WLTConstants.BILLDATAEDITSTATE_UPDATE);
 				dialog.setVisible(true);
-				cardpanel.setEditable("STATE", false);//设置修改时，不能修改状态
+				cardpanel.setEditable("STATE", false);// 设置修改时，不能修改状态
 				listPanel.refreshCurrSelectedRow();
 			} else {
 				MessageBox.show(this, "当前数据未批复,无法修改");
 			}
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	private void vertifyData() {
-		try{
+		try {
 			BillVO billvo = listPanel.getSelectedBillVO();
 			if (billvo == null) {
 				MessageBox.show(this, "请选中一条数据！！！");
 				return;
 			}
-			String state = billvo.getStringValue("state");//获取到选中数据的状态
+			String state = billvo.getStringValue("state");// 获取到选中数据的状态
 			if ("已提交".equals(state.trim())) {
-				BillCardPanel cardpanel = new BillCardPanel("WN_CSBHZ_01_ZPY_Q01");
+				BillCardPanel cardpanel = new BillCardPanel(
+						"WN_CSBHZ_01_ZPY_Q01");
 				cardpanel.setBillVO(billvo);
-				BillCardDialog dialog = new BillCardDialog(listPanel, "编辑", cardpanel, WLTConstants.BILLDATAEDITSTATE_UPDATE);
+				BillCardDialog dialog = new BillCardDialog(listPanel, "编辑",
+						cardpanel, WLTConstants.BILLDATAEDITSTATE_UPDATE);
 				dialog.setVisible(true);
 				listPanel.refreshCurrSelectedRow();
 			} else {
 				MessageBox.show(this, "当前数据状态是【" + state + "】,无法批复");
 			}
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	private void vertifyBatchData() {
@@ -105,8 +112,10 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener{
 			}
 			String ids = "";
 			String notIds = "";
-			String ratifyPerson=ClientEnvironment.getInstance().getLoginUserName();
-			String ratifyTime=new  SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+			String ratifyPerson = ClientEnvironment.getInstance()
+					.getLoginUserName();
+			String ratifyTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+					.format(new Date());
 			for (int i = 0; i < billvos.length; i++) {
 				String state = billvos[i].getStringValue("state");
 				String id = billvos[i].getStringValue("id");
@@ -116,7 +125,7 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener{
 					} else {
 						notIds = notIds + " " + id;
 					}
-				}else if ("已提交".equals(state)) {
+				} else if ("已提交".equals(state)) {
 					if ("".equals(ids)) {
 						ids = ids + "'" + id + "'";
 					} else {
@@ -129,21 +138,25 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener{
 				return;
 			} else {
 				Frame frame = new Frame();
-				if(ids.contains(",")){
-					ids = ids.substring(0,ids.lastIndexOf(","));
+				if (ids.contains(",")) {
+					ids = ids.substring(0, ids.lastIndexOf(","));
 				}
 				String inputValue = JOptionPane.showInputDialog("请输入理由:");
-				UIUtil.executeUpdateByDS(null, "update WN_CSBHZ_01 set ratifyReason='" + inputValue + "',ratifyPerson='"+ratifyPerson+"',ratifyTime='"+ratifyTime+"',state='已审核' where id in (" + ids + ")");
-			    listPanel.refreshData();
+				UIUtil.executeUpdateByDS(null,
+						"update WN_CSBHZ_01 set ratifyReason='" + inputValue
+								+ "',ratifyPerson='" + ratifyPerson
+								+ "',ratifyTime='" + ratifyTime
+								+ "',state='已审核' where id in (" + ids + ")");
+				listPanel.refreshData();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	private void backBatchData() {
-		try{
+		try {
 			BillVO[] billvos = listPanel.getSelectedBillVOs();
 			if (billvos == null || billvos.length == 0) {
 				MessageBox.show(this, "请选中一条数据！！！");
@@ -151,8 +164,10 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener{
 			}
 			String ids = "";
 			String notIds = "";
-			String ratifyPerson=ClientEnvironment.getInstance().getLoginUserName();
-			String ratifyTime=new  SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+			String ratifyPerson = ClientEnvironment.getInstance()
+					.getLoginUserName();
+			String ratifyTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+					.format(new Date());
 			for (int i = 0; i < billvos.length; i++) {
 				String state = billvos[i].getStringValue("state");
 				String id = billvos[i].getStringValue("id");
@@ -162,7 +177,7 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener{
 					} else {
 						notIds = notIds + " " + id;
 					}
-				}else if ("已提交".equals(state)) {
+				} else if ("已提交".equals(state)) {
 					if ("".equals(ids)) {
 						ids = ids + "'" + id + "'";
 					} else {
@@ -175,33 +190,38 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener{
 				return;
 			} else {
 				Frame frame = new Frame();
-				if(ids.contains(",")){
-					ids = ids.substring(0,ids.lastIndexOf(","));
+				if (ids.contains(",")) {
+					ids = ids.substring(0, ids.lastIndexOf(","));
 				}
 				String inputValue = JOptionPane.showInputDialog("请输入理由:");
-				UIUtil.executeUpdateByDS(null, "update WN_CSBHZ_01 set ratifyReason='" + inputValue + "',ratifyPerson='"+ratifyPerson+"',ratifyTime='"+ratifyTime+"',state='已退回' where id in (" + ids + ")");
+				UIUtil.executeUpdateByDS(null,
+						"update WN_CSBHZ_01 set ratifyReason='" + inputValue
+								+ "',ratifyPerson='" + ratifyPerson
+								+ "',ratifyTime='" + ratifyTime
+								+ "',state='已退回' where id in (" + ids + ")");
 				listPanel.refreshData();
 			}
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	@Override
 	public void initialize() {
-		  listPanel=new BillListPanel("WN_CSBHZ_01_ZPY_Q01");
-		  updateButton=new WLTButton("修改");
-		  vertifyButton=new WLTButton("批复");
-		  vertifyBatchButton=new WLTButton("批量审核");
-		  backBatchButton=new WLTButton("批量退回");
-		  updateButton.addActionListener(this);
-		  vertifyButton.addActionListener(this);
-		  vertifyBatchButton.addActionListener(this);
-		  backBatchButton.addActionListener(this);
-		  listPanel.addBatchBillListButton(new WLTButton[]{updateButton,vertifyButton,vertifyBatchButton,backBatchButton});
-		  listPanel.repaintBillListButton();
-		  listPanel.getQuickQueryPanel().addBillQuickActionListener(this);
-		  this.add(listPanel);
+		listPanel = new BillListPanel("WN_CSBHZ_01_ZPY_Q01");
+		updateButton = new WLTButton("修改");
+		vertifyButton = new WLTButton("批复");
+		vertifyBatchButton = new WLTButton("批量审核");
+		backBatchButton = new WLTButton("批量退回");
+		updateButton.addActionListener(this);
+		vertifyButton.addActionListener(this);
+		vertifyBatchButton.addActionListener(this);
+		backBatchButton.addActionListener(this);
+		listPanel.addBatchBillListButton(new WLTButton[] { updateButton,
+				vertifyButton, vertifyBatchButton, backBatchButton });
+		listPanel.repaintBillListButton();
+		listPanel.getQuickQueryPanel().addBillQuickActionListener(this);
+		this.add(listPanel);
 	}
 }

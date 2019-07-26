@@ -20,8 +20,10 @@ import cn.com.infostrategy.ui.common.WLTButton;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
 import cn.com.infostrategy.ui.mdata.BillListSelectListener;
 import cn.com.infostrategy.ui.mdata.BillListSelectionEvent;
+
 //部门定性指标打分
-public class BMqualitative extends AbstractWorkPanel implements ActionListener, BillListSelectListener {
+public class BMqualitative extends AbstractWorkPanel implements ActionListener,
+		BillListSelectListener {
 
 	private BillListPanel listPanel;
 	private WLTButton btn_ks, btn_end = null;
@@ -30,7 +32,7 @@ public class BMqualitative extends AbstractWorkPanel implements ActionListener, 
 
 	@Override
 	public void initialize() {
-		//WN_JDFKMHZB_02_Q02_ZPY
+		// WN_JDFKMHZB_02_Q02_ZPY
 		listPanel = new BillListPanel("WN_BMPFPLAN_Q01_ZPY");
 		btn_ks = new WLTButton("开始考核");
 		btn_ks.addActionListener(this);
@@ -43,23 +45,24 @@ public class BMqualitative extends AbstractWorkPanel implements ActionListener, 
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == btn_ks) {//开始打分
+		if (e.getSource() == btn_ks) {// 开始打分
 			gradeScore();
-		} else if (e.getSource() == btn_end) {//结束打分
+		} else if (e.getSource() == btn_end) {// 结束打分
 			gradeEnd();
 		}
 	}
 
-	private void gradeEnd() {//1.将当前状态全部结束;2.计算每个部门每一大项的最终得分
-		try {//首先锁定每一大项，然后确定每一个部门
+	private void gradeEnd() {// 1.将当前状态全部结束;2.计算每个部门每一大项的最终得分
+		try {// 首先锁定每一大项，然后确定每一个部门
 			BillVO selectedBillVO = listPanel.getSelectedBillVO();
-			if(selectedBillVO==null){
+			if (selectedBillVO == null) {
 				MessageBox.show("请选中一行计划进行操作");
 				return;
 			}
-			final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil.lookUpRemoteService(WnSalaryServiceIfc.class);
-			new  SplashWindow(this, new AbstractAction() {
-				
+			final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil
+					.lookUpRemoteService(WnSalaryServiceIfc.class);
+			new SplashWindow(this, new AbstractAction() {
+
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					str = service.gradeBMScoreEnd();
@@ -77,30 +80,37 @@ public class BMqualitative extends AbstractWorkPanel implements ActionListener, 
 	 */
 	private void gradeScore() {
 		try {
-			//判断当前考计划中是否存在打分项
+			// 判断当前考计划中是否存在打分项
 			final BillVO vo = listPanel.getSelectedBillVO();
-			if(vo==null){
-				MessageBox.show(this,"请选中一条状态为【未生成】的计划进行操作！！！");
-				return;
-			} 
-			final String id = vo.getStringValue("id");//获取当前计划的id
-			HashVO[] hashvo = UIUtil.getHashVoArrayByDS(null, "select * from wn_BMPF_table where planid='" + id + "' ");
-			if (hashvo.length > 0) {//不允许重复生成计划
-				MessageBox.show(this, "当前选中计划【" + vo.getStringValue("PLANNAME") + "】已经存在");
+			if (vo == null) {
+				MessageBox.show(this, "请选中一条状态为【未生成】的计划进行操作！！！");
 				return;
 			}
-			HashVO[] vos = UIUtil.getHashVoArrayByDS(null, "select * from WN_BMPFPLAN where state='评分中' and id!='" + id + "'");
+			final String id = vo.getStringValue("id");// 获取当前计划的id
+			HashVO[] hashvo = UIUtil.getHashVoArrayByDS(null,
+					"select * from wn_BMPF_table where planid='" + id + "' ");
+			if (hashvo.length > 0) {// 不允许重复生成计划
+				MessageBox.show(this, "当前选中计划【" + vo.getStringValue("PLANNAME")
+						+ "】已经存在");
+				return;
+			}
+			HashVO[] vos = UIUtil.getHashVoArrayByDS(null,
+					"select * from WN_BMPFPLAN where state='评分中' and id!='"
+							+ id + "'");
 			if (vos.length > 0) {//
 				MessageBox.show(this, "存在尚未结束的部门考核计划,请先结束！！！");
 				return;
 			}
-			final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil.lookUpRemoteService(WnSalaryServiceIfc.class);
+			final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil
+					.lookUpRemoteService(WnSalaryServiceIfc.class);
 			new SplashWindow(this, new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					str = service.getBMsql(id);
-					UpdateSQLBuilder update = new UpdateSQLBuilder(listPanel.getTempletVO().getTablename());
-					update.setWhereCondition("id='" + vo.getStringValue("id") + "'");
+					UpdateSQLBuilder update = new UpdateSQLBuilder(listPanel
+							.getTempletVO().getTablename());
+					update.setWhereCondition("id='" + vo.getStringValue("id")
+							+ "'");
 					update.putFieldValue("state", "评分中");
 					try {
 						UIUtil.executeUpdateByDS(null, update.getSQL());

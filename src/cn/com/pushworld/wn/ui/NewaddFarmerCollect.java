@@ -6,17 +6,18 @@ import java.awt.event.ActionListener;
 import cn.com.infostrategy.ui.common.AbstractWorkPanel;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
 
-public class NewaddFarmerCollect extends AbstractWorkPanel implements ActionListener {
+public class NewaddFarmerCollect extends AbstractWorkPanel implements
+		ActionListener {
 
 	/**
-	 * @author FJ[农民工管理指标完成比]
-	 * 2019年6月4日14:36:09
+	 * @author FJ[农民工管理指标完成比] 2019年6月4日14:36:09
 	 */
 	private static final long serialVersionUID = 1L;
 	private BillListPanel billListPanel;
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource()==billListPanel.getQuickQueryPanel()){
+		if (e.getSource() == billListPanel.getQuickQueryPanel()) {
 			QuickQuery();
 		}
 
@@ -24,22 +25,25 @@ public class NewaddFarmerCollect extends AbstractWorkPanel implements ActionList
 
 	private void QuickQuery() {
 		String sql = "select * from V_NMGGLZB_WCL where 1=1 ";
-		String date_time = billListPanel.getQuickQueryPanel().getCompentRealValue("KHDATE");
+		String date_time = billListPanel.getQuickQueryPanel()
+				.getCompentRealValue("KHDATE");
 		if (date_time != null && !date_time.isEmpty()) {
 			date_time = date_time.substring(0, date_time.length() - 1);
 			date_time = date_time.replace("-", "年");
 			sql = sql + " and KHDATE='" + date_time + "' ";
 		}
-		String code = billListPanel.getQuickQueryPanel().getCompentRealValue("code");
+		String code = billListPanel.getQuickQueryPanel().getCompentRealValue(
+				"code");
 		if (code != null && !code.isEmpty()) {
 			sql = sql + " and CODE like '%" + code + "%' ";
 		}
-		String name = billListPanel.getQuickQueryPanel().getCompentRealValue("j");
+		String name = billListPanel.getQuickQueryPanel().getCompentRealValue(
+				"j");
 		if (name != null && !name.isEmpty()) {
 			sql = sql + " and J like'%" + name + "%'";
 		}
 		billListPanel.QueryData(sql);
-		
+
 	}
 
 	@Override

@@ -24,7 +24,7 @@ public class LinuxImportdataUtil {
 		Session openSession = login.openSession();
 		String execute = getInstance().execute(login,
 				"java -jar /home/oracle/wnImportTest.jar");
-		System.out.println("执行效果:"+execute);
+		System.out.println("执行效果:" + execute);
 
 	}
 
@@ -92,18 +92,18 @@ public class LinuxImportdataUtil {
 				Session session = conn.openSession();// 打开会话建立连接
 				session.requestPTY("bash");
 				session.startShell();
-				PrintWriter out=new PrintWriter(session.getStdin());
+				PrintWriter out = new PrintWriter(session.getStdin());
 				out.print(cmd);
 				out.close();
-//				session.execCommand(cmd);// 执行Shell脚本命令
-//				stdOut = new StreamGobbler(session.getStdout());
-//				stdErr = new StreamGobbler(session.getStderr());
-//				session.waitForCondition(ChannelCondition.EXIT_STATUS,
-//						ChannelCondition.CLOSED);
-//				result = "执行命令成功,链接conn" + conn + ",执行的命令:" + cmd;
-//				Integer exitStatus = session.getExitStatus();
-//				conn.close();
-//				session.close();
+				// session.execCommand(cmd);// 执行Shell脚本命令
+				// stdOut = new StreamGobbler(session.getStdout());
+				// stdErr = new StreamGobbler(session.getStderr());
+				// session.waitForCondition(ChannelCondition.EXIT_STATUS,
+				// ChannelCondition.CLOSED);
+				// result = "执行命令成功,链接conn" + conn + ",执行的命令:" + cmd;
+				// Integer exitStatus = session.getExitStatus();
+				// conn.close();
+				// session.close();
 			} else {
 				result = "未正常连接服务器,错误的连接为:" + conn;
 			}

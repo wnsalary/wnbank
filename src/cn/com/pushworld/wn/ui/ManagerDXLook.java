@@ -10,25 +10,22 @@ import cn.com.infostrategy.ui.mdata.BillListHtmlHrefEvent;
 import cn.com.infostrategy.ui.mdata.BillListHtmlHrefListener;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
 
-/**
- * 黔农E贷线上替代明细查询
- * 
- * @author ZPY【2019-05-30】
- */
-public class QnedtdSearchWKPanel extends AbstractWorkPanel implements
-		ActionListener, BillListHtmlHrefListener {
+public class ManagerDXLook extends AbstractWorkPanel implements ActionListener,
+		BillListHtmlHrefListener {
 
 	private BillListPanel listPanel;
+	private String str;
 
 	@Override
 	public void initialize() {
-		listPanel = new BillListPanel("WN_QNEDTD_Q01_ZPY");
+		listPanel = new BillListPanel("V_MANAGERSCORE_LOOK_ZPY_Q01");
 		listPanel.addBillListHtmlHrefListener(this);
 		this.add(listPanel);
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+
 	}
 
 	@Override
@@ -36,9 +33,11 @@ public class QnedtdSearchWKPanel extends AbstractWorkPanel implements
 		if (e.getSource() == listPanel) {
 			BillVO vo = listPanel.getSelectedBillVO();
 			BillListDialog dialog = new BillListDialog(this, "查看",
-					"V_S_LOAN_HK_CODE1");
+					"WN_MANAGERDX_TABLE_ZPY_Q01");
 			dialog.getBilllistPanel().QueryDataByCondition(
-					"xd_col1='" + vo.getStringValue("DKNO") + "'");
+					"planid='" + vo.getStringValue("planid")
+							+ "' and username='"
+							+ vo.getStringValue("username") + "'");
 			dialog.getBtn_confirm().setVisible(false);
 			dialog.setVisible(true);
 		}

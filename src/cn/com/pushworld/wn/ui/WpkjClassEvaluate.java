@@ -8,25 +8,28 @@ import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.infostrategy.ui.common.WLTButton;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
 
-public class WpkjClassEvaluate extends AbstractWorkPanel implements ActionListener{
-	
-	private UIUtil uiutil =  new UIUtil();
+public class WpkjClassEvaluate extends AbstractWorkPanel implements
+		ActionListener {
+
+	private UIUtil uiutil = new UIUtil();
 	private String date = uiutil.getCurrDate();
 	private BillListPanel billListPanel;
 	private WLTButton btn_evaluate;
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource()==btn_evaluate){
+		if (e.getSource() == btn_evaluate) {
 			try {
-				WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil.lookUpRemoteService(WnSalaryServiceIfc.class);
+				WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil
+						.lookUpRemoteService(WnSalaryServiceIfc.class);
 				String str = service.getWpkjClass(date);
-				MessageBox.show(this,str);
+				MessageBox.show(this, str);
 			} catch (Exception e2) {
 				e2.printStackTrace();
 				MessageBox.show("评级失败，请联系管理员");
 			}
 		}
-		
+
 	}
 
 	@Override
@@ -38,7 +41,7 @@ public class WpkjClassEvaluate extends AbstractWorkPanel implements ActionListen
 		billListPanel.repaintBillListButton();
 		billListPanel.setVisible(true);
 		this.add(billListPanel);
-		
+
 	}
 
 }

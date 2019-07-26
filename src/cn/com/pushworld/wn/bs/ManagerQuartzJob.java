@@ -15,12 +15,12 @@ public class ManagerQuartzJob implements WLTJobIFC {
 	@Override
 	public String run() throws Exception {
 		try {
-			//获取到当前时间
-			SimpleDateFormat simple=new SimpleDateFormat("dd");
-			int day =Integer.parseInt(simple.format(new Date()));
-			if(day==1 ){//每个月的1号启动打分
+			// 获取到当前时间
+			SimpleDateFormat simple = new SimpleDateFormat("dd");
+			int day = Integer.parseInt(simple.format(new Date()));
+			if (day == 1) {// 每个月的1号启动打分
 				ManagerGradeStart();
-			}else if(day==5 ){//每个月的5号晚上结束打分
+			} else if (day == 5) {// 每个月的5号晚上结束打分
 				ManagerGradeEnd();
 			}
 		} catch (Exception e) {
@@ -31,26 +31,29 @@ public class ManagerQuartzJob implements WLTJobIFC {
 
 	private void ManagerGradeEnd() {
 		try {
-			String planid = dmo.getStringValueByDS(null, "select max(planid) from WN_MANAGERDX_TABLE");
-			if(planid==null || planid.isEmpty()){
+			String planid = dmo.getStringValueByDS(null,
+					"select max(planid) from WN_MANAGERDX_TABLE");
+			if (planid == null || planid.isEmpty()) {
 				return;
-			}else{
-				WnSalaryServiceIfc service = new  WnSalaryServiceImpl();
+			} else {
+				WnSalaryServiceIfc service = new WnSalaryServiceImpl();
 				service.endManagerDXscore(planid);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+
 	private void ManagerGradeStart() {
 		try {
-			WnSalaryServiceIfc service = new  WnSalaryServiceImpl();
-			//对id进行处理
-			String planid = dmo.getStringValueByDS(null, "select max(planid) from WN_MANAGERDX_TABLE");
-			if(planid==null || planid.isEmpty()){
-				planid="1";
-			}else {
-				planid=String.valueOf(Integer.parseInt(planid)+1);
+			WnSalaryServiceIfc service = new WnSalaryServiceImpl();
+			// 对id进行处理
+			String planid = dmo.getStringValueByDS(null,
+					"select max(planid) from WN_MANAGERDX_TABLE");
+			if (planid == null || planid.isEmpty()) {
+				planid = "1";
+			} else {
+				planid = String.valueOf(Integer.parseInt(planid) + 1);
 			}
 			service.gradeManagerDXscore(planid);
 		} catch (Exception e) {
