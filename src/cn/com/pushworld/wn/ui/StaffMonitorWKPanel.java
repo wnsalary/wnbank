@@ -144,10 +144,18 @@ public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionList
 		    		return;
 		    	}
 		    	//如何设置弹出框是一个Panel
-		    	BillCardDialog cardDialog=new BillCardDialog(this,"WN_CURRENT_CHECK_RESULT_ZPY_Q01");
+		    	BillCardDialog cardDialog=new BillCardDialog(this,"员工交易核实","WN_CURRENT_CHECK_RESULT_ZPY_Q01",600,300);
 	            cardDialog.setCardEditable(true);
+	            cardDialog.setSaveBtnVisiable(false);
+	            cardDialog.getBtn_confirm().addActionListener(new ActionListener() {
+					
+					@Override
+					public void actionPerformed(ActionEvent actionevent) {//zzl  在这里写你的逻辑拉歌
+						// TODO Auto-generated method stub
+						
+					}
+				});
 	            cardDialog.setVisible(true);
-	            cardDialog.setClickSaveButton(true);//设置保存
 	            //获取到当前保存的结果
 	            String checkResult= cardDialog.getCardItemValue("check_result");
 	            List<String> updateList=new ArrayList<String>();
