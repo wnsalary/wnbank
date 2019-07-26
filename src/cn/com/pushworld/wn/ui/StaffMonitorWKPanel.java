@@ -24,6 +24,7 @@ import cn.com.infostrategy.to.common.HashVO;
 import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
 import cn.com.infostrategy.to.mdata.Pub_Templet_1_ItemVO;
+import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
 import cn.com.infostrategy.ui.common.AbstractWorkPanel;
 import cn.com.infostrategy.ui.common.BillDialog;
 import cn.com.infostrategy.ui.common.MessageBox;
@@ -39,7 +40,7 @@ public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionList
      
 	private BillListPanel listPanel,sonListPanel;
 	private String str;
-	private WLTButton exportButton,checkButton;
+	private WLTButton exportButton,checkButton,save_btn;
 	private static String queryCondition;;
 	private JFileChooser fileChooser;
 	private JComboBox comboBox = null;
@@ -52,6 +53,8 @@ public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionList
 		exportButton.addActionListener(this);
 		checkButton=new WLTButton("处理");
 		checkButton.addActionListener(this);
+		save_btn=new WLTButton("保存");
+		save_btn.addActionListener(this);
 		listPanel.addBillListButton(exportButton);
 		listPanel.addBillListButton(checkButton);
 		//获取到快速查询的监听
@@ -103,41 +106,65 @@ public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionList
 		    	String dealResult=listPanel.getQuickQueryPanel().getRealValueAt("DEAL_RESULT");//获取到处理结果
 		    	String codAccTitle=listPanel.getQuickQueryPanel().getRealValueAt("COD_ACCT_TITLE");//获取到当前用户姓名
 		    	String amtTxn2=listPanel.getQuickQueryPanel().getRealValueAt("AMT_TXN2");//获取到交易金额
+		    	String billListQuery="select * from WN_CURRENT_DEAL_RESULT where  1=1 ";
 		    	HashMap<String, String> conditionMap=new HashMap<String, String>();
-		    
 		    	if(datTxn!=null && !"".equals(datTxn)){
 		    		conditionMap.put("DAT_TXN", datTxn);
+		    		billListQuery=billListQuery+" and DAT_TXN like '"+datTxn.replace(";", "")+"%' ";
+		    	}else {
+		    		return;
 		    	}
 		    	if(dealResult!=null && !"".equals(dealResult)){
 		    		conditionMap.put("DEAL_RESULT",dealResult );
-		    		
+		    		billListQuery=billListQuery+" and DEAL_RESULT='"+dealResult+"' ";
 		    	}
 		    	if(codAccTitle!=null && !"".equals(codAccTitle)){
 		    		conditionMap.put("COD_ACCT_TITLE", codAccTitle);
+		    		billListQuery=billListQuery+" and COD_ACCT_TITLE like '%"+codAccTitle+"%' ";
 		    	}
 		    	if(amtTxn2!=null && !"".equals(amtTxn2)){
+		    		if(!amtTxn2.matches("([1-9]\\d*\\.?\\d*)|(0\\.\\d*[1-9])")){//判断用户输入是否是非数字
+			    		MessageBox.show(this,"当前输入过程中包含非数字，请重新输入");
+			    		return;
+			    	}
 		    		conditionMap.put("AMT_TXN2", amtTxn2);
+		    		billListQuery=billListQuery+" and AMT_TXN2>="+Double.parseDouble(amtTxn2);
 		    	}
 		    	service.insertMonitorResult(sql,conditionMap);
-		    	listPanel.QueryData("select * from WN_CURRENT_DEAL_RESULT where 1=1  "+queryCondition);
-		    	System.out.println("deal_result="+dealResult);
-		    	System.out.println("amtTxn2="+amtTxn2);
+//		    	listPanel.QueryData("select * from WN_CURRENT_DEAL_RESULT where 1=1  "+queryCondition);
+		    	listPanel.QueryData(billListQuery);		   
 			} catch (Exception e2) {
 				e2.printStackTrace();
 			}
 	    }else  if(e.getSource()==checkButton){//对数据进行处理
-	    	BillVO[] checkUsers = listPanel.getSelectedBillVOs();
-	    	if(checkUsers==null||checkUsers.length<=0){
-	    		MessageBox.show(this,"请选择一条数据进行处理");
-	    		return;
+	    	try{
+	    		BillVO[] checkUsers = listPanel.getSelectedBillVOs();
+		    	if(checkUsers==null||checkUsers.length<=0){
+		    		MessageBox.show(this,"请选择一条数据进行处理");
+		    		return;
+		    	}
+		    	//如何设置弹出框是一个Panel
+		    	BillCardDialog cardDialog=new BillCardDialog(this,"WN_CURRENT_CHECK_RESULT_ZPY_Q01");
+	            cardDialog.setCardEditable(true);
+	            cardDialog.setVisible(true);
+	            cardDialog.setClickSaveButton(true);//设置保存
+	            //获取到当前保存的结果
+	            String checkResult= cardDialog.getCardItemValue("check_result");
+	            List<String> updateList=new ArrayList<String>();
+	            UpdateSQLBuilder update=new UpdateSQLBuilder("wn_current_deal_date");
+	            for (BillVO billVO : checkUsers) {
+					String  codAcctNo= billVO.getStringValue("COD_ACCT_NO");
+					update.setWhereCondition("COD_ACCT_NO='"+codAcctNo+"'");
+					update.putFieldValue("deal_result", checkResult);
+					updateList.add(update.getSQL());
+					if(updateList.size()>=5000){
+						UIUtil.executeBatchByDS(null, updateList);
+					}
+				}
+	    	}catch(Exception ex){
+	    		ex.printStackTrace();
 	    	}
-	    	//如何设置弹出框是一个Panel
-	    	BillCardDialog cardDialog=new BillCardDialog(this,"WN_CURRENT_CHECK_RESULT_ZPY_Q01");
-	    	cardDialog.setVisible(true);//设置可见
-	    	cardDialog.getBillcardPanel().setEditable(true);
-	    	cardDialog.setCardEditable(true);//设置可编辑
-	    	cardDialog.setSaveBtnVisiable(true);
-	    	
+	    
 	    }
 	}
 	
@@ -162,7 +189,7 @@ public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionList
 					 n++;
 				 }
 			}
-             String sql="select * from wn_current_deal_date where 1=1 "+queryCondition;
+             String sql="select * from WN_CURRENT_DEAL_result where 1=1 "+queryCondition;
              HashVO[] hashVos = UIUtil.getHashVoArrayByDS(null, sql);
             Row nextRow = null;
             for (int i = 0; i < hashVos.length; i++) {

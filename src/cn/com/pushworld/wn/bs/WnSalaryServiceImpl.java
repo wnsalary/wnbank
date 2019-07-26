@@ -4540,18 +4540,19 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 							conditionMap.get("DAT_TXN").lastIndexOf(";"))
 					+ "%'";
 			if (conditionMap.containsKey("AMT_TXN2")) {
-				String[] dateNum = conditionMap.get("AMT_TXN2").split(";");
-
-				if (dateNum.length==2) {
-					sql = sql + " and AMT_TXN<="
-							+ Double.parseDouble(dateNum[1]) * 10000
-							+ " and AMT_TXN>="
-							+ Double.parseDouble(dateNum[0]) * 10000;
-				} else {
-					sql = sql + " and AMT_TXN>='"
-							+ Double.parseDouble(conditionMap.get("AMT_TXN2").replace(";", ""))
-							* 10000 + "'";
-				}
+//				String[] dateNum = conditionMap.get("AMT_TXN2").split(";");
+//
+//				if (dateNum.length==2) {
+//					sql = sql + " and AMT_TXN<="
+//							+ Double.parseDouble(dateNum[1]) * 10000
+//							+ " and AMT_TXN>="
+//							+ Double.parseDouble(dateNum[0]) * 10000;
+//				} else {
+//					sql = sql + " and AMT_TXN>='"
+//							+ Double.parseDouble(conditionMap.get("AMT_TXN2").replace(";", ""))
+//							* 10000 + "'";
+//				}
+				sql=sql +" and AMT_TXN>="+ Double.parseDouble(conditionMap.get("AMT_TXN2"))*10000;
 			}
 			if (conditionMap.containsKey("COD_ACCT_TITLE")) {
 				sql = sql + " and COD_ACCT_TITLE like '%"
