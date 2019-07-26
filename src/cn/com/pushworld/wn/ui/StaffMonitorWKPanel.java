@@ -159,7 +159,7 @@ public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionList
 	            //获取到当前保存的结果
 	            String checkResult= cardDialog.getCardItemValue("check_result");
 	            List<String> updateList=new ArrayList<String>();
-	            UpdateSQLBuilder update=new UpdateSQLBuilder("wn_current_deal_date");
+	            UpdateSQLBuilder update=new UpdateSQLBuilder("WN_CURRENT_DEAL_result");
 	            for (BillVO billVO : checkUsers) {
 					String  codAcctNo= billVO.getStringValue("COD_ACCT_NO");
 					update.setWhereCondition("COD_ACCT_NO='"+codAcctNo+"'");
@@ -172,10 +172,8 @@ public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionList
 	    	}catch(Exception ex){
 	    		ex.printStackTrace();
 	    	}
-	    
 	    }
 	}
-	
 	public String createExcel(String filePath){
 		String result="";
 		try {
