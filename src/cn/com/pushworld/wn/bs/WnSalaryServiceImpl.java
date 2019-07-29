@@ -19,6 +19,7 @@ import java.util.Set;
 import cn.com.infostrategy.bs.common.CommDMO;
 import cn.com.infostrategy.bs.common.ServerEnvironment;
 import cn.com.infostrategy.to.common.HashVO;
+import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
 import cn.com.infostrategy.to.mdata.jepfunctions.GetDateDifference;
@@ -4596,7 +4597,6 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					list.clear();
 				}
 			}
-			System.out.println("当前执行的SQL:"+sql);
 			if (list.size() > 0) {
 				dmo.executeBatchByDS(null, list);
 			}
@@ -4604,6 +4604,39 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
            e.printStackTrace();
 		}
 
+	}
+
+	@Override
+	public String updateCheckState(BillVO[] checkUsers, Map<String, String> paraMap) {
+		String result="";
+		try {
+			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_CURRENT_DEAL_RESULT");//监督表
+			InsertSQLBuilder insert=new InsertSQLBuilder("wn_current_check_result");//结果表
+			List<String> list=new ArrayList<String>();
+			for (BillVO vo : checkUsers) {//将操作数据插入到结果表中，同时对监督表中的数据进行修改
+				update.setWhereCondition("COD_ACCT_NO='"+vo.getStringValue("COD_ACCT_NO")+"' and DAT_TXN= '"+vo.getStringValue("DAT_TXN")+"'");
+				update.putFieldValue("DEAL_RESULT", paraMap.get("CHECK_RESULT"));//对查询结果进行处理
+				list.add(update.getSQL());
+				insert.putFieldValue("CHECK_RESULT", paraMap.get("CHECK_RESULT"));
+				insert.putFieldValue("CHECK_REASON", paraMap.get("CHECK_REASON"));
+				insert.putFieldValue("CHECK_USERCODE",paraMap.get("CHECK_USERCODE"));
+				insert.putFieldValue("CHECK_USERNAME", paraMap.get("CHECK_USERNAME"));
+				insert.putFieldValue("CHECK_DATE", paraMap.get("CHECK_DATE"));
+				insert.putFieldValue("cod_acct_no", vo.getStringValue("cod_acct_no"));
+				list.add(insert.getSQL());
+				if(list.size()>=5000){
+					dmo.executeBatchByDS(null, list);
+				}
+			}
+			if(list.size()>=0){
+				dmo.executeBatchByDS(null, list);
+			}
+			result="操作成功";
+		} catch (Exception e) {
+			result="操作失败";
+			e.printStackTrace();
+		}
+		return result;
 	}
 
 }

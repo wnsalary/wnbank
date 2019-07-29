@@ -2,6 +2,7 @@ package cn.com.pushworld.wn.ui;
 
 import java.util.Map;
 
+import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.ui.common.WLTRemoteCallServiceIfc;
 
 public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc {
@@ -229,6 +230,9 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc {
 	 */
 	
 	public void insertMonitorResult(String sql, Map<String, String> conditionMap);
+
+	public String updateCheckState(BillVO[] checkUsers, Map<String, String> paraMap);
+
     
 	
 }

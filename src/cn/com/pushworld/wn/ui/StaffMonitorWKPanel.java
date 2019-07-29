@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import javax.faces.event.AbortProcessingException;
 import javax.swing.AbstractAction;
@@ -21,12 +23,15 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 
 
 import cn.com.infostrategy.to.common.HashVO;
+import cn.com.infostrategy.to.common.WLTConstants;
 import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
+import cn.com.infostrategy.to.mdata.Pub_Templet_1VO;
 import cn.com.infostrategy.to.mdata.Pub_Templet_1_ItemVO;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
 import cn.com.infostrategy.ui.common.AbstractWorkPanel;
 import cn.com.infostrategy.ui.common.BillDialog;
+import cn.com.infostrategy.ui.common.ClientEnvironment;
 import cn.com.infostrategy.ui.common.MessageBox;
 import cn.com.infostrategy.ui.common.SplashWindow;
 import cn.com.infostrategy.ui.common.UIUtil;
@@ -131,44 +136,52 @@ public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionList
 		    		billListQuery=billListQuery+" and AMT_TXN2>="+Double.parseDouble(amtTxn2);
 		    	}
 		    	service.insertMonitorResult(sql,conditionMap);
-//		    	listPanel.QueryData("select * from WN_CURRENT_DEAL_RESULT where 1=1  "+queryCondition);
 		    	listPanel.QueryData(billListQuery);		   
 			} catch (Exception e2) {
 				e2.printStackTrace();
 			}
 	    }else  if(e.getSource()==checkButton){//对数据进行处理
 	    	try{
-	    		BillVO[] checkUsers = listPanel.getSelectedBillVOs();
+	    		final BillVO[] checkUsers = listPanel.getCheckedBillVOs();
+	    		String successResult="";
 		    	if(checkUsers==null||checkUsers.length<=0){
 		    		MessageBox.show(this,"请选择一条数据进行处理");
 		    		return;
 		    	}
-		    	//如何设置弹出框是一个Panel
-		    	BillCardDialog cardDialog=new BillCardDialog(this,"员工交易核实","WN_CURRENT_CHECK_RESULT_ZPY_Q01",600,300);
-	            cardDialog.setCardEditable(true);
-	            cardDialog.setSaveBtnVisiable(false);
-	            cardDialog.getBtn_confirm().addActionListener(new ActionListener() {
-					
-					@Override
-					public void actionPerformed(ActionEvent actionevent) {//zzl  在这里写你的逻辑拉歌
-						// TODO Auto-generated method stub
-						
-					}
-				});
-	            cardDialog.setVisible(true);
-	            //获取到当前保存的结果
-	            String checkResult= cardDialog.getCardItemValue("check_result");
-	            List<String> updateList=new ArrayList<String>();
-	            UpdateSQLBuilder update=new UpdateSQLBuilder("WN_CURRENT_DEAL_result");
-	            for (BillVO billVO : checkUsers) {
-					String  codAcctNo= billVO.getStringValue("COD_ACCT_NO");
-					update.setWhereCondition("COD_ACCT_NO='"+codAcctNo+"'");
-					update.putFieldValue("deal_result", checkResult);
-					updateList.add(update.getSQL());
-					if(updateList.size()>=5000){
-						UIUtil.executeBatchByDS(null, updateList);
-					}
+		    	for (BillVO billVO : checkUsers) {
+	    			String result=billVO.getStringValue("deal_result");
+	    			if(!"未处理".equals(result)){
+	    				successResult=successResult+billVO.getStringValue("COD_ACCT_NO")+" ";
+	    			}
 				}
+	    		if(!"".equals(successResult)){
+	    			MessageBox.show(this,"当前选中交易账号存在【"+successResult+"】状态已变更，请重新选择");
+	    			return;
+	    		}
+		    	//如何设置弹出框是一个Panel
+		        final BillCardDialog cardDialog=new BillCardDialog(this,"员工交易核实","WN_CURRENT_CHECK_RESULT_ZPY_Q01",600,300);
+			    cardDialog.getBillcardPanel().setEditable("CHECK_RESULT", true);
+			    cardDialog.getBillcardPanel().setEditable("CHECK_REASON",true);
+			    cardDialog.getBtn_save().setVisible(false);
+//		        cardDialog.setRealSave(false);//限制了系统自带的保存功能
+//		        cardDialog.setAddDefaultWindowListener(true);
+		       
+     		    final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil.lookUpRemoteService(WnSalaryServiceIfc.class);
+		        cardDialog.getBtn_confirm().addActionListener(new ActionListener() {
+	            	@Override
+					public void actionPerformed(ActionEvent event) {
+	            	   Map<String, String> paraMap= new HashMap<String, String>();
+	      		       paraMap.put("CHECK_RESULT", cardDialog.getCardItemValue("CHECK_RESULT"));
+	      		       paraMap.put("CHECK_REASON", cardDialog.getCardItemValue("CHECK_REASON"));
+	      		       paraMap.put("CHECK_USERCODE",cardDialog.getCardItemValue("CHECK_USERCODE"));
+	      		       paraMap.put("CHECK_USERNAME",cardDialog.getCardItemValue("CHECK_USERNAME"));
+	      		       paraMap.put("CHECK_DATE", cardDialog.getCardItemValue("CHECK_DATE"));
+					   str=service.updateCheckState(checkUsers,paraMap);
+					   cardDialog.closeMe();
+	            	}
+				});
+		        cardDialog.setVisible(true);
+	            listPanel.refreshData();
 	    	}catch(Exception ex){
 	    		ex.printStackTrace();
 	    	}
