@@ -4660,11 +4660,13 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			}
 			for(String user:userMap.keySet()){
 				Double count,rwcount;
-				if(resultMap.get(user).equals("0")||resultMap.get(user)==null||resultMap.get(user).equals("")){
+				System.out.println(user);
+				System.out.println(resultMap.get(user));
+				if(resultMap.get(user)==null || resultMap.get(user).equals("0") || resultMap.get(user).equals("")){
 					continue;
 				}else{
 					count = Double.parseDouble(resultMap.get(user));
-				}if(taskMap.get(user)=="0"||taskMap.get(user).equals("")){
+				}if(taskMap.get(user)==null || taskMap.get(user).equals("0") || taskMap.get(user).equals("")){
 					continue;
 				}else{
 					rwcount = Double.parseDouble(taskMap.get(user));
