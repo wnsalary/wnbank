@@ -2774,8 +2774,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				} else {
 					count = Double.parseDouble(map.get(str));
 				}
-				if (rwMap.get(str).equals("0") || rwMap.get(str) == null
-						|| rwMap.get(str).equals("")) {
+				if (rwMap.get(str).equals("0") || rwMap.get(str) == null || rwMap.get(str).equals("")) {
 					continue;
 				} else {
 					rwcount = Double.parseDouble(rwMap.get(str));
@@ -3134,9 +3133,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			} catch (Exception e) {
 				e.printStackTrace();
 				result = "柜员评级失败，请联系系统管理员！";
-			}
 		}
-
+		}
 		return result;
 	}
 
@@ -3290,10 +3288,10 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	private HashMap<String, String> getQxpjzb(String date, String year) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo
-					.getHashMapBySQLByDS(
-							null,
-							"select B ,case when rate>15 then 15 else rate end as rate from (select a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) a ,(select (sum(d)/5)/102 as c  from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) ) b)");
+
+			map = dmo.getHashMapBySQLByDS(null,"select B ,case when rate>15 then 15 else rate end as rate from (select a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) a ,(select (sum(d)/5)/102 as c  from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) ) b)");
+
+			map = dmo.getHashMapBySQLByDS(null,"select B ,case when rate>15 then 15 else rate end as rate from (select a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/6 as c from excel_tab_57 where B in (select A from excel_tab_67) group by B) a ,(select (sum(d)/6)/109 as c  from excel_tab_57 where B in (select A from excel_tab_67) ) b)");
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -3310,10 +3308,9 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	private HashMap<String, String> getWdpjzb(String date, String year) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo
-					.getHashMapBySQLByDS(
-							null,
-							"select B,case when rate>15 then 15 else rate end as rate from (select  a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) a left join (select a.B,b.count as c from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05') a left join (select a.c,(b.count/a.count)/5 as count from (select c,count(B) as count from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05' group by c) a left join (select a.c,sum(b.c) as count from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05') a left join (select B,sum(D) as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) b on a.b=b.b group by a.c) b on a.c=b.c) b on a.c=b.c) b on a.b=b.b)");
+			map = dmo.getHashMapBySQLByDS(null,"select B,case when rate>15 then 15 else rate end as rate from (select  a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) a left join (select a.B,b.count as c from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05') a left join (select a.c,(b.count/a.count)/5 as count from (select c,count(B) as count from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05' group by c) a left join (select a.c,sum(b.c) as count from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05') a left join (select B,sum(D) as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) b on a.b=b.b group by a.c) b on a.c=b.c) b on a.c=b.c) b on a.b=b.b)");
+
+			map = dmo.getHashMapBySQLByDS(null,"select B,case when rate>15 then 15 else rate end as rate from (select  a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/6 as c from excel_tab_57 where B in (select A from excel_tab_67) group by B) a left join (select a.B,b.count as c from (select B,C from excel_tab_57 where B in (select A from excel_tab_67) and year||'-'||month='2019-06') a left join (select a.c,(b.count/a.count)/6 as count from (select c,count(B) as count from excel_tab_57 where B in (select A from excel_tab_67) and year||'-'||month='2019-06' group by c) a left join (select a.c,sum(b.c) as count from (select B,C from excel_tab_57 where B in (select A from excel_tab_67) and year||'-'||month='2019-06') a left join (select B,sum(D) as c from excel_tab_57 where B in (select A from excel_tab_67) group by B) b on a.b=b.b group by a.c) b on a.c=b.c) b on a.c=b.c) b on a.b=b.b)");
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -3443,6 +3440,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 										+ String.valueOf((Integer.valueOf(year) - 1))
 										+ "-09') and xiangmu='文明客户服务部' and state='评分结束') group by deptname) b where a.deptname=b.deptname ");
 			}
+			
+				map = dmo.getHashMapBySQLByDS(null,"select a.username,b.c/100*10 from v_pub_user_post_1 a,(select a,sum(b)/2 as c from excel_tab_68 where year||'-'||month='2019-03' or year||'-'||month='2019-06' group by a) b where a.deptname=b.a");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -4638,5 +4637,52 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		}
 		return result;
 	}
+	
+	/**
+	 * fj农民工管理指标
+	 * 
+	 */
+	@Override
+	public String getNmggl(String date) {
+		Double month = Double.parseDouble(date.substring(5,7));
+		String result=null;
+		try {
+			InsertSQLBuilder insert=new InsertSQLBuilder("wn_nmggl");
+			List list=new ArrayList<String>();
+			//完成量
+			HashMap<String,String> resultMap =  dmo.getHashMapBySQLByDS(null,"select  j, count(*) num from wnsalarydb.excel_tab_2 where year||'-'||month='"+date+"'  and b is not null and  d is not null and e is not null and  g is not null and h is not null group by j");
+			//客户经理
+			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
+			//任务量
+			HashMap<String, String> taskMap = dmo.getHashMapBySQLByDS(null,"select A,sum(R)*'"+month+"' from EXCEL_TAB_53 where year||'-'||month='"+date+"' group by A");
+			if(taskMap.size()<=0){
+				return "您选择的日期没有上传相关的任务数！请重新选择！";
+			}
+			for(String user:userMap.keySet()){
+				Double count,rwcount;
+				if(resultMap.get(user).equals("0")||resultMap.get(user)==null||resultMap.get(user).equals("")){
+					continue;
+				}else{
+					count = Double.parseDouble(resultMap.get(user));
+				}if(taskMap.get(user)=="0"||taskMap.get(user).equals("")){
+					continue;
+				}else{
+					rwcount = Double.parseDouble(taskMap.get(user));
+				}
+				insert.putFieldValue("name",user);
+				insert.putFieldValue("result",count);
+				insert.putFieldValue("task", rwcount);
+				insert.putFieldValue("date_time",date);
+				list.add(insert.getSQL());
+			}
+			dmo.executeBatchByDS(null,list);
+			result = "查询成功！";
+		} catch (Exception e) {
+			e.printStackTrace();
+			result="查询失败！请联系管理员！";
+		}
+		return result;
+	}
+	
 
 }

@@ -235,4 +235,11 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc {
 
     
 	
+	
+	/**
+	 * fj农民工管理指标
+	 * @param replace
+	 * @return
+	 */
+	public String getNmggl(String replace);
 }
