@@ -103,7 +103,7 @@ public class JDFKMhuizongSp extends AbstractWorkPanel implements ActionListener 
 					ids = ids.substring(0, ids.lastIndexOf(","));
 				}
 				String inputValue = JOptionPane.showInputDialog("«Î ‰»Î¿Ì”…:");
-				UIUtil.executeUpdateByDS(null,
+			UIUtil.executeUpdateByDS(null,
 						"update WN_JDFKMHZB_02 set ratifyReason='" + inputValue
 								+ "',ratifyPerson='" + ratifyPerson
 								+ "',ratifyTime='" + ratifyTime
