@@ -4637,7 +4637,6 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		}
 		return result;
 	}
-	
 	/**
 	 * fj农民工管理指标
 	 * 

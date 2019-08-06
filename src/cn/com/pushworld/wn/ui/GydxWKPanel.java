@@ -11,12 +11,6 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
-import com.ibm.db2.jcc.a.de;
-import com.sun.mail.handlers.message_rfc822;
-
-import bsh.This;
-
-import cn.com.infostrategy.bs.common.CommDMO;
 import cn.com.infostrategy.to.common.HashVO;
 import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
@@ -33,7 +27,7 @@ import cn.com.infostrategy.ui.mdata.BillListSelectionEvent;
 import cn.com.infostrategy.ui.mdata.BillTreePanel;
 import cn.com.infostrategy.ui.mdata.BillTreeSelectListener;
 import cn.com.infostrategy.ui.mdata.BillTreeSelectionEvent;
-import freemarker.template.SimpleDate;
+
 
 public class GydxWKPanel extends AbstractWorkPanel implements
 		BillTreeSelectListener, BillListSelectListener, ActionListener {
@@ -195,8 +189,8 @@ public class GydxWKPanel extends AbstractWorkPanel implements
 						+ "' and state='评分中'");
 				update2.putFieldValue("PFUSERNAME", PFUSERNAME);
 				update2.putFieldValue("PFUSERCODE", PFSUERCODE);
-				update2.putFieldValue("pftime", new SimpleDateFormat(
-						"yyyy-MM-dd hh:mm:ss").format(new Date()));// 插入评分时间
+//				update2.putFieldValue("pftime", new SimpleDateFormat(
+//						"yyyy-MM-dd hh:mm:ss").format(new Date()));// 插入评分时间
 				String PFDEPTCODE = USERCODES.get(PFUSERDEPT).toString();
 				update2.putFieldValue("PFUSERDEPT", PFDEPTCODE);
 				// MessageBox.show(this,update2.getSQL());
@@ -295,7 +289,7 @@ public class GydxWKPanel extends AbstractWorkPanel implements
 						update.putFieldValue("PFUSERNAME", PFUSERNAME);
 						update.putFieldValue("PFUSERCODE", PFSUERCODE);
 						update.putFieldValue("PFUSERDEPT", map.get(PFUSERDEPT));
-						update.putFieldValue("pftime", time);
+//						update.putFieldValue("pftime", time);
 						sqlList.add(update.getSQL());
 					}
 					UIUtil.executeBatchByDS(null, sqlList);
@@ -306,7 +300,7 @@ public class GydxWKPanel extends AbstractWorkPanel implements
 					update2.putFieldValue("PFUSERNAME", PFUSERNAME);
 					update2.putFieldValue("PFUSERCODE", PFSUERCODE);
 					update2.putFieldValue("PFUSERDEPT", map.get(PFUSERDEPT));
-					update2.putFieldValue("pftime", time);
+//					update2.putFieldValue("pftime", time);
 					update2.putFieldValue("koufen", "");
 					UIUtil.executeUpdateByDS(null, update2.getSQL());
 					MessageBox.show(this, "评分结束成功");
@@ -342,7 +336,7 @@ public class GydxWKPanel extends AbstractWorkPanel implements
 					update.putFieldValue("PFUSERNAME", PFUSERNAME);
 					update.putFieldValue("PFUSERCODE", PFSUERCODE);
 					update.putFieldValue("PFUSERDEPT", map.get(PFUSERDEPT));
-					update.putFieldValue("pftime", time);
+//					update.putFieldValue("pftime", time);
 					sqlList.add(update.getSQL());
 					result = result - koufen;
 				}
@@ -355,7 +349,7 @@ public class GydxWKPanel extends AbstractWorkPanel implements
 				update2.putFieldValue("PFUSERNAME", PFUSERNAME);
 				update2.putFieldValue("PFUSERCODE", PFSUERCODE);
 				update2.putFieldValue("PFUSERDEPT", map.get(PFUSERDEPT));
-				update2.putFieldValue("pftime", time);
+//				update2.putFieldValue("pftime", time);
 				UIUtil.executeUpdateByDS(null, update2.getSQL());
 				MessageBox.show(this, "评分结束成功");
 				pfTime = UIUtil.getStringValueByDS(null,
@@ -497,5 +491,4 @@ public class GydxWKPanel extends AbstractWorkPanel implements
 	public String getCorpTempletCode() {
 		return "PUB_CORP_DEPT_CODE1"; // 最简单的
 	}
-
 }

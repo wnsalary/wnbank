@@ -132,8 +132,8 @@ public class ManagerDxWKPanel extends AbstractWorkPanel implements
 				update.putFieldValue("pfusercode", PFSUERCODE);
 				update.putFieldValue("pfuserdept", USERCODES.get(PFUSERDEPT)
 						.toString());
-				update.putFieldValue("pftime", new SimpleDateFormat(
-						"yyyy-MM-dd hh:mm:ss").format(new Date()));
+//				update.putFieldValue("pftime", new SimpleDateFormat(
+//						"yyyy-MM-dd hh:mm:ss").format(new Date()));
 				_sqllist.add(update.getSQL());
 			}
 			UpdateSQLBuilder update2 = new UpdateSQLBuilder(
@@ -145,8 +145,8 @@ public class ManagerDxWKPanel extends AbstractWorkPanel implements
 			update2.putFieldValue("pfusercode", PFSUERCODE);
 			update2.putFieldValue("pfuserdept", USERCODES.get(PFUSERDEPT)
 					.toString());
-			update2.putFieldValue("pftime", new SimpleDateFormat(
-					"yyyy-MM-dd hh:mm:ss").format(new Date()));
+//			update2.putFieldValue("pftime", new SimpleDateFormat(
+//					"yyyy-MM-dd hh:mm:ss").format(new Date()));
 			_sqllist.add(update2.getSQL());
 			UIUtil.executeBatchByDS(null, _sqllist);
 			String sql = "select * from wn_managerdx_table where usercode='"
@@ -221,8 +221,8 @@ public class ManagerDxWKPanel extends AbstractWorkPanel implements
 						update.putFieldValue("pfusercode", PFSUERCODE);
 						update.putFieldValue("pfuserdept",
 								USERCODES.get(PFUSERDEPT).toString());
-						update.putFieldValue("pftime", new SimpleDateFormat(
-								"yyyy-MM-dd hh:mm:ss").format(new Date()));
+//						update.putFieldValue("pftime", new SimpleDateFormat(
+//								"yyyy-MM-dd hh:mm:ss").format(new Date()));
 						list.add(update.getSQL());
 					}
 					UpdateSQLBuilder update2 = new UpdateSQLBuilder(
@@ -234,8 +234,8 @@ public class ManagerDxWKPanel extends AbstractWorkPanel implements
 					update2.putFieldValue("pfusercode", PFSUERCODE);
 					update2.putFieldValue("pfuserdept",
 							USERCODES.get(PFUSERDEPT).toString());
-					update2.putFieldValue("pftime", new SimpleDateFormat(
-							"yyyy-MM-dd hh:mm:ss").format(new Date()));
+//					update2.putFieldValue("pftime", new SimpleDateFormat(
+//							"yyyy-MM-dd hh:mm:ss").format(new Date()));
 					update2.putFieldValue("state", "评分结束");
 					update2.putFieldValue("fenzhi", 100.0 - result);
 					list.add(update2.getSQL());
@@ -275,8 +275,8 @@ public class ManagerDxWKPanel extends AbstractWorkPanel implements
 					update.putFieldValue("pfusercode", PFSUERCODE);
 					update.putFieldValue("pfuserdept", USERCODES
 							.get(PFUSERDEPT).toString());
-					update.putFieldValue("pftime", new SimpleDateFormat(
-							"yyyy-MM-dd hh:mm:ss").format(new Date()));
+//					update.putFieldValue("pftime", new SimpleDateFormat(
+//							"yyyy-MM-dd hh:mm:ss").format(new Date()));
 					list.add(update.getSQL());
 				}
 				UpdateSQLBuilder update2 = new UpdateSQLBuilder(
@@ -287,8 +287,8 @@ public class ManagerDxWKPanel extends AbstractWorkPanel implements
 				update2.putFieldValue("pfusercode", PFSUERCODE);
 				update2.putFieldValue("pfuserdept", USERCODES.get(PFUSERDEPT)
 						.toString());
-				update2.putFieldValue("pftime", new SimpleDateFormat(
-						"yyyy-MM-dd hh:mm:ss").format(new Date()));
+//				update2.putFieldValue("pftime", new SimpleDateFormat(
+//						"yyyy-MM-dd hh:mm:ss").format(new Date()));
 				update2.putFieldValue("state", "评分结束");
 				update2.putFieldValue("fenzhi", 100.0 - result);
 				list.add(update2.getSQL());
@@ -335,12 +335,10 @@ public class ManagerDxWKPanel extends AbstractWorkPanel implements
 			e2.printStackTrace();
 		}
 	}
-
 	@Override
 	public void onBillTreeSelectChanged(BillTreeSelectionEvent arg0) {
 
 	}
-
 	/**
 	 * 获得机构模板
 	 * 
@@ -349,5 +347,4 @@ public class ManagerDxWKPanel extends AbstractWorkPanel implements
 	public String getCorpTempletCode() {
 		return "PUB_CORP_DEPT_CODE1"; // 最简单的
 	}
-
 }

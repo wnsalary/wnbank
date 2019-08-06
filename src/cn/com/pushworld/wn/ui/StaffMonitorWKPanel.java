@@ -40,12 +40,14 @@ import cn.com.infostrategy.ui.mdata.BillCardDialog;
 import cn.com.infostrategy.ui.mdata.BillCardPanel;
 import cn.com.infostrategy.ui.mdata.BillListDialog;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
-
+/**
+ * 员工异常行为信息监测
+ * @author 85378
+ */
 public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionListener {
-     
 	private BillListPanel listPanel,sonListPanel;
 	private String str;
-	private WLTButton exportButton,checkButton,save_btn;
+	private WLTButton exportButton,checkButton;
 	private static String queryCondition;;
 	private JFileChooser fileChooser;
 	private JComboBox comboBox = null;
@@ -54,13 +56,11 @@ public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionList
 	public void initialize() {
 		listPanel=new BillListPanel("WN_CURRENT_DEAL_RESULT_ZPY_Q01");
 		sonListPanel=new BillListPanel("WN_CURRENT_CHECK_RESULT_ZPY_Q01");
-		exportButton=new WLTButton("数据导出");
-		exportButton.addActionListener(this);
+//		exportButton=new WLTButton("数据导出");
+//		exportButton.addActionListener(this);
 		checkButton=new WLTButton("处理");
 		checkButton.addActionListener(this);
-		save_btn=new WLTButton("保存");
-		save_btn.addActionListener(this);
-		listPanel.addBillListButton(exportButton);
+//		listPanel.addBillListButton(exportButton);
 		listPanel.addBillListButton(checkButton);
 		//获取到快速查询的监听
 		listPanel.getQuickQueryPanel().addBillQuickActionListener(this);//对快速查询进行监听
@@ -96,7 +96,6 @@ public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionList
 			} catch (Exception e2) {
 				e2.printStackTrace();
 			}
-          
 	    }else if(e.getSource()==listPanel.getQuickQueryPanel()){
 	    	try {
 	    		//获取到整个sql的查询条件
@@ -181,7 +180,7 @@ public class StaffMonitorWKPanel extends AbstractWorkPanel implements ActionList
 	            	}
 				});
 		        cardDialog.setVisible(true);
-	            listPanel.refreshData();
+	            listPanel.refreshData();//刷新数据
 	    	}catch(Exception ex){
 	    		ex.printStackTrace();
 	    	}
