@@ -57,7 +57,7 @@ public class GydxWKPanel extends AbstractWorkPanel implements
 			USERCODES = UIUtil.getHashMapBySQLByDS(null,
 					"select id,code from PUB_CORP_DEPT");
 			USERTYPE = UIUtil.getHashMapBySQLByDS(null,
-					"select USERCODE,POSTNAME from  V_PUB_USER_POST_1 ");// 对于人员评分表，不同的人看到柜员评分表中的内容
+					"select USERCODE,POSTNAME from  V_PUB_USER_POST_1 where ISDEFAULT='Y'");// 对于人员评分表，不同的人看到柜员评分表中的内容
 			KJMAP = UIUtil
 					.getHashMapBySQLByDS(null,
 							"SELECT DEPTCODE,USERCODE FROM V_PUB_USER_POST_1 WHERE POSTNAME='委派会计'");

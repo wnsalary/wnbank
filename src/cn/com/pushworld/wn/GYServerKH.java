@@ -62,7 +62,6 @@ public class GYServerKH extends AbstractWorkPanel implements
 	private HashMap USERCODES = null;
 	private HashMap USERTYPE = null;
 	private String pfTime = null;
-
 	public void initialize() {
 		// 获取到当前登录人的机构code
 		try {
@@ -70,12 +69,12 @@ public class GYServerKH extends AbstractWorkPanel implements
 					"select id,code from PUB_CORP_DEPT");
 			USERTYPE = UIUtil
 					.getHashMapBySQLByDS(null,
-							"select USERCODE,POSTNAME from  WNSALARYDB.V_PUB_USER_POST_1");// 对于人员评分表，不同的人看到柜员评分表中的内容
+							"select USERCODE,POSTNAME from  WNSALARYDB.V_PUB_USER_POST_1 where ISDEFAULT='Y'");// 对于人员评分表，不同的人看到柜员评分表中的内容
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		billTreePanel_Dept = new BillTreePanel(getCorpTempletCode());// 机构树:
-																		// 获取相应的数据
+																// 获取相应的数据
 		billListPanel_User_Post = new BillListPanel("V_PUB_USER_POST_zpy");// 右侧上上人员表
 		billListPanel_User_Post.addBillListSelectListener(this);
 		// billCellPanel = new BillCellPanel("柜员服务考核评价单", null, null, true,
