@@ -2774,7 +2774,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				} else {
 					count = Double.parseDouble(map.get(str));
 				}
-				if (rwMap.get(str).equals("0") || rwMap.get(str) == null || rwMap.get(str).equals("")) {
+				if (rwMap.get(str).equals("0") || rwMap.get(str) == null
+						|| rwMap.get(str).equals("")) {
 					continue;
 				} else {
 					rwcount = Double.parseDouble(rwMap.get(str));
@@ -3133,7 +3134,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			} catch (Exception e) {
 				e.printStackTrace();
 				result = "柜员评级失败，请联系系统管理员！";
-		}
+			}
 		}
 		return result;
 	}
@@ -3289,9 +3290,15 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
 
-			map = dmo.getHashMapBySQLByDS(null,"select B ,case when rate>15 then 15 else rate end as rate from (select a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) a ,(select (sum(d)/5)/102 as c  from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) ) b)");
+			map = dmo
+					.getHashMapBySQLByDS(
+							null,
+							"select B ,case when rate>15 then 15 else rate end as rate from (select a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) a ,(select (sum(d)/5)/102 as c  from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) ) b)");
 
-			map = dmo.getHashMapBySQLByDS(null,"select B ,case when rate>15 then 15 else rate end as rate from (select a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/6 as c from excel_tab_57 where B in (select A from excel_tab_67) group by B) a ,(select (sum(d)/6)/109 as c  from excel_tab_57 where B in (select A from excel_tab_67) ) b)");
+			map = dmo
+					.getHashMapBySQLByDS(
+							null,
+							"select B ,case when rate>15 then 15 else rate end as rate from (select a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/6 as c from excel_tab_57 where B in (select A from excel_tab_67) group by B) a ,(select (sum(d)/6)/109 as c  from excel_tab_57 where B in (select A from excel_tab_67) ) b)");
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -3308,9 +3315,15 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	private HashMap<String, String> getWdpjzb(String date, String year) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
-			map = dmo.getHashMapBySQLByDS(null,"select B,case when rate>15 then 15 else rate end as rate from (select  a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) a left join (select a.B,b.count as c from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05') a left join (select a.c,(b.count/a.count)/5 as count from (select c,count(B) as count from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05' group by c) a left join (select a.c,sum(b.c) as count from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05') a left join (select B,sum(D) as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) b on a.b=b.b group by a.c) b on a.c=b.c) b on a.c=b.c) b on a.b=b.b)");
+			map = dmo
+					.getHashMapBySQLByDS(
+							null,
+							"select B,case when rate>15 then 15 else rate end as rate from (select  a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/5 as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) a left join (select a.B,b.count as c from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05') a left join (select a.c,(b.count/a.count)/5 as count from (select c,count(B) as count from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05' group by c) a left join (select a.c,sum(b.c) as count from (select B,C from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) and year||'-'||month='2019-05') a left join (select B,sum(D) as c from excel_tab_57 where B in (select B from (select B,count(B) as c from excel_tab_39 group by B) where c=6) group by B) b on a.b=b.b group by a.c) b on a.c=b.c) b on a.c=b.c) b on a.b=b.b)");
 
-			map = dmo.getHashMapBySQLByDS(null,"select B,case when rate>15 then 15 else rate end as rate from (select  a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/6 as c from excel_tab_57 where B in (select A from excel_tab_67) group by B) a left join (select a.B,b.count as c from (select B,C from excel_tab_57 where B in (select A from excel_tab_67) and year||'-'||month='2019-06') a left join (select a.c,(b.count/a.count)/6 as count from (select c,count(B) as count from excel_tab_57 where B in (select A from excel_tab_67) and year||'-'||month='2019-06' group by c) a left join (select a.c,sum(b.c) as count from (select B,C from excel_tab_57 where B in (select A from excel_tab_67) and year||'-'||month='2019-06') a left join (select B,sum(D) as c from excel_tab_57 where B in (select A from excel_tab_67) group by B) b on a.b=b.b group by a.c) b on a.c=b.c) b on a.c=b.c) b on a.b=b.b)");
+			map = dmo
+					.getHashMapBySQLByDS(
+							null,
+							"select B,case when rate>15 then 15 else rate end as rate from (select  a.b,to_char(ROUND(a.c/b.c,2),'fm9999990.9999')*15 as rate from (select B,sum(D)/6 as c from excel_tab_57 where B in (select A from excel_tab_67) group by B) a left join (select a.B,b.count as c from (select B,C from excel_tab_57 where B in (select A from excel_tab_67) and year||'-'||month='2019-06') a left join (select a.c,(b.count/a.count)/6 as count from (select c,count(B) as count from excel_tab_57 where B in (select A from excel_tab_67) and year||'-'||month='2019-06' group by c) a left join (select a.c,sum(b.c) as count from (select B,C from excel_tab_57 where B in (select A from excel_tab_67) and year||'-'||month='2019-06') a left join (select B,sum(D) as c from excel_tab_57 where B in (select A from excel_tab_67) group by B) b on a.b=b.b group by a.c) b on a.c=b.c) b on a.c=b.c) b on a.b=b.b)");
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -3440,8 +3453,11 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 										+ String.valueOf((Integer.valueOf(year) - 1))
 										+ "-09') and xiangmu='文明客户服务部' and state='评分结束') group by deptname) b where a.deptname=b.deptname ");
 			}
-			
-				map = dmo.getHashMapBySQLByDS(null,"select a.username,b.c/100*10 from v_pub_user_post_1 a,(select a,sum(b)/2 as c from excel_tab_68 where year||'-'||month='2019-03' or year||'-'||month='2019-06' group by a) b where a.deptname=b.a");
+
+			map = dmo
+					.getHashMapBySQLByDS(
+							null,
+							"select a.username,b.c/100*10 from v_pub_user_post_1 a,(select a,sum(b)/2 as c from excel_tab_68 where year||'-'||month='2019-03' or year||'-'||month='2019-06' group by a) b where a.deptname=b.a");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -4540,19 +4556,23 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 							conditionMap.get("DAT_TXN").lastIndexOf(";"))
 					+ "%'";
 			if (conditionMap.containsKey("AMT_TXN2")) {
-//				String[] dateNum = conditionMap.get("AMT_TXN2").split(";");
-//
-//				if (dateNum.length==2) {
-//					sql = sql + " and AMT_TXN<="
-//							+ Double.parseDouble(dateNum[1]) * 10000
-//							+ " and AMT_TXN>="
-//							+ Double.parseDouble(dateNum[0]) * 10000;
-//				} else {
-//					sql = sql + " and AMT_TXN>='"
-//							+ Double.parseDouble(conditionMap.get("AMT_TXN2").replace(";", ""))
-//							* 10000 + "'";
-//				}
-				sql=sql +" and AMT_TXN>="+ Double.parseDouble(conditionMap.get("AMT_TXN2"))*10000;
+				// String[] dateNum = conditionMap.get("AMT_TXN2").split(";");
+				//
+				// if (dateNum.length==2) {
+				// sql = sql + " and AMT_TXN<="
+				// + Double.parseDouble(dateNum[1]) * 10000
+				// + " and AMT_TXN>="
+				// + Double.parseDouble(dateNum[0]) * 10000;
+				// } else {
+				// sql = sql + " and AMT_TXN>='"
+				// +
+				// Double.parseDouble(conditionMap.get("AMT_TXN2").replace(";",
+				// ""))
+				// * 10000 + "'";
+				// }
+				sql = sql + " and AMT_TXN>="
+						+ Double.parseDouble(conditionMap.get("AMT_TXN2"))
+						* 10000;
 			}
 			if (conditionMap.containsKey("COD_ACCT_TITLE")) {
 				sql = sql + " and COD_ACCT_TITLE like '%"
@@ -4600,90 +4620,295 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				dmo.executeBatchByDS(null, list);
 			}
 		} catch (Exception e) {
-           e.printStackTrace();
+			e.printStackTrace();
 		}
 
 	}
 
 	@Override
-	public String updateCheckState(BillVO[] checkUsers, Map<String, String> paraMap) {
-		String result="";
+	public String updateCheckState(BillVO[] checkUsers,
+			Map<String, String> paraMap) {
+		String result = "";
 		try {
-			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_CURRENT_DEAL_RESULT");//监督表
-			InsertSQLBuilder insert=new InsertSQLBuilder("wn_current_check_result");//结果表
-			List<String> list=new ArrayList<String>();
-			for (BillVO vo : checkUsers) {//将操作数据插入到结果表中，同时对监督表中的数据进行修改
-				update.setWhereCondition("COD_ACCT_NO='"+vo.getStringValue("COD_ACCT_NO")+"' and DAT_TXN= '"+vo.getStringValue("DAT_TXN")+"'");
-				update.putFieldValue("DEAL_RESULT", paraMap.get("CHECK_RESULT"));//对查询结果进行处理
+			UpdateSQLBuilder update = new UpdateSQLBuilder(
+					"WN_CURRENT_DEAL_RESULT");// 监督表
+			InsertSQLBuilder insert = new InsertSQLBuilder(
+					"wn_current_check_result");// 结果表
+			List<String> list = new ArrayList<String>();
+			for (BillVO vo : checkUsers) {// 将操作数据插入到结果表中，同时对监督表中的数据进行修改
+				update.setWhereCondition("COD_ACCT_NO='"
+						+ vo.getStringValue("COD_ACCT_NO") + "' and DAT_TXN= '"
+						+ vo.getStringValue("DAT_TXN") + "'");
+				update.putFieldValue("DEAL_RESULT", paraMap.get("CHECK_RESULT"));// 对查询结果进行处理
 				list.add(update.getSQL());
-				insert.putFieldValue("CHECK_RESULT", paraMap.get("CHECK_RESULT"));
-				insert.putFieldValue("CHECK_REASON", paraMap.get("CHECK_REASON"));
-				insert.putFieldValue("CHECK_USERCODE",paraMap.get("CHECK_USERCODE"));
-				insert.putFieldValue("CHECK_USERNAME", paraMap.get("CHECK_USERNAME"));
+				insert.putFieldValue("CHECK_RESULT",
+						paraMap.get("CHECK_RESULT"));
+				insert.putFieldValue("CHECK_REASON",
+						paraMap.get("CHECK_REASON"));
+				insert.putFieldValue("CHECK_USERCODE",
+						paraMap.get("CHECK_USERCODE"));
+				insert.putFieldValue("CHECK_USERNAME",
+						paraMap.get("CHECK_USERNAME"));
 				insert.putFieldValue("CHECK_DATE", paraMap.get("CHECK_DATE"));
-				insert.putFieldValue("cod_acct_no", vo.getStringValue("cod_acct_no"));
+				insert.putFieldValue("cod_acct_no",
+						vo.getStringValue("cod_acct_no"));
 				list.add(insert.getSQL());
-				if(list.size()>=5000){
+				if (list.size() >= 5000) {
 					dmo.executeBatchByDS(null, list);
 				}
 			}
-			if(list.size()>=0){
+			if (list.size() >= 0) {
 				dmo.executeBatchByDS(null, list);
 			}
-			result="操作成功";
+			result = "操作成功";
 		} catch (Exception e) {
-			result="操作失败";
+			result = "操作失败";
 			e.printStackTrace();
 		}
 		return result;
 	}
+
 	/**
 	 * fj农民工管理指标
 	 * 
 	 */
 	@Override
 	public String getNmggl(String date) {
-		Double month = Double.parseDouble(date.substring(5,7));
-		String result=null;
+		Double month = Double.parseDouble(date.substring(5, 7));
+		String result = null;
 		try {
-			InsertSQLBuilder insert=new InsertSQLBuilder("wn_nmggl");
-			List list=new ArrayList<String>();
-			//完成量
-			HashMap<String,String> resultMap =  dmo.getHashMapBySQLByDS(null,"select  j, count(*) num from wnsalarydb.excel_tab_2 where year||'-'||month='"+date+"'  and b is not null and  d is not null and e is not null and  g is not null and h is not null group by j");
-			//客户经理
-			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
-			//任务量
-			HashMap<String, String> taskMap = dmo.getHashMapBySQLByDS(null,"select A,sum(R)*'"+month+"' from EXCEL_TAB_53 where year||'-'||month='"+date+"' group by A");
-			if(taskMap.size()<=0){
+			InsertSQLBuilder insert = new InsertSQLBuilder("wn_nmggl");
+			List list = new ArrayList<String>();
+			// 完成量
+			HashMap<String, String> resultMap = dmo
+					.getHashMapBySQLByDS(
+							null,
+							"select  j, count(*) num from wnsalarydb.excel_tab_2 where year||'-'||month='"
+									+ date
+									+ "'  and b is not null and  d is not null and e is not null and  g is not null and h is not null group by j");
+			// 客户经理
+			HashMap<String, String> userMap = dmo
+					.getHashMapBySQLByDS(
+							null,
+							"select name,name from v_sal_personinfo where stationkind in('城区客户经理','乡镇客户经理','副主任兼职客户经理','乡镇网点副主任','城区网点副主任')");
+			// 任务量
+			HashMap<String, String> taskMap = dmo.getHashMapBySQLByDS(null,
+					"select A,sum(R)*'" + month
+							+ "' from EXCEL_TAB_53 where year||'-'||month='"
+							+ date + "' group by A");
+			if (taskMap.size() <= 0) {
 				return "您选择的日期没有上传相关的任务数！请重新选择！";
 			}
-			for(String user:userMap.keySet()){
-				Double count,rwcount;
+			for (String user : userMap.keySet()) {
+				Double count, rwcount;
 				System.out.println(user);
 				System.out.println(resultMap.get(user));
-				if(resultMap.get(user)==null || resultMap.get(user).equals("0") || resultMap.get(user).equals("")){
+				if (resultMap.get(user) == null
+						|| resultMap.get(user).equals("0")
+						|| resultMap.get(user).equals("")) {
 					continue;
-				}else{
+				} else {
 					count = Double.parseDouble(resultMap.get(user));
-				}if(taskMap.get(user)==null || taskMap.get(user).equals("0") || taskMap.get(user).equals("")){
+				}
+				if (taskMap.get(user) == null || taskMap.get(user).equals("0")
+						|| taskMap.get(user).equals("")) {
 					continue;
-				}else{
+				} else {
 					rwcount = Double.parseDouble(taskMap.get(user));
 				}
-				insert.putFieldValue("name",user);
-				insert.putFieldValue("result",count);
+				insert.putFieldValue("name", user);
+				insert.putFieldValue("result", count);
 				insert.putFieldValue("task", rwcount);
-				insert.putFieldValue("date_time",date);
+				insert.putFieldValue("date_time", date);
 				list.add(insert.getSQL());
 			}
-			dmo.executeBatchByDS(null,list);
+			dmo.executeBatchByDS(null, list);
 			result = "查询成功！";
 		} catch (Exception e) {
 			e.printStackTrace();
-			result="查询失败！请联系管理员！";
+			result = "查询失败！请联系管理员！";
 		}
 		return result;
 	}
-	
 
+	/**
+	 * 向员工系数调整检测表表中插入数据
+	 */
+	@Override
+	public void insertStaffRadio(String handleDate) {
+		try {
+			String[] existsData = dmo.getStringArrayFirstColByDS(null,
+					"SELECT 1 FROM wn_workerStadio WHERE CREATETIME='"
+							+ handleDate + "'");
+			if (existsData.length > 0) {// 删除数据
+				dmo.executeUpdateByDS(null,
+						"delete from wn_workerStadio where createtime='"
+								+ handleDate + "'");
+			}
+			HashVO[] staffRadios = dmo.getHashVoArrayByDS(null,
+					"select * from V_WN_MISSIONARY where 1=1");// 使用的表有问题
+			InsertSQLBuilder insert = new InsertSQLBuilder("wn_workerStadio");
+			List<String> list = new ArrayList<String>();
+			for (int i = 0; i < staffRadios.length; i++) {
+				insert.putFieldValue("CREATEtime", handleDate);
+				insert.putFieldValue("usercode",
+						staffRadios[i].getStringValue("GYCODE"));
+				insert.putFieldValue("username",
+						staffRadios[i].getStringValue("GYNAME"));
+				insert.putFieldValue("cardno",
+						staffRadios[i].getStringValue("CARDID"));
+				insert.putFieldValue("userpost",
+						staffRadios[i].getStringValue("POSITION"));
+				insert.putFieldValue("userpositionname",
+						staffRadios[i].getStringValue("deptname"));
+				insert.putFieldValue("radiochangebefore",
+						staffRadios[i].getStringValue("STATIONRATIO"));
+				insert.putFieldValue("radiochangeafter",
+						staffRadios[i].getStringValue("STATIONRATIO"));
+				list.add(insert.getSQL());
+				if (list.size() >= 5000) {
+					dmo.executeBatchByDS(null, list);
+				}
+			}
+			if (list.size() > 0) {
+				dmo.executeBatchByDS(null, list);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+	
+	/**
+	 * 员工异常行为监测数据导入
+	 */
+	@Override
+	public String importMonitorData() {
+		String message = "";
+		try {
+//			String[] existsData = dmo.getStringArrayFirstColByDS(null,
+//					"SELECT 1 FROM wn_show_monitor");
+//			HashVO[] monitorData = null;
+//			if (existsData == null || existsData.length <= 0) {// 表示表中没有数据，直接插入
+//				monitorData = dmo
+//						.getHashVoArrayByDS(null,
+//								"SELECT * FROM WN_CURRENT_DEAL_DATE where dat_txn>='2019-01-01'");
+//			} else {// 表示表中已经存在数据，对于已经存在的数据不需要额外导入
+//				String maxDate = dmo.getStringValueByDS(null,
+//						"SELECT max(DAT_TXN) FROM wn_show_monitor");
+//				monitorData = dmo.getHashVoArrayByDS(null,
+//						"SELECT * FROM WN_CURRENT_DEAL_DATE WHERE  DAT_TXN>'"
+//								+ maxDate + "'");
+//			}
+//			List<String> list = new ArrayList<String>();
+//			InsertSQLBuilder insert = new InsertSQLBuilder("wn_show_monitor");
+//			for (int i = 0; i < monitorData.length; i++) {// 向监控数据表中插入数据
+//				insert.putFieldValue("dat_txn",
+//						monitorData[i].getStringValue("dat_txn"));// 交易时间
+//				insert.putFieldValue("cod_acct_no",
+//						monitorData[i].getStringValue("cod_acct_no"));// 交易账号
+//				insert.putFieldValue("txt_txn_desc",
+//						monitorData[i].getStringValue("txt_txn_desc"));// 交易类型
+//				insert.putFieldValue("amt_txn",
+//						monitorData[i].getStringValue("amt_txn"));// 交易金额
+//				insert.putFieldValue("amt_txn2",
+//						monitorData[i].getStringValue("amt_txn2"));// 处理之后的交易金额
+//				insert.putFieldValue("cod_acct_title",
+//						monitorData[i].getStringValue("cod_acct_title"));// 员工姓名
+//				insert.putFieldValue("cod_cust",
+//						monitorData[i].getStringValue("cod_cust"));
+//				insert.putFieldValue("flg_ic_typ",
+//						monitorData[i].getStringValue("flg_ic_typ"));// 证件类型
+//				insert.putFieldValue("EXTERNAL_CUSTOMER_IC",
+//						monitorData[i].getStringValue("EXTERNAL_CUSTOMER_IC"));// 证件号
+//				insert.putFieldValue("mainstation",
+//						monitorData[i].getStringValue("mainstation"));// 员工岗位
+//				insert.putFieldValue("deptname",
+//						monitorData[i].getStringValue("deptname"));// 所在机构
+//				insert.putFieldValue("deal_result", "未处理");
+//				list.add(insert.getSQL());
+//				if(list.size()>=5000){
+//					dmo.executeBatchByDS(null, list);
+//					list.clear();
+//				}
+//			}
+			List<String> list = new ArrayList<String>();
+			//对汇总表进行处理
+			String[] existsData =existsData=dmo.getStringArrayFirstColByDS(null, "select 1 from wn_gather_monitor_result");
+			SimpleDateFormat simple=new SimpleDateFormat("yyyy-MM");
+			String currentMonth=simple.format(new Date());//获取到当前考核月
+			String gatherSQL="select * from V_wn_gather_monitor_result where amt_txn_2>=5";//将数据进行汇总
+		    if(existsData==null ||existsData.length<=0){//
+				gatherSQL=gatherSQL+" and dat_txn<'"+currentMonth+"'";
+			}else {
+				String maxDate=dmo.getStringValueByDS(null, "select max(dat_txn) from wn_gather_monitor_result");
+				gatherSQL=gatherSQL+" and dat_txn<'"+currentMonth+"' and dat_txn>='"+maxDate+"'";
+			}
+			HashVO[] gatherDataVos = dmo.getHashVoArrayByDS(null, gatherSQL);
+			InsertSQLBuilder gatherDataInsert=new InsertSQLBuilder("wn_gather_monitor_result");
+			for (int i = 0; i < gatherDataVos.length; i++) {//获取到当前所有的汇总数据
+				gatherDataInsert.putFieldValue("dat_txn",gatherDataVos[i].getStringValue("dat_txn"));
+				gatherDataInsert.putFieldValue("amt_txn_sum", gatherDataVos[i].getStringValue("amt_txn"));
+				gatherDataInsert.putFieldValue("amt_txn_sum2", gatherDataVos[i].getStringValue("amt_txn_2"));
+				gatherDataInsert.putFieldValue("EXTERNAL_CUSTOMER_IC", gatherDataVos[i].getStringValue("cardid"));
+				gatherDataInsert.putFieldValue("name", gatherDataVos[i].getStringValue("name"));
+				gatherDataInsert.putFieldValue("mainstation", gatherDataVos[i].getStringValue("mainstation"));
+				gatherDataInsert.putFieldValue("deptname", gatherDataVos[i].getStringValue("deptname"));
+				gatherDataInsert.putFieldValue("deal_result", "未处理");
+				gatherDataInsert.putFieldValue("ck", "查看");
+				list.add(gatherDataInsert.getSQL());
+				if(list.size()>=5000){
+					dmo.executeBatchByDS(null, list);
+					list.clear();
+				}
+			}
+			if(list.size()>0){
+				dmo.executeBatchByDS(null, list);
+			}
+			message="数据导入成功";
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return message;
+	}
+
+	@Override
+	public String dealExceptionData(BillVO[] billVos,Map<String,String> paraMap) {
+		String message="";
+		try {//员工异常行为处理
+			InsertSQLBuilder insert=new InsertSQLBuilder("wn_deal_monitor");
+			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_GATHER_MONITOR_RESULT");
+			List<String> list=new ArrayList<String>();
+			for (int i = 0; i < billVos.length; i++) {
+				insert.putFieldValue("dat_txn",billVos[i].getStringValue("dat_txn"));//处理日期
+//				insert.putFieldValue("cod_acct_no", billVos[i].getStringValue("cod_acct_no"));
+//			    insert.putFieldValue("txt_txn_desc", billVos[i].getStringValue("txt_txn_desc"));
+			    insert.putFieldValue("amt_txn", billVos[i].getStringValue("AMT_TXN_SUM"));
+			    insert.putFieldValue("amt_txn2", billVos[i].getStringValue("AMT_TXN_SUM2"));
+			    insert.putFieldValue("cod_acct_title", billVos[i].getStringValue("NAME"));
+//			    insert.putFieldValue("cod_cust", billVos[i].getStringValue("cod_cust"));
+//			    insert.putFieldValue("flg_ic_typ", billVos[i].getStringValue("flg_ic_typ"));
+			    insert.putFieldValue("EXTERNAL_CUSTOMER_IC", billVos[i].getStringValue("EXTERNAL_CUSTOMER_IC"));
+			    insert.putFieldValue("mainstation", billVos[i].getStringValue("mainstation"));
+			    insert.putFieldValue("deptname", billVos[i].getStringValue("deptname"));
+			    insert.putFieldValue("deal_result", paraMap.get("CHECK_RESULT"));
+			    insert.putFieldValue("deal_usercode", paraMap.get("CHECK_USERCODE"));
+			    insert.putFieldValue("deal_username", paraMap.get("CHECK_USERNAME"));
+			    insert.putFieldValue("deal_time", paraMap.get("CHECK_DATE"));
+			    insert.putFieldValue("deal_reason",paraMap.get("CHECK_REASON"));
+			    update.setWhereCondition("dat_txn='"+billVos[i].getStringValue("dat_txn")+"' and EXTERNAL_CUSTOMER_IC='"+billVos[i].getStringValue("EXTERNAL_CUSTOMER_IC")+"'");
+			    update.putFieldValue("deal_result",paraMap.get("CHECK_RESULT"));
+			    list.add(insert.getSQL());
+			    list.add(update.getSQL());
+			}
+			if(list.size()>0){
+				dmo.executeBatchByDS(null, list);
+			}
+			message="处理成功";
+		} catch (Exception e) {
+			message="处理失败";
+			e.printStackTrace();
+		}
+		return message;
+	}
 }

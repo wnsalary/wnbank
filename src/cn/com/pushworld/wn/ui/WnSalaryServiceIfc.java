@@ -242,4 +242,21 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc {
 	 * @return
 	 */
 	public String getNmggl(String replace);
+    /**
+     * 向员工岗位系数表中填充数据
+     * @param handleDate
+     */
+	public void insertStaffRadio(String handleDate);
+    /**
+     * 员工异常行为数据监测
+     * @return
+     */
+	public String importMonitorData();
+    /**
+     * 处理员工异常行为信息
+     * @param billVos
+     * @return
+     */
+	public String dealExceptionData(BillVO[] billVos,Map<String,String> paraMap);
+  
 }

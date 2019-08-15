@@ -1,7 +1,21 @@
 package cn.com.pushworld.wn.to;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+
+import cn.com.infostrategy.to.common.HashVO;
+import cn.com.infostrategy.to.mdata.Pub_Templet_1_ItemVO;
+import cn.com.infostrategy.ui.common.UIUtil;
+import cn.com.infostrategy.ui.mdata.BillListPanel;
 
 import freemarker.template.SimpleDate;
 
@@ -153,5 +167,73 @@ public class WnUtils {
 			simple = new SimpleDateFormat("yyyyMMdd");
 		}
 		return simple;
+	}
+	
+	public static boolean isEmpty(String str){
+		if(str==null|| "".equals(str)){
+			return false;
+		}
+		return true;
+	}
+	/**
+	 * 导出Excel表格
+	 * @param listPanel
+	 * @param filePath
+	 * @param selectSQL
+	 * @param sheetName
+	 * @return
+	 */
+	public static  String ImportExcel(BillListPanel listPanel,String filePath,String selectSQL,String sheetName){
+		String result="";//
+		try {
+			String templetName = listPanel.getTempletVO().getTempletname();//获取到模板名称
+			Workbook monitorResult=new SXSSFWorkbook(100);
+            Sheet firstSheet = monitorResult.createSheet(sheetName);//创建sheet
+            Row firstRow = firstSheet.createRow(0);//创建首行
+            //获取到表头信息
+            Pub_Templet_1_ItemVO[] templetItemVOs = listPanel.getTempletItemVOs();
+            List<String> unShowList=new ArrayList<String>();
+            for (int i = 0,n = 0; i < templetItemVOs.length; i++) {
+           	 Pub_Templet_1_ItemVO pub_Templet_1_ItemVO = templetItemVOs[i];
+           	 String cellKey=pub_Templet_1_ItemVO.getItemkey();
+           	 String cellName=pub_Templet_1_ItemVO.getItemname();
+           	 if(pub_Templet_1_ItemVO.isListisshowable()){
+           		 firstRow.createCell(i-n).setCellValue(cellName);
+				 }else{
+					 unShowList.add(cellKey);
+					 n++;
+				 }
+			}
+           HashVO[] hashVos = UIUtil.getHashVoArrayByDS(null, selectSQL);
+           Row nextRow = null;
+           for (int i = 0; i < hashVos.length; i++) {
+           	nextRow=firstSheet.createRow(i+1);//创建下一行数据
+           	String[] keys = hashVos[i].getKeys();
+           	for (int j = 0,n=0; j < keys.length; j++) {//对每一行数据进行处理
+					if(unShowList.contains(keys[j].toUpperCase())){//判断当前列是否已经隐藏
+						n++;
+						continue;
+					}
+					nextRow.createCell(j-n).setCellValue(hashVos[i].getStringValue(keys[j]));
+				}
+			}
+           String fileName=filePath.substring(filePath.lastIndexOf("\\")+1,filePath.lastIndexOf("."));
+           filePath=filePath.substring(0,filePath.lastIndexOf("\\"));
+           File file=new File(filePath+"/"+fileName+".xls");
+           int i=1;
+           while(file.exists()){
+           	fileName=templetName+i+".xls";
+           	file=new File(filePath+"/"+fileName);
+           	i++;
+           }
+           file.createNewFile();
+           FileOutputStream fout = new FileOutputStream(file.getAbsolutePath());
+           monitorResult.write(fout);
+           fout.close();
+		} catch (Exception e) {
+			result="数据导出失败";
+			e.printStackTrace();
+		}
+		return result;
 	}
 }

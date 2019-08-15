@@ -70,6 +70,9 @@ public class GYServerKH extends AbstractWorkPanel implements
 			USERTYPE = UIUtil
 					.getHashMapBySQLByDS(null,
 							"select USERCODE,POSTNAME from  WNSALARYDB.V_PUB_USER_POST_1 where ISDEFAULT='Y'");// 对于人员评分表，不同的人看到柜员评分表中的内容
+			/*USERTYPE = UIUtil
+					.getHashMapBySQLByDS(null,"SELECT USERCODE,ROLENAME FROM V_PUB_USER_ROLE_1 WHERE ROLENAME ='委派会计' OR ROLENAME LIKE '%主任%'");
+		*/
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -93,13 +96,17 @@ public class GYServerKH extends AbstractWorkPanel implements
 		btn_end.addActionListener(this);
 		// if ("主任".equals() ||
 		// "副主任".equals(USERTYPE.get(PFSUERCODE).toString())) {
-		String userType = USERTYPE.get(PFSUERCODE).toString();// 获取到当前登录人的身份
-		if (userType.contains("主任")) {
+		String userType ="";
+		if(USERTYPE.get(PFSUERCODE)!=null){
+			userType = USERTYPE.get(PFSUERCODE).toString()==null?"":USERTYPE.get(PFSUERCODE).toString();// 获取到当前登录人的身份
+		}
+//		userType = USERTYPE.get(PFSUERCODE).toString()==null?"":USERTYPE.get(PFSUERCODE).toString();// 获取到当前登录人的身份
+		if (userType!=null&& userType.contains("主任")) {
 			btn_verify = new WLTButton("评分复核");
 			btn_verify.addActionListener(this);
 			billListPanel_User_check.addBillListButton(btn_verify);
 			billListPanel_User_check.setItemEditable("fhreason", true);
-		} else if (userType.contains("委派会计")) {
+		} else if (userType!=null&&userType.contains("委派会计")) {
 			billListPanel_User_check.addBillListButton(btn_save);
 			btn_end.setIconTextGap(-50);
 			billListPanel_User_check.addBillListButton(btn_end);
@@ -111,8 +118,8 @@ public class GYServerKH extends AbstractWorkPanel implements
 		billListPanel_User_Post.queryDataByCondition("deptcode='" + PFDEPTCODE
 				+ "' and POSTNAME like '%柜员%'", "seq,usercode");
 		// 获取到当前登录人的机构code
-		if ("282007".equals(PFDEPTCODE)) {
-			splitPanel_all.add(billTreePanel_Dept);// 如果当前登录人属于客户服务部，则显示机构树
+		if ("282006".equals(PFDEPTCODE)||"282007".equals(PFDEPTCODE)) {
+			splitPanel_all.add(billTreePanel_Dept);// 如果当前登录人属于运营管理部，则显示机构树
 			billTreePanel_Dept.addBillTreeSelectListener(this);
 		}
 		splitPanel_all.add(splitPanel);
