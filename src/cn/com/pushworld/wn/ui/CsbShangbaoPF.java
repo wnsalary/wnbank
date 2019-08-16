@@ -36,7 +36,7 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener {
 			vertifyBatchData();
 		} else if (e.getSource() == backBatchButton) {// ÅúÁ¿ÍË»Ø
 			backBatchData();
-		} else if (e.getSource() == listPanel.getQuickQueryPanel()) {
+		}else if (e.getSource() == listPanel.getQuickQueryPanel()) {
 			QuickQuery();
 		}
 	}

@@ -172,8 +172,7 @@ public class CsbShangbaoHuizong extends AbstractWorkPanel implements
 				String date = new SimpleDateFormat("yyyy-MM-dd")
 						.format(new Date());
 				UIUtil.executeUpdateByDS(null,
-						"update WN_CSBHZ_01 set state='已提交' , SJ_DATE='" + date
-								+ "' where id =" + billvo.getPkValue());
+						"update WN_CSBHZ_01 set state='已提交' where id =" + billvo.getPkValue());
 				list_01.refreshCurrSelectedRow();
 				MessageBox.show(list_01, "提交成功!");
 			} else if (state.equals("已提交")) {
