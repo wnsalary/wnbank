@@ -4838,13 +4838,17 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			SimpleDateFormat simple=new SimpleDateFormat("yyyy-MM");
 			String currentMonth=simple.format(new Date());//获取到当前考核月
 			String gatherSQL="select * from V_wn_gather_monitor_result where amt_txn_2>=5";//将数据进行汇总
+			String loanSQL="";
 		    if(existsData==null ||existsData.length<=0){//
 				gatherSQL=gatherSQL+" and dat_txn<'"+currentMonth+"'";
+				loanSQL="SELECT a.xd_col16, sum(a.xd_col7) FROM WNBANK.s_loan_dk  a LEFT JOIN (WNSALARYDB.V_SAL_PERSONINFO) b ON a.xd_col16=b.CARDID WHERE b.Cardid IS NOT NULL AND TO_CHAR(TO_DATE(a.LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')<'"+currentMonth+"'   GROUP BY a.xd_col16,a.LOAD_DATES";
 			}else {
 				String maxDate=dmo.getStringValueByDS(null, "select max(dat_txn) from wn_gather_monitor_result");
 				gatherSQL=gatherSQL+" and dat_txn<'"+currentMonth+"' and dat_txn>='"+maxDate+"'";
+				loanSQL="SELECT a.xd_col16, sum(a.xd_col7) FROM WNBANK.s_loan_dk  a LEFT JOIN (WNSALARYDB.V_SAL_PERSONINFO) b ON a.xd_col16=b.CARDID WHERE b.Cardid IS NOT NULL AND TO_CHAR(TO_DATE(a.LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')<'"+currentMonth+"' AND TO_CHAR(TO_DATE(a.LOAD_DATES, 'yyyy-mm-dd'),'yyyy-mm-dd')>'"+maxDate+"'  GROUP BY a.xd_col16,a.LOAD_DATES";
 			}
 			HashVO[] gatherDataVos = dmo.getHashVoArrayByDS(null, gatherSQL);
+			HashMap<String,String> loanVos = dmo.getHashMapBySQLByDS(null, loanSQL);//ZPY 【2019-08-21】增加监测员工贷款余额  心情贼不爽
 			InsertSQLBuilder gatherDataInsert=new InsertSQLBuilder("wn_gather_monitor_result");
 			for (int i = 0; i < gatherDataVos.length; i++) {//获取到当前所有的汇总数据
 				gatherDataInsert.putFieldValue("dat_txn",gatherDataVos[i].getStringValue("dat_txn"));
@@ -4856,6 +4860,9 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				gatherDataInsert.putFieldValue("deptname", gatherDataVos[i].getStringValue("deptname"));
 				gatherDataInsert.putFieldValue("deal_result", "未处理");
 				gatherDataInsert.putFieldValue("ck", "查看");
+				//获取当前员工的贷款情况 ZPY[2019-08-21]
+				String  loan_balance= loanVos.get(gatherDataVos[i].getStringValue("cardid"))==null?"0":loanVos.get(gatherDataVos[i].getStringValue("cardid"));
+				gatherDataInsert.putFieldValue("loan_balance",loan_balance);
 				list.add(gatherDataInsert.getSQL());
 				if(list.size()>=5000){
 					dmo.executeBatchByDS(null, list);

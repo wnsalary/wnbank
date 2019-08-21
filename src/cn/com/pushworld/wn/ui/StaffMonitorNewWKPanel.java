@@ -131,7 +131,6 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements ActionL
 				String querySQLCondition = listPanel.getQuickQueryPanel().getQuerySQLCondition();//获取到当前查询条件
 				String sql="select * from WN_GATHER_MONITOR_RESULT where 1=1 ";
 				if(WnUtils.isEmpty(querySQLCondition)){//
-					
 					sql=sql+querySQLCondition.replaceAll(";", "").replaceAll("年", "-").replaceAll("月","");
 				}
 				fileChooser=new JFileChooser();
@@ -231,7 +230,6 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements ActionL
 			dialog.getBilllistPanel().QueryDataByCondition(
 					"EXTERNAL_CUSTOMER_IC='"+vo.getStringValue("EXTERNAL_CUSTOMER_IC")+"' and DAT_TXN LIKE '"+vo.getStringValue("DAT_TXN")+"%'");
 			dialog.getBtn_confirm().setVisible(false);
-			MessageBox.show(this,sonListPanel.getQuickQueryPanel().getQuerySQL());
 			dialog.setVisible(true);
 		}
 	}
