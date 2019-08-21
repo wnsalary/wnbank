@@ -159,7 +159,7 @@ public class JDFKMhuizong extends AbstractWorkPanel implements ActionListener {
 					if (Double.parseDouble(JFFSE) < Double.parseDouble(JFTJZJ)
 							|| Double.parseDouble(DFFSE) < Double
 									.parseDouble(DFTJZJ)) {
-						MessageBox.show(this, "您选择的记录中有不合理的数据，请重新填写后提交！");
+						MessageBox.show(this, "您选择的记录中存在借方发生额小于借方调剂资金或者贷方发生额小于贷方调剂资金的数据，请重新填写后提交！");
 					} else {
 						updateSQL = "update WN_JDFKMHZB_02 set state='已提交' where id='"
 								+ selectedId + "'";

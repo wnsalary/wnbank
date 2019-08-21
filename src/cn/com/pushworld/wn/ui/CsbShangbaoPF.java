@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 
 import cn.com.infostrategy.to.common.WLTConstants;
@@ -18,11 +19,14 @@ import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.infostrategy.ui.common.WLTButton;
 import cn.com.infostrategy.ui.mdata.BillCardDialog;
 import cn.com.infostrategy.ui.mdata.BillCardPanel;
+import cn.com.infostrategy.ui.mdata.BillListHtmlHrefEvent;
+import cn.com.infostrategy.ui.mdata.BillListHtmlHrefListener;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
 
-public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener {
+public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener,BillListHtmlHrefListener {
 
 	private BillListPanel listPanel = null;
+	private JComboBox comboBox = null;//复选框
 	private WLTButton updateButton, vertifyButton, vertifyBatchButton,
 			backBatchButton;
 
@@ -105,7 +109,7 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener {
 
 	private void vertifyBatchData() {
 		try {
-			BillVO[] billvos = listPanel.getSelectedBillVOs();
+			BillVO[] billvos = listPanel.getCheckedBillVOs();
 			if (billvos == null || billvos.length == 0) {
 				MessageBox.show(this, "请选中一条数据！！！");
 				return;
@@ -157,7 +161,7 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener {
 
 	private void backBatchData() {
 		try {
-			BillVO[] billvos = listPanel.getSelectedBillVOs();
+			BillVO[] billvos = listPanel.getCheckedBillVOs();
 			if (billvos == null || billvos.length == 0) {
 				MessageBox.show(this, "请选中一条数据！！！");
 				return;
@@ -218,10 +222,18 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener {
 		vertifyButton.addActionListener(this);
 		vertifyBatchButton.addActionListener(this);
 		backBatchButton.addActionListener(this);
+		listPanel.setRowNumberChecked(true);//设置启动
+		listPanel.addBillListHtmlHrefListener(this);
 		listPanel.addBatchBillListButton(new WLTButton[] { updateButton,
 				vertifyButton, vertifyBatchButton, backBatchButton });
 		listPanel.repaintBillListButton();
 		listPanel.getQuickQueryPanel().addBillQuickActionListener(this);
 		this.add(listPanel);
+	}
+
+	@Override
+	public void onBillListHtmlHrefClicked(BillListHtmlHrefEvent arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 }

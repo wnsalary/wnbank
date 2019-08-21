@@ -126,7 +126,7 @@ public class CsbShangbaoHuizong extends AbstractWorkPanel implements
 				}
 			}
 			if (notId != null & !"".equals(notId)) {
-				MessageBox.show(list_01, "ID为【" + notId + "】状态已经改变，无法删除！！！");
+				MessageBox.show(list_01, "您选中的数据中存在已经提交或者已经审核的数据，无法删除！！！");
 			}
 			list_01.refreshCurrData();
 		} catch (Exception e) {

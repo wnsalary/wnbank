@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 
 import cn.com.infostrategy.to.common.WLTConstants;
@@ -17,6 +18,8 @@ import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.infostrategy.ui.common.WLTButton;
 import cn.com.infostrategy.ui.mdata.BillCardDialog;
 import cn.com.infostrategy.ui.mdata.BillCardPanel;
+import cn.com.infostrategy.ui.mdata.BillListHtmlHrefEvent;
+import cn.com.infostrategy.ui.mdata.BillListHtmlHrefListener;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
 
 /**
@@ -25,9 +28,10 @@ import cn.com.infostrategy.ui.mdata.BillListPanel;
  * 
  *         2019-3-28-下午05:01:24 借贷方科目审批
  */
-public class JDFKMhuizongSp extends AbstractWorkPanel implements ActionListener {
+public class JDFKMhuizongSp extends AbstractWorkPanel implements ActionListener,BillListHtmlHrefListener{
 
 	private BillListPanel list = null;
+	private JComboBox comboBox = null;//复选框
 	private WLTButton updateButton, verifyButton, vertiybatchButton,
 			backbatchButton;
 
@@ -44,8 +48,10 @@ public class JDFKMhuizongSp extends AbstractWorkPanel implements ActionListener 
 		backbatchButton.addActionListener(this);
 		list.addBatchBillListButton(new WLTButton[] { updateButton,
 				verifyButton, vertiybatchButton, backbatchButton });
-		list.repaintBillListButton();
 		list.getQuickQueryPanel().addBillQuickActionListener(this);// 获取到快速查询事件
+		list.setRowNumberChecked(true);//设置启动
+		list.addBillListHtmlHrefListener(this);
+		list.repaintBillListButton();
 		this.add(list);
 	}
 
@@ -66,7 +72,7 @@ public class JDFKMhuizongSp extends AbstractWorkPanel implements ActionListener 
 
 	private void vertiybatchData() {
 		try {
-			BillVO[] billvos = list.getSelectedBillVOs();
+			BillVO[] billvos = list.getCheckedBillVOs();
 			if (billvos == null || billvos.length == 0) {
 				MessageBox.show(list, "请选中一条数据！！！");
 				return;
@@ -118,7 +124,7 @@ public class JDFKMhuizongSp extends AbstractWorkPanel implements ActionListener 
 
 	private void backbatchData() {// 批量退回
 		try {
-			BillVO[] billvos = list.getSelectedBillVOs();
+			BillVO[] billvos = list.getCheckedBillVOs();
 			if (billvos == null || billvos.length == 0) {
 				MessageBox.show(list, "请选中一条数据！！！");
 				return;
@@ -245,5 +251,13 @@ public class JDFKMhuizongSp extends AbstractWorkPanel implements ActionListener 
 		}
 
 	}
+
+	@Override
+	public void onBillListHtmlHrefClicked(BillListHtmlHrefEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
 
 }
