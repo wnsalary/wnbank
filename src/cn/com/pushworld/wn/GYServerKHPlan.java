@@ -199,7 +199,7 @@ public class GYServerKHPlan extends AbstractWorkPanel implements
 			final HashVO[] vo = UIUtil
 					.getHashVoArrayByDS(
 							null,
-							"SELECT distinct(USERCODE) AS USERCODE,STATE,PFTIME FROM WN_GYPF_TABLE WHERE STATE='评分中'");
+							"SELECT distinct(USERCODE) AS USERCODE,STATE,PFTIME,FHRESULT FROM WN_GYPF_TABLE WHERE STATE='评分中' OR FHRESULT IS NULL  OR FHRESULT<>'复核通过'");
 			String result = UIUtil
 					.getStringValueByDS(
 							null,
@@ -287,7 +287,7 @@ public class GYServerKHPlan extends AbstractWorkPanel implements
 					"wnSalaryDb.WN_GYPF_TABLE");
 			HashVO[] vo = UIUtil.getHashVoArrayByDS(null,
 					"select * from wnSalaryDb.WN_GYPF_TABLE where usercode='"
-							+ usercode + "' and state='评分中' Order by ID");
+							+ usercode + "' and (FHRESULT IS null or  FHRESULT<>'复核通过')    Order by ID");
 			List list = new ArrayList<String>();
 			for (int i = 0; i < vo.length - 1; i++) {
 				String koufenValue = vo[i].getStringValue("KOUFEN");
@@ -311,7 +311,6 @@ public class GYServerKHPlan extends AbstractWorkPanel implements
 			String sumSQL = "update wnSalaryDb.WN_GYPF_TABLE set KOUOFEN='"
 					+ sumfen + "',state='评分结束' where usercode='" + usercode
 					+ "' and xiangmu='总分'";
-			System.out.println(sumSQL);
 			list.add(sumSQL);
 			if (list.size() > 0) {
 				UIUtil.executeBatchByDS(null, list);

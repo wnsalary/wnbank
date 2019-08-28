@@ -105,7 +105,6 @@ public class GYQuartzJob implements WLTJobIFC {
 			if (list.size() > 0) {
 				dmo.executeBatchByDS(null, list);
 			}
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
