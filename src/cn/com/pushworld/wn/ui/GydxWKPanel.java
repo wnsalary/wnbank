@@ -87,8 +87,10 @@ public class GydxWKPanel extends AbstractWorkPanel implements
 		billListPanel_User_check.addBillListButton(btn_save);
 		billListPanel_User_check.addBillListButton(btn_end);
 		// 复核功能只对网点主任开放，如果这个网点没有网点主任，由网点副主任进行复核
-		if ("主任".equals(USERTYPE.get(PFSUERCODE).toString())
-				|| "副主任".equals(USERTYPE.get(PFSUERCODE).toString())) {
+//		if ("主任".equals(USERTYPE.get(PFSUERCODE).toString())
+//				|| "副主任".equals(USERTYPE.get(PFSUERCODE).toString())) {
+		String curPostName=USERTYPE.get(PFSUERCODE).toString();
+		if(curPostName.indexOf("主任")!=-1){
 			btn_verify = new WLTButton("评分复核");
 			btn_verify.addActionListener(this);
 			billListPanel_User_check.addBillListButton(btn_verify);
@@ -397,7 +399,7 @@ public class GydxWKPanel extends AbstractWorkPanel implements
 					new String[] { "复核通过", "复核退回" }, 1);
 			String FHUSERNAME = PFUSERNAME;
 			String FHUSERDEPT = USERCODES.get(PFUSERDEPT).toString();
-			String FHTIME = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
+			String FHTIME = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 					.format(new Date());
 			UpdateSQLBuilder update = new UpdateSQLBuilder("wn_gydx_table");
 			update.setWhereCondition("pfTime='" + pfTime + "' and USERCODE='"

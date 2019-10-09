@@ -193,7 +193,6 @@ public class GydxdfWKPanel extends AbstractWorkPanel implements ActionListener {
 				} else {
 					return;
 				}
-
 			} else {
 				// 结束当前考核计划
 				final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil

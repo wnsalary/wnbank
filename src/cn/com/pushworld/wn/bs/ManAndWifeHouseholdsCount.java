@@ -284,7 +284,6 @@ public class ManAndWifeHouseholdsCount {
 			System.out.println(">>>>>>>" + str + ">>>>>>>>" + map.get(str));
 		}
 		return map;
-
 	}
 
 	/**

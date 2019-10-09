@@ -175,7 +175,7 @@ public class GYServerKHPlan extends AbstractWorkPanel implements
 			new SplashWindow(this, new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent event) {
-					String date = new SimpleDateFormat("yyyy-MM-dd  hh:MM:ss")
+					String date = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss")
 							.format(new Date());
 					str = service.getSqlInsert(date);
 				}
@@ -196,14 +196,15 @@ public class GYServerKHPlan extends AbstractWorkPanel implements
 				MessageBox.show(this, "请选中一条考核计划进行操作");
 				return;
 			}
+			String pftime=UIUtil.getStringValueByDS(null,"select max(pftime) from WN_GYPF_TABLE") ;
 			final HashVO[] vo = UIUtil
 					.getHashVoArrayByDS(
 							null,
-							"SELECT distinct(USERCODE) AS USERCODE,STATE,PFTIME,FHRESULT FROM WN_GYPF_TABLE WHERE STATE='评分中' OR FHRESULT IS NULL  OR FHRESULT<>'复核通过'");
+							"SELECT distinct(USERCODE) AS USERCODE,STATE,PFTIME,FHRESULT FROM WN_GYPF_TABLE WHERE STATE='评分中'  OR FHRESULT<>'复核通过' AND PFTIME='"+pftime+"'");
 			String result = UIUtil
 					.getStringValueByDS(
 							null,
-							"SELECT COUNT(*) FROM WN_GYPF_TABLE WHERE STATE='评分中' OR FHRESULT IS NULL OR FHRESULT='未通过'");
+							"SELECT COUNT(*) FROM WN_GYPF_TABLE WHERE STATE='评分中' OR FHRESULT IS NULL OR FHRESULT<>'复核通过' AND PFTIME='"+pftime+"'");
 			int count = Integer.parseInt(result);
 
 			int sumcount = 0;
@@ -283,12 +284,14 @@ public class GYServerKHPlan extends AbstractWorkPanel implements
 		try {
 			Double KOUOFEN = 0.0;
 			Double result = 0.0;
+			String pftime=UIUtil.getStringValueByDS(null, "select max(pftime) from WN_GYPF_TABLE where usercode='"+usercode+"'")  ;
 			UpdateSQLBuilder update = new UpdateSQLBuilder(
 					"wnSalaryDb.WN_GYPF_TABLE");
 			HashVO[] vo = UIUtil.getHashVoArrayByDS(null,
 					"select * from wnSalaryDb.WN_GYPF_TABLE where usercode='"
-							+ usercode + "' and (FHRESULT IS null or  FHRESULT<>'复核通过')    Order by ID");
+							+ usercode + "' and  (FHRESULT<>'复核通过' OR FHRESULT IS null) and pftime='"+pftime+"'   Order by ID");
 			List list = new ArrayList<String>();
+			
 			for (int i = 0; i < vo.length - 1; i++) {
 				String koufenValue = vo[i].getStringValue("KOUFEN");
 				String defenValue = vo[i].getStringValue("FENZHI");
@@ -302,7 +305,7 @@ public class GYServerKHPlan extends AbstractWorkPanel implements
 				KOUOFEN = Double.parseDouble(koufenValue);
 				result = result + KOUOFEN;
 				update.setWhereCondition("id='" + vo[i].getStringValue("id")
-						+ "'");
+						+ "' and pftime='"+pftime+"'");
 				update.putFieldValue("KOUOFEN", KOUOFEN);
 				update.putFieldValue("state", "评分结束");
 				list.add(update.getSQL());
@@ -310,7 +313,7 @@ public class GYServerKHPlan extends AbstractWorkPanel implements
 			double sumfen = 100.00 - result;
 			String sumSQL = "update wnSalaryDb.WN_GYPF_TABLE set KOUOFEN='"
 					+ sumfen + "',state='评分结束' where usercode='" + usercode
-					+ "' and xiangmu='总分'";
+					+ "' and xiangmu='总分' and pftime='"+pftime+"'";
 			list.add(sumSQL);
 			if (list.size() > 0) {
 				UIUtil.executeBatchByDS(null, list);
