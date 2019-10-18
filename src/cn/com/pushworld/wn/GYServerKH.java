@@ -242,9 +242,10 @@ public class GYServerKH extends AbstractWorkPanel implements
 						"SELECT max(PFTIME) FROM WN_GYPF_TABLE WHERE USERCODE='"
 								+ gyUserCode + "'");
 				String PFDEPTCODE = USERCODES.get(PFUSERDEPT).toString();
+				
 				String[] state = UIUtil.getStringArrayFirstColByDS(null,
 						"select state from WN_GYPF_TABLE where state='评分中' AND USERCODE='"
-								+ gyUserCode + "'");//
+								+ gyUserCode + "' and pftime='"+pfTime+"'");//
 				if (state.length <= 0) {
 					MessageBox.show(this, "当前柜员【" + gyUserName
 							+ "】服务质量考核已经结束，无须重复结束！");
