@@ -133,7 +133,7 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener,B
 					if ("".equals(ids)) {
 						ids = ids + "'" + id + "'";
 					} else {
-						ids = ids + ",'" + id + "',";
+						ids = ids + ",'" + id + "'";
 					}
 				}
 			}
@@ -142,9 +142,6 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener,B
 				return;
 			} else {
 				Frame frame = new Frame();
-				if (ids.contains(",")) {
-					ids = ids.substring(0, ids.lastIndexOf(","));
-				}
 				String inputValue = JOptionPane.showInputDialog("请输入理由:");
 				UIUtil.executeUpdateByDS(null,
 						"update WN_CSBHZ_01 set ratifyReason='" + inputValue
@@ -185,7 +182,7 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener,B
 					if ("".equals(ids)) {
 						ids = ids + "'" + id + "'";
 					} else {
-						ids = ids + ",'" + id + "',";
+						ids = ids + ",'" + id + "'";
 					}
 				}
 			}
@@ -194,9 +191,6 @@ public class CsbShangbaoPF extends AbstractWorkPanel implements ActionListener,B
 				return;
 			} else {
 				Frame frame = new Frame();
-				if (ids.contains(",")) {
-					ids = ids.substring(0, ids.lastIndexOf(","));
-				}
 				String inputValue = JOptionPane.showInputDialog("请输入理由:");
 				UIUtil.executeUpdateByDS(null,
 						"update WN_CSBHZ_01 set ratifyReason='" + inputValue

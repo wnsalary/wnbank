@@ -21,6 +21,7 @@ public class DepositTimingJob implements WLTJobIFC {
 		String inputParam = getKHYCMonth() + ";" + getKHYMMonth() + ";"
 				+ getSYYCMonth() + ";" + getSYYMMonth() + ";" + getKHNCMYear()
 				+ ";" + getKHNCYear() + ";" + getMonthCount();
+//		String inputParam = "2019-08-01;2019-08-31;2019-07-01;2019-07-31;2018-12-01;2018-12-31;31";
 		ManAndWifeHouseholdsCount mc = new ManAndWifeHouseholdsCount();
 		mc.getComputeMap(inputParam);
 		AverageDailyManAnd am = new AverageDailyManAnd();

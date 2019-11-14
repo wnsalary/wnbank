@@ -96,7 +96,7 @@ public class JDFKMhuizongSp extends AbstractWorkPanel implements ActionListener,
 					if ("".equals(ids)) {
 						ids = ids + "'" + id + "'";
 					} else {
-						ids = ids + ",'" + id + "',";
+						ids = ids + ",'" + id + "'";
 					}
 				}
 			}
@@ -105,9 +105,6 @@ public class JDFKMhuizongSp extends AbstractWorkPanel implements ActionListener,
 				return;
 			} else {
 				Frame frame = new Frame();
-				if (ids.contains(",")) {
-					ids = ids.substring(0, ids.lastIndexOf(","));
-				}
 				String inputValue = JOptionPane.showInputDialog("请输入理由:");
 			UIUtil.executeUpdateByDS(null,
 						"update WN_JDFKMHZB_02 set ratifyReason='" + inputValue
@@ -148,7 +145,7 @@ public class JDFKMhuizongSp extends AbstractWorkPanel implements ActionListener,
 					if ("".equals(ids)) {
 						ids = ids + "'" + id + "'";
 					} else {
-						ids = ids + ",'" + id + "',";
+						ids = ids + ",'" + id + "'";
 					}
 				}
 			}
@@ -157,9 +154,6 @@ public class JDFKMhuizongSp extends AbstractWorkPanel implements ActionListener,
 				return;
 			} else {
 				Frame frame = new Frame();
-				if (ids.contains(",")) {
-					ids = ids.substring(0, ids.lastIndexOf(","));
-				}
 				String inputValue = JOptionPane.showInputDialog("请输入理由:");
 				UIUtil.executeUpdateByDS(null,
 						"update WN_JDFKMHZB_02 set ratifyReason='" + inputValue
