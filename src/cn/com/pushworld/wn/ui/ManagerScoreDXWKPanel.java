@@ -39,9 +39,10 @@ public class ManagerScoreDXWKPanel extends AbstractWorkPanel implements
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == rateButton) {// 客户经理等级评定
 			try {
-				// 允许客户去选择是对上半年进行考核还是对下半年进行考核
+				// 允许客户去选择是对上半年进行考核还是对下半年进行考核 0 表示上半年，1表示下半年 -1表示取消
 				final int dateNum = MessageBox.showOptionDialog(this,
 						"请选择考核的时间段", "提示", new String[] { "上半年", "下半年" }, 0);
+				MessageBox.show(this,"当前选中的值为:"+dateNum);
 				final WnSalaryServiceIfc service = new WnSalaryServiceImpl();
 				if (dateNum == -1) {
 					return;

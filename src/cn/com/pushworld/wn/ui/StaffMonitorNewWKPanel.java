@@ -44,6 +44,8 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements ActionL
 		listPanel=new BillListPanel("WN_GATHER_MONITOR_RESULT_ZPY_Q01");
 //		sonListPanel=new BillListPanel("WN_SHOW_MONITOR_ZPY_Q01");
 		sonListPanel=new BillListPanel("WN_CURRENT_DEAL_DATE_ZPY_Q01");
+		
+		comboBox=new  JComboBox();
 		importButton=new WLTButton("员工异常信息查询");
 		importButton.addActionListener(this);
 		exportButton=new WLTButton("汇总结果导出");

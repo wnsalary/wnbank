@@ -62,6 +62,7 @@ public class GYServerKH extends AbstractWorkPanel implements
 	private HashMap USERCODES = null;
 	private HashMap USERTYPE = null;
 	private String pfTime = null;
+	
 	public void initialize() {
 		// 获取到当前登录人的机构code
 		try {
@@ -115,8 +116,13 @@ public class GYServerKH extends AbstractWorkPanel implements
 		billListPanel_User_check.repaintBillListButton();
 		billListPanel_User_check.addBillListSelectListener(this);
 		String PFDEPTCODE = USERCODES.get(PFUSERDEPT).toString();// 获取到当前的机构code
+		/**
+		 * 【2019-11-26】
+		 * 应客户要求，不参与考核的柜员信息不再此显示
+		 */
+		String unCheckCode="SELECT CODE FROM V_SAL_PERSONINFO WHERE ISUNCHECK='Y' ";//获取到当前机构不参与考核的人名单 
 		billListPanel_User_Post.queryDataByCondition("deptcode='" + PFDEPTCODE
-				+ "' and POSTNAME like '%柜员%'", "seq,usercode");
+				+ "' and POSTNAME like '%柜员%' and usercode not in ("+unCheckCode+")", "seq,usercode");
 		// 获取到当前登录人的机构code
 		if ("282006".equals(PFDEPTCODE)||"282007".equals(PFDEPTCODE)) {
 			splitPanel_all.add(billTreePanel_Dept);// 如果当前登录人属于运营管理部，则显示机构树
@@ -463,8 +469,13 @@ public class GYServerKH extends AbstractWorkPanel implements
 		str_currdeptid = _event.getCurrSelectedVO().getStringValue("id"); //
 		str_currdeptname = _event.getCurrSelectedVO().getStringValue("name"); //
 		if (billListPanel_User_Post != null) {
+//			/**
+//			 * 【2019-11-26】
+//			 * 应客户要求，将不参与考核的人员不显示
+//			 */
+//			String unCheckCode="SELECT CODE FROM V_SAL_PERSONINFO WHERE ISUNCHECK='Y' AND  DEPTID ='"+str_currdeptid+"'";//获取到当前机构不参与考核的人名单 
 			billListPanel_User_Post.queryDataByCondition("deptid='"
-					+ str_currdeptid + "' and POSTNAME like '%柜员%'",
+					+ str_currdeptid + "' and POSTNAME like '%柜员%' ",
 					"seq,usercode"); //
 		}
 	}
@@ -483,12 +494,15 @@ public class GYServerKH extends AbstractWorkPanel implements
 		try {
 			if (e.getSource() == billListPanel_User_Post) {
 				BillVO vo = billListPanel_User_Post.getSelectedBillVO();
+			
+				
 				pfTime = UIUtil.getStringValueByDS(null,
 						"SELECT max(PFTIME) FROM WN_GYPF_TABLE WHERE USERCODE='"
 								+ vo.getStringValue("usercode") + "'");//
 				billListPanel_User_check.QueryDataByCondition("usercode='"
-						+ vo.getStringValue("usercode") + "' and pftime='"
+						+ vo.getStringValue("usercode") + "'   and pftime='"
 						+ pfTime + "'");
+//			MessageBox.show(this,"查询条件为:"+billListPanel_User_check.getQuickQueryPanel().getQuerySQL());
 			} else if (e.getSource() == billListPanel_User_check) {
 				BillVO vo = billListPanel_User_check.getSelectedBillVO();
 				// 获取到当前复核人登录信息

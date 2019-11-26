@@ -102,8 +102,12 @@ public class GydxWKPanel extends AbstractWorkPanel implements
 		billListPanel_User_check.repaintBillListButton();
 		billListPanel_User_check.addBillListSelectListener(this);
 		String PFDEPTCODE = USERCODES.get(PFUSERDEPT).toString();// 获取当前评分人的机构代码
+		/**
+		 * 【2019-11-26】应客户要求，将不参与考核的人不显示
+		 */
+		String unCheckCode="SELECT CODE FROM V_SAL_PERSONINFO WHERE ISUNCHECK='Y' ";
 		billListPanel_User_Post.queryDataByCondition("deptcode='" + PFDEPTCODE
-				+ "' and POSTNAME like '%柜员%'", "seq,usercode");
+				+ "' and POSTNAME like '%柜员%' and usercode not in ("+unCheckCode+")", "seq,usercode");
 		if ("282006".equals(PFDEPTCODE)) {
 			splitPanel_all.add(billTreePanel_Dept);// 如果当前登录人属于运营管理部，则显示机构树
 			billTreePanel_Dept.addBillTreeSelectListener(this);

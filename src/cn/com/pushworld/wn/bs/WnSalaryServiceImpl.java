@@ -90,9 +90,10 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		List list = new ArrayList<String>();
 		String[][] date = getTowWeiDate();
 		try {
+			String unCheckCode="SELECT CODE FROM V_SAL_PERSONINFO WHERE ISUNCHECK='Y'";
 			HashVO[] vos = dmo
 					.getHashVoArrayByDS(null,
-							"select * from V_PUB_USER_POST_1 where POSTNAME like '%柜员%'");
+							"select * from V_PUB_USER_POST_1 where POSTNAME like '%柜员%' and usercode  not in ("+unCheckCode+")");
 			String d = new SimpleDateFormat("yyyy.MM.dd").format(new Date());
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR) + 6);
@@ -828,10 +829,15 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		String result = "";
 		String planName = "";
 		try {
+			/**
+			 * 【2019-11-26】
+			 * 应客户要求，将所有不参与考核的人不生成打分表和显示
+			 */
+			String unCheckCode="SELECT CODE FROM V_SAL_PERSONINFO WHERE ISUNCHECK='Y' ";
 			// 获取到柜员相关信息
 			HashVO[] vos = dmo
 					.getHashVoArrayByDS(null,
-							"select * from V_PUB_USER_POST_1 where POSTNAME like '%柜员%'");
+							"select * from V_PUB_USER_POST_1 where POSTNAME like '%柜员%'  and usercode not in ("+unCheckCode+")");
 			// 获取到柜员定性考核指标
 			HashVO[] dxzbVos = dmo
 					.getHashVoArrayByDS(
@@ -3646,8 +3652,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		HashMap<String, Double> resultMap = new HashMap<String, Double>();
 		try {
 			// 到期贷款收回率考核首先获取到考核时间
-			String yearStartDate = getYearStartAndEnd(dateNum).get(0);
-			String checkDate = getYearStartAndEnd(dateNum).get(1);
+			String yearStartDate = getYearStartAndEnd(dateNum).get(0);//获取到年初日期
+			String checkDate = getYearStartAndEnd(dateNum).get(1);//获取到年末考核日期
 			// 1-3月份累计已收回
 			HashMap<String, String> dsMonth1_3Map = UIUtil.getHashMapBySQLByDS(
 					null, "select B,D from excel_tab_44");
