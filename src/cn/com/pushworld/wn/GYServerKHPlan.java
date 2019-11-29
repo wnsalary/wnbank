@@ -100,6 +100,7 @@ public class GYServerKHPlan extends AbstractWorkPanel implements
 		BillVO vo = list.getSelectedBillVO();
 		if (vo.getStringValue("state").equals("评分中")) {
 			btn_ks.setEnabled(false);
+			btn_end.setEnabled(true);
 		} else if (vo.getStringValue("state").equals("评分结束")) {
 			btn_ks.setEnabled(false);
 			btn_end.setEnabled(false);

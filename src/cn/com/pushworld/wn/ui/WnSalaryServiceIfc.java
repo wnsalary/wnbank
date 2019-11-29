@@ -258,5 +258,17 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc {
      * @return
      */
 	public String dealExceptionData(BillVO[] billVos,Map<String,String> paraMap);
+    /**
+     * 结束柜员服务质量打分
+     * @param bos
+     * @param pfUserDept 
+     * @param pfUserName 
+     */
+	public String finishGradeScore(BillVO[] bos, String pfUserName,String pfUserCode, String pfUserDept);
+    /**
+     * 保存柜员服务质量打分
+     * @param bos
+     */
+	public String saveGradeScore(BillVO[] bos);
   
 }

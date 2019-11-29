@@ -23,6 +23,7 @@ import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
 import cn.com.infostrategy.to.mdata.jepfunctions.GetDateDifference;
+import cn.com.infostrategy.to.mdata.jepfunctions.GetStringItemVO;
 import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.pushworld.wn.to.WnUtils;
 import cn.com.pushworld.wn.ui.WnSalaryServiceIfc;
@@ -90,10 +91,12 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		List list = new ArrayList<String>();
 		String[][] date = getTowWeiDate();
 		try {
-			String unCheckCode="SELECT CODE FROM V_SAL_PERSONINFO WHERE ISUNCHECK='Y'";
+			String unCheckCode = "SELECT CODE FROM V_SAL_PERSONINFO WHERE ISUNCHECK='Y'";
 			HashVO[] vos = dmo
-					.getHashVoArrayByDS(null,
-							"select * from V_PUB_USER_POST_1 where POSTNAME like '%柜员%' and usercode  not in ("+unCheckCode+")");
+					.getHashVoArrayByDS(
+							null,
+							"select * from V_PUB_USER_POST_1 where POSTNAME like '%柜员%' and usercode  not in ("
+									+ unCheckCode + ")");
 			String d = new SimpleDateFormat("yyyy.MM.dd").format(new Date());
 			Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR) + 6);
@@ -119,6 +122,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					insert.putFieldValue("state", "评分中");
 					insert.putFieldValue("seq", j + 1);
 					insert.putFieldValue("timezone", timezone);
+					insert.putFieldValue("FHRESULT", "未复核");// 将复核状态直接放入到生成表的过程中
 					if ("总分".equals(date[j][0])) {
 						insert.putFieldValue("KOUOFEN", "100");
 					} else {
@@ -830,14 +834,15 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		String planName = "";
 		try {
 			/**
-			 * 【2019-11-26】
-			 * 应客户要求，将所有不参与考核的人不生成打分表和显示
+			 * 【2019-11-26】 应客户要求，将所有不参与考核的人不生成打分表和显示
 			 */
-			String unCheckCode="SELECT CODE FROM V_SAL_PERSONINFO WHERE ISUNCHECK='Y' ";
+			String unCheckCode = "SELECT CODE FROM V_SAL_PERSONINFO WHERE ISUNCHECK='Y' ";
 			// 获取到柜员相关信息
 			HashVO[] vos = dmo
-					.getHashVoArrayByDS(null,
-							"select * from V_PUB_USER_POST_1 where POSTNAME like '%柜员%'  and usercode not in ("+unCheckCode+")");
+					.getHashVoArrayByDS(
+							null,
+							"select * from V_PUB_USER_POST_1 where POSTNAME like '%柜员%'  and usercode not in ("
+									+ unCheckCode + ")");
 			// 获取到柜员定性考核指标
 			HashVO[] dxzbVos = dmo
 					.getHashVoArrayByDS(
@@ -3652,8 +3657,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		HashMap<String, Double> resultMap = new HashMap<String, Double>();
 		try {
 			// 到期贷款收回率考核首先获取到考核时间
-			String yearStartDate = getYearStartAndEnd(dateNum).get(0);//获取到年初日期
-			String checkDate = getYearStartAndEnd(dateNum).get(1);//获取到年末考核日期
+			String yearStartDate = getYearStartAndEnd(dateNum).get(0);// 获取到年初日期
+			String checkDate = getYearStartAndEnd(dateNum).get(1);// 获取到年末考核日期
 			// 1-3月份累计已收回
 			HashMap<String, String> dsMonth1_3Map = UIUtil.getHashMapBySQLByDS(
 					null, "select B,D from excel_tab_44");
@@ -4784,7 +4789,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		}
 
 	}
-	
+
 	/**
 	 * 员工异常行为监测数据导入
 	 */
@@ -4792,93 +4797,113 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	public String importMonitorData() {
 		String message = "";
 		try {
-//			String[] existsData = dmo.getStringArrayFirstColByDS(null,
-//					"SELECT 1 FROM wn_show_monitor");
-//			HashVO[] monitorData = null;
-//			if (existsData == null || existsData.length <= 0) {// 表示表中没有数据，直接插入
-//				monitorData = dmo
-//						.getHashVoArrayByDS(null,
-//								"SELECT * FROM WN_CURRENT_DEAL_DATE where dat_txn>='2019-01-01'");
-//			} else {// 表示表中已经存在数据，对于已经存在的数据不需要额外导入
-//				String maxDate = dmo.getStringValueByDS(null,
-//						"SELECT max(DAT_TXN) FROM wn_show_monitor");
-//				monitorData = dmo.getHashVoArrayByDS(null,
-//						"SELECT * FROM WN_CURRENT_DEAL_DATE WHERE  DAT_TXN>'"
-//								+ maxDate + "'");
-//			}
-//			List<String> list = new ArrayList<String>();
-//			InsertSQLBuilder insert = new InsertSQLBuilder("wn_show_monitor");
-//			for (int i = 0; i < monitorData.length; i++) {// 向监控数据表中插入数据
-//				insert.putFieldValue("dat_txn",
-//						monitorData[i].getStringValue("dat_txn"));// 交易时间
-//				insert.putFieldValue("cod_acct_no",
-//						monitorData[i].getStringValue("cod_acct_no"));// 交易账号
-//				insert.putFieldValue("txt_txn_desc",
-//						monitorData[i].getStringValue("txt_txn_desc"));// 交易类型
-//				insert.putFieldValue("amt_txn",
-//						monitorData[i].getStringValue("amt_txn"));// 交易金额
-//				insert.putFieldValue("amt_txn2",
-//						monitorData[i].getStringValue("amt_txn2"));// 处理之后的交易金额
-//				insert.putFieldValue("cod_acct_title",
-//						monitorData[i].getStringValue("cod_acct_title"));// 员工姓名
-//				insert.putFieldValue("cod_cust",
-//						monitorData[i].getStringValue("cod_cust"));
-//				insert.putFieldValue("flg_ic_typ",
-//						monitorData[i].getStringValue("flg_ic_typ"));// 证件类型
-//				insert.putFieldValue("EXTERNAL_CUSTOMER_IC",
-//						monitorData[i].getStringValue("EXTERNAL_CUSTOMER_IC"));// 证件号
-//				insert.putFieldValue("mainstation",
-//						monitorData[i].getStringValue("mainstation"));// 员工岗位
-//				insert.putFieldValue("deptname",
-//						monitorData[i].getStringValue("deptname"));// 所在机构
-//				insert.putFieldValue("deal_result", "未处理");
-//				list.add(insert.getSQL());
-//				if(list.size()>=5000){
-//					dmo.executeBatchByDS(null, list);
-//					list.clear();
-//				}
-//			}
+			// String[] existsData = dmo.getStringArrayFirstColByDS(null,
+			// "SELECT 1 FROM wn_show_monitor");
+			// HashVO[] monitorData = null;
+			// if (existsData == null || existsData.length <= 0) {//
+			// 表示表中没有数据，直接插入
+			// monitorData = dmo
+			// .getHashVoArrayByDS(null,
+			// "SELECT * FROM WN_CURRENT_DEAL_DATE where dat_txn>='2019-01-01'");
+			// } else {// 表示表中已经存在数据，对于已经存在的数据不需要额外导入
+			// String maxDate = dmo.getStringValueByDS(null,
+			// "SELECT max(DAT_TXN) FROM wn_show_monitor");
+			// monitorData = dmo.getHashVoArrayByDS(null,
+			// "SELECT * FROM WN_CURRENT_DEAL_DATE WHERE  DAT_TXN>'"
+			// + maxDate + "'");
+			// }
+			// List<String> list = new ArrayList<String>();
+			// InsertSQLBuilder insert = new
+			// InsertSQLBuilder("wn_show_monitor");
+			// for (int i = 0; i < monitorData.length; i++) {// 向监控数据表中插入数据
+			// insert.putFieldValue("dat_txn",
+			// monitorData[i].getStringValue("dat_txn"));// 交易时间
+			// insert.putFieldValue("cod_acct_no",
+			// monitorData[i].getStringValue("cod_acct_no"));// 交易账号
+			// insert.putFieldValue("txt_txn_desc",
+			// monitorData[i].getStringValue("txt_txn_desc"));// 交易类型
+			// insert.putFieldValue("amt_txn",
+			// monitorData[i].getStringValue("amt_txn"));// 交易金额
+			// insert.putFieldValue("amt_txn2",
+			// monitorData[i].getStringValue("amt_txn2"));// 处理之后的交易金额
+			// insert.putFieldValue("cod_acct_title",
+			// monitorData[i].getStringValue("cod_acct_title"));// 员工姓名
+			// insert.putFieldValue("cod_cust",
+			// monitorData[i].getStringValue("cod_cust"));
+			// insert.putFieldValue("flg_ic_typ",
+			// monitorData[i].getStringValue("flg_ic_typ"));// 证件类型
+			// insert.putFieldValue("EXTERNAL_CUSTOMER_IC",
+			// monitorData[i].getStringValue("EXTERNAL_CUSTOMER_IC"));// 证件号
+			// insert.putFieldValue("mainstation",
+			// monitorData[i].getStringValue("mainstation"));// 员工岗位
+			// insert.putFieldValue("deptname",
+			// monitorData[i].getStringValue("deptname"));// 所在机构
+			// insert.putFieldValue("deal_result", "未处理");
+			// list.add(insert.getSQL());
+			// if(list.size()>=5000){
+			// dmo.executeBatchByDS(null, list);
+			// list.clear();
+			// }
+			// }
 			List<String> list = new ArrayList<String>();
-			//对汇总表进行处理
-			String[] existsData =existsData=dmo.getStringArrayFirstColByDS(null, "select 1 from wn_gather_monitor_result");
-			SimpleDateFormat simple=new SimpleDateFormat("yyyy-MM");
-			String currentMonth=simple.format(new Date());//获取到当前考核月
-			String gatherSQL="select * from V_wn_gather_monitor_result where amt_txn_2>=5";//将数据进行汇总
-			String loanSQL="";
-		    if(existsData==null ||existsData.length<=0){//
-				gatherSQL=gatherSQL+" and dat_txn<'"+currentMonth+"'";
-				loanSQL="SELECT a.xd_col16, sum(a.xd_col7) FROM WNBANK.s_loan_dk  a LEFT JOIN (WNSALARYDB.V_SAL_PERSONINFO) b ON a.xd_col16=b.CARDID WHERE b.Cardid IS NOT NULL AND TO_CHAR(TO_DATE(a.LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')<'"+currentMonth+"'   GROUP BY a.xd_col16,a.LOAD_DATES";
-			}else {
-				String maxDate=dmo.getStringValueByDS(null, "select max(dat_txn) from wn_gather_monitor_result");
-				gatherSQL=gatherSQL+" and dat_txn<'"+currentMonth+"' and dat_txn>='"+maxDate+"'";
-				loanSQL="SELECT a.xd_col16, sum(a.xd_col7) FROM WNBANK.s_loan_dk  a LEFT JOIN (WNSALARYDB.V_SAL_PERSONINFO) b ON a.xd_col16=b.CARDID WHERE b.Cardid IS NOT NULL AND TO_CHAR(TO_DATE(a.LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')<'"+currentMonth+"' AND TO_CHAR(TO_DATE(a.LOAD_DATES, 'yyyy-mm-dd'),'yyyy-mm-dd')>'"+maxDate+"'  GROUP BY a.xd_col16,a.LOAD_DATES";
+			// 对汇总表进行处理
+			String[] existsData = existsData = dmo.getStringArrayFirstColByDS(
+					null, "select 1 from wn_gather_monitor_result");
+			SimpleDateFormat simple = new SimpleDateFormat("yyyy-MM");
+			String currentMonth = simple.format(new Date());// 获取到当前考核月
+			String gatherSQL = "select * from V_wn_gather_monitor_result where amt_txn_2>=5";// 将数据进行汇总
+			String loanSQL = "";
+			if (existsData == null || existsData.length <= 0) {//
+				gatherSQL = gatherSQL + " and dat_txn<'" + currentMonth + "'";
+				loanSQL = "SELECT a.xd_col16, sum(a.xd_col7) FROM WNBANK.s_loan_dk  a LEFT JOIN (WNSALARYDB.V_SAL_PERSONINFO) b ON a.xd_col16=b.CARDID WHERE b.Cardid IS NOT NULL AND TO_CHAR(TO_DATE(a.LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')<'"
+						+ currentMonth + "'   GROUP BY a.xd_col16,a.LOAD_DATES";
+			} else {
+				String maxDate = dmo.getStringValueByDS(null,
+						"select max(dat_txn) from wn_gather_monitor_result");
+				gatherSQL = gatherSQL + " and dat_txn<'" + currentMonth
+						+ "' and dat_txn>='" + maxDate + "'";
+				loanSQL = "SELECT a.xd_col16, sum(a.xd_col7) FROM WNBANK.s_loan_dk  a LEFT JOIN (WNSALARYDB.V_SAL_PERSONINFO) b ON a.xd_col16=b.CARDID WHERE b.Cardid IS NOT NULL AND TO_CHAR(TO_DATE(a.LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')<'"
+						+ currentMonth
+						+ "' AND TO_CHAR(TO_DATE(a.LOAD_DATES, 'yyyy-mm-dd'),'yyyy-mm-dd')>'"
+						+ maxDate + "'  GROUP BY a.xd_col16,a.LOAD_DATES";
 			}
 			HashVO[] gatherDataVos = dmo.getHashVoArrayByDS(null, gatherSQL);
-			HashMap<String,String> loanVos = dmo.getHashMapBySQLByDS(null, loanSQL);//ZPY 【2019-08-21】增加监测员工贷款余额  心情贼不爽
-			InsertSQLBuilder gatherDataInsert=new InsertSQLBuilder("wn_gather_monitor_result");
-			for (int i = 0; i < gatherDataVos.length; i++) {//获取到当前所有的汇总数据
-				gatherDataInsert.putFieldValue("dat_txn",gatherDataVos[i].getStringValue("dat_txn"));
-				gatherDataInsert.putFieldValue("amt_txn_sum", gatherDataVos[i].getStringValue("amt_txn"));
-				gatherDataInsert.putFieldValue("amt_txn_sum2", gatherDataVos[i].getStringValue("amt_txn_2"));
-				gatherDataInsert.putFieldValue("EXTERNAL_CUSTOMER_IC", gatherDataVos[i].getStringValue("cardid"));
-				gatherDataInsert.putFieldValue("name", gatherDataVos[i].getStringValue("name"));
-				gatherDataInsert.putFieldValue("mainstation", gatherDataVos[i].getStringValue("mainstation"));
-				gatherDataInsert.putFieldValue("deptname", gatherDataVos[i].getStringValue("deptname"));
+			HashMap<String, String> loanVos = dmo.getHashMapBySQLByDS(null,
+					loanSQL);// ZPY 【2019-08-21】增加监测员工贷款余额 心情贼不爽
+			InsertSQLBuilder gatherDataInsert = new InsertSQLBuilder(
+					"wn_gather_monitor_result");
+			for (int i = 0; i < gatherDataVos.length; i++) {// 获取到当前所有的汇总数据
+				gatherDataInsert.putFieldValue("dat_txn",
+						gatherDataVos[i].getStringValue("dat_txn"));
+				gatherDataInsert.putFieldValue("amt_txn_sum",
+						gatherDataVos[i].getStringValue("amt_txn"));
+				gatherDataInsert.putFieldValue("amt_txn_sum2",
+						gatherDataVos[i].getStringValue("amt_txn_2"));
+				gatherDataInsert.putFieldValue("EXTERNAL_CUSTOMER_IC",
+						gatherDataVos[i].getStringValue("cardid"));
+				gatherDataInsert.putFieldValue("name",
+						gatherDataVos[i].getStringValue("name"));
+				gatherDataInsert.putFieldValue("mainstation",
+						gatherDataVos[i].getStringValue("mainstation"));
+				gatherDataInsert.putFieldValue("deptname",
+						gatherDataVos[i].getStringValue("deptname"));
 				gatherDataInsert.putFieldValue("deal_result", "未处理");
 				gatherDataInsert.putFieldValue("ck", "查看");
-				//获取当前员工的贷款情况 ZPY[2019-08-21]
-				String  loan_balance= loanVos.get(gatherDataVos[i].getStringValue("cardid"))==null?"0":loanVos.get(gatherDataVos[i].getStringValue("cardid"));
-				gatherDataInsert.putFieldValue("loan_balance",loan_balance);
+				// 获取当前员工的贷款情况 ZPY[2019-08-21]
+				String loan_balance = loanVos.get(gatherDataVos[i]
+						.getStringValue("cardid")) == null ? "0" : loanVos
+						.get(gatherDataVos[i].getStringValue("cardid"));
+				gatherDataInsert.putFieldValue("loan_balance", loan_balance);
 				list.add(gatherDataInsert.getSQL());
-				if(list.size()>=5000){
+				if (list.size() >= 5000) {
 					dmo.executeBatchByDS(null, list);
 					list.clear();
 				}
 			}
-			if(list.size()>0){
+			if (list.size() > 0) {
 				dmo.executeBatchByDS(null, list);
 			}
-			message="数据导入成功";
+			message = "数据导入成功";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -4886,42 +4911,213 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	}
 
 	@Override
-	public String dealExceptionData(BillVO[] billVos,Map<String,String> paraMap) {
-		String message="";
-		try {//员工异常行为处理
-			InsertSQLBuilder insert=new InsertSQLBuilder("wn_deal_monitor");
-			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_GATHER_MONITOR_RESULT");
-			List<String> list=new ArrayList<String>();
+	public String dealExceptionData(BillVO[] billVos,
+			Map<String, String> paraMap) {
+		String message = "";
+		try {// 员工异常行为处理
+			InsertSQLBuilder insert = new InsertSQLBuilder("wn_deal_monitor");
+			UpdateSQLBuilder update = new UpdateSQLBuilder(
+					"WN_GATHER_MONITOR_RESULT");
+			List<String> list = new ArrayList<String>();
 			for (int i = 0; i < billVos.length; i++) {
-				insert.putFieldValue("dat_txn",billVos[i].getStringValue("dat_txn"));//处理日期
-//				insert.putFieldValue("cod_acct_no", billVos[i].getStringValue("cod_acct_no"));
-//			    insert.putFieldValue("txt_txn_desc", billVos[i].getStringValue("txt_txn_desc"));
-			    insert.putFieldValue("amt_txn", billVos[i].getStringValue("AMT_TXN_SUM"));
-			    insert.putFieldValue("amt_txn2", billVos[i].getStringValue("AMT_TXN_SUM2"));
-			    insert.putFieldValue("cod_acct_title", billVos[i].getStringValue("NAME"));
-//			    insert.putFieldValue("cod_cust", billVos[i].getStringValue("cod_cust"));
-//			    insert.putFieldValue("flg_ic_typ", billVos[i].getStringValue("flg_ic_typ"));
-			    insert.putFieldValue("EXTERNAL_CUSTOMER_IC", billVos[i].getStringValue("EXTERNAL_CUSTOMER_IC"));
-			    insert.putFieldValue("mainstation", billVos[i].getStringValue("mainstation"));
-			    insert.putFieldValue("deptname", billVos[i].getStringValue("deptname"));
-			    insert.putFieldValue("deal_result", paraMap.get("CHECK_RESULT"));
-			    insert.putFieldValue("deal_usercode", paraMap.get("CHECK_USERCODE"));
-			    insert.putFieldValue("deal_username", paraMap.get("CHECK_USERNAME"));
-			    insert.putFieldValue("deal_time", paraMap.get("CHECK_DATE"));
-			    insert.putFieldValue("deal_reason",paraMap.get("CHECK_REASON"));
-			    update.setWhereCondition("dat_txn='"+billVos[i].getStringValue("dat_txn")+"' and EXTERNAL_CUSTOMER_IC='"+billVos[i].getStringValue("EXTERNAL_CUSTOMER_IC")+"'");
-			    update.putFieldValue("deal_result",paraMap.get("CHECK_RESULT"));
-			    list.add(insert.getSQL());
-			    list.add(update.getSQL());
+				insert.putFieldValue("dat_txn",
+						billVos[i].getStringValue("dat_txn"));// 处理日期
+				// insert.putFieldValue("cod_acct_no",
+				// billVos[i].getStringValue("cod_acct_no"));
+				// insert.putFieldValue("txt_txn_desc",
+				// billVos[i].getStringValue("txt_txn_desc"));
+				insert.putFieldValue("amt_txn",
+						billVos[i].getStringValue("AMT_TXN_SUM"));
+				insert.putFieldValue("amt_txn2",
+						billVos[i].getStringValue("AMT_TXN_SUM2"));
+				insert.putFieldValue("cod_acct_title",
+						billVos[i].getStringValue("NAME"));
+				// insert.putFieldValue("cod_cust",
+				// billVos[i].getStringValue("cod_cust"));
+				// insert.putFieldValue("flg_ic_typ",
+				// billVos[i].getStringValue("flg_ic_typ"));
+				insert.putFieldValue("EXTERNAL_CUSTOMER_IC",
+						billVos[i].getStringValue("EXTERNAL_CUSTOMER_IC"));
+				insert.putFieldValue("mainstation",
+						billVos[i].getStringValue("mainstation"));
+				insert.putFieldValue("deptname",
+						billVos[i].getStringValue("deptname"));
+				insert.putFieldValue("deal_result", paraMap.get("CHECK_RESULT"));
+				insert.putFieldValue("deal_usercode",
+						paraMap.get("CHECK_USERCODE"));
+				insert.putFieldValue("deal_username",
+						paraMap.get("CHECK_USERNAME"));
+				insert.putFieldValue("deal_time", paraMap.get("CHECK_DATE"));
+				insert.putFieldValue("deal_reason", paraMap.get("CHECK_REASON"));
+				update.setWhereCondition("dat_txn='"
+						+ billVos[i].getStringValue("dat_txn")
+						+ "' and EXTERNAL_CUSTOMER_IC='"
+						+ billVos[i].getStringValue("EXTERNAL_CUSTOMER_IC")
+						+ "'");
+				update.putFieldValue("deal_result", paraMap.get("CHECK_RESULT"));
+				list.add(insert.getSQL());
+				list.add(update.getSQL());
 			}
-			if(list.size()>0){
+			if (list.size() > 0) {
 				dmo.executeBatchByDS(null, list);
 			}
-			message="处理成功";
+			message = "处理成功";
 		} catch (Exception e) {
-			message="处理失败";
+			message = "处理失败";
 			e.printStackTrace();
 		}
 		return message;
+	}
+
+	/**
+	 * 结束柜员服务质量打分
+	 */
+	@Override
+	public String finishGradeScore(BillVO[] bos, String pfUserName, String pfUserCode,String pfUserDept) {
+		String message="";
+		try{
+			StringBuffer msg = new StringBuffer("");
+			for (int i = 0; i < bos.length; i++) {
+				if("总分".equals(bos[i].getStringValue("XIANGMU"))){
+					continue;
+				}
+				if (isEmpty(bos[i].getStringValue("KOUOFEN"))) {
+					msg.append("第" + (i + 1) + "行数据项目为["
+							+ bos[i].getStringValue("XIANGMU") + "],指标为["
+							+ bos[i].getStringValue("ZHIBIAO") + "]扣分项数据为空\n");
+				}
+				if (Double.parseDouble(bos[i].getStringValue("KOUOFEN")) > Double
+						.parseDouble(bos[i].getStringValue("FENZHI"))) {
+					msg.append("第" + (i + 1) + "行数据项目为["
+							+ bos[i].getStringValue("XIANGMU") + "],指标为["
+							+ bos[i].getStringValue("ZHIBIAO") + "]扣分项大于分值  \n");
+				}
+			}
+			if (msg.length() > 0) {// 存在异常的数据（为空或者扣分项数值过大，直接提示用户）
+				msg.append("请修改后继续操作!!!");
+				return msg.toString();
+			}
+			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_GYPF_TABLE");
+			String xiangmu = "总分";
+
+			List<String> _sqllist = new ArrayList<String>();
+			double result = 100.0;
+			for (int i = 0; i < bos.length; i++) {
+				if (xiangmu.equals(bos[i].getStringValue("XIANGMU"))) {
+					update.setWhereCondition("USERCODE='"
+							+ bos[i].getStringValue("USERCODE")
+							+ "' AND PFTIME='"
+							+ bos[i].getStringValue("PFTIME")
+							+ "' AND XIANGMU= '" + xiangmu + "'");
+					update.putFieldValue("KOUOFEN", result);
+				} else {
+					update.setWhereCondition("USERCODE='"
+							+ bos[i].getStringValue("USERCODE")
+							+ "' AND PFTIME='"
+							+ bos[i].getStringValue("PFTIME") + "' AND KHSM= '"
+							+ bos[i].getStringValue("KHSM") + "' AND ZHIBIAO = '"+bos[i].getStringValue("ZHIBIAO")+"'");
+					// 联社要求每次扣分，要不全部扣完，要么不扣
+					if (Double.parseDouble(bos[i].getStringValue("KOUOFEN")) > 0) {
+						result -= Double.parseDouble(bos[i]
+								.getStringValue("FENZHI"));
+						update.putFieldValue("KOUOFEN",
+								bos[i].getStringValue("FENZHI"));
+					}else {
+						update.putFieldValue("KOUOFEN",
+								bos[i].getStringValue("KOUOFEN"));
+					}
+				}
+				update.putFieldValue("PFSUERCODE", pfUserCode);
+				update.putFieldValue("PFUSERNAME", pfUserName);
+				update.putFieldValue("PFUSERDEPT", pfUserDept);
+				update.putFieldValue("STATE", "评分结束");
+				update.putFieldValue("FHRESULT", "未复核");
+				_sqllist.add(update.getSQL());
+			}
+			dmo.executeBatchByDS(null, _sqllist);
+			message="操作成功";
+		}catch(Exception e){
+			message="操作异常！！！";
+			e.printStackTrace();
+		}
+        return message;
+	}
+
+	/**
+	 * 保存柜员服务质量打分
+	 */
+	@Override
+	public String saveGradeScore(BillVO[] bos) {// 保存得分
+		String message = "";
+		try {
+
+			StringBuffer msg = new StringBuffer("");
+			for (int i = 0; i < bos.length; i++) {
+				if("总分".equals(bos[i].getStringValue("XIANGMU"))){
+					continue;
+				}
+				if (isEmpty(bos[i].getStringValue("KOUOFEN"))) {
+					msg.append("第" + (i + 1) + "行数据项目为["
+							+ bos[i].getStringValue("XIANGMU") + "],指标为["
+							+ bos[i].getStringValue("ZHIBIAO") + "]扣分项数据为空\n");
+				}
+				if (Double.parseDouble(bos[i].getStringValue("KOUOFEN")) > Double
+						.parseDouble(bos[i].getStringValue("FENZHI"))) {
+					msg.append("第" + (i + 1) + "行数据项目为["
+							+ bos[i].getStringValue("XIANGMU") + "],指标为["
+							+ bos[i].getStringValue("ZHIBIAO") + "]扣分项大于分值  \n");
+				}
+			}
+			if (msg.length() > 0) {// 存在异常的数据（为空或者扣分项数值过大，直接提示用户）
+				msg.append("请修改后继续操作!!!");
+				return msg.toString();
+			}
+			// 接下里才是处理分值，两个操作【1.计算总分，保存数值】
+			UpdateSQLBuilder update = new UpdateSQLBuilder("WN_GYPF_TABLE");
+			String xiangmu = "总分";
+			List<String> _sqllist = new ArrayList<String>();
+			double result = 100.0;
+			for (int i = 0; i < bos.length; i++) {
+				if (xiangmu.equals(bos[i].getStringValue("XIANGMU"))) {
+					update.setWhereCondition("USERCODE='"
+							+ bos[i].getStringValue("USERCODE")
+							+ "' AND PFTIME='"
+							+ bos[i].getStringValue("PFTIME")
+							+ "' AND XIANGMU= '" + xiangmu + "'");
+					update.putFieldValue("KOUOFEN", result);
+				} else {
+					update.setWhereCondition("USERCODE='"
+							+ bos[i].getStringValue("USERCODE")
+							+ "' AND PFTIME='"
+							+ bos[i].getStringValue("PFTIME") + "' AND KHSM= '"
+							+ bos[i].getStringValue("KHSM") + "' AND ZHIBIAO = '"+bos[i].getStringValue("ZHIBIAO")+"'");
+					// 联社要求每次扣分，要不全部扣完，要么不扣
+					if (Double.parseDouble(bos[i].getStringValue("KOUOFEN")) > 0) {
+						result -= Double.parseDouble(bos[i]
+								.getStringValue("FENZHI"));
+						update.putFieldValue("KOUOFEN",
+								bos[i].getStringValue("FENZHI"));
+					}else {
+						update.putFieldValue("KOUOFEN",
+								bos[i].getStringValue("KOUOFEN"));
+					}
+					
+				}
+				_sqllist.add(update.getSQL());
+			}
+			dmo.executeBatchByDS(null, _sqllist);
+			message = "保存成功";
+		} catch (Exception e) {
+			message = "保存失败，请和管理员联系处理异常";
+			e.printStackTrace();
+		}
+		return message;
+	}
+
+	private boolean isEmpty(String val) {
+		if (val == null || "".equals(val)) {
+			return true;
+		}
+		return false;
 	}
 }
