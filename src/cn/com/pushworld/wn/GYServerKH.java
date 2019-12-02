@@ -141,141 +141,150 @@ public class GYServerKH extends AbstractWorkPanel implements
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == btn_save) {//保存按钮
 			try {
-/////////******************************************************************************************************************
-//				临时保留，如果下面未注释的代码依然有问题，可以启动这段代码
-//				final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil
-//						.lookUpRemoteService(WnSalaryServiceIfc.class);
-//				List<String> list=new ArrayList<String>();
-//				//判断当前选中柜员评分是否结束
-//			    final	BillVO[] bos = billListPanel_User_check.getBillVOs();//这里获取到的是当前选中柜员的得分
-//			   for (int i = 0; i < bos.length; i++) {
-//				if("评分结束".equals(bos[i].getStringValue("state"))){
-//					list.add(bos[i].getStringValue("id"));
-//				}
-//			   }
-//			   if(list.size()==bos.length){
-//				   MessageBox.show(this,"当前柜员评分已经结束，请勿重复操作！！！");
-//				   return;
-//			   }
-//				new SplashWindow(this, new AbstractAction() {
-//
-//					@Override
-//					public void actionPerformed(ActionEvent e) {//重写方法，将方法放到后台执行
-//						message=service.saveGradeScore(bos);
-//					}
-//					
-//				});
-//				if(message.contains("成功")){
-//					MessageBox.show(this,message);
-//					billListPanel_User_check.refreshData();
-//				}else{
-//					MessageBox.show(this,message);
-//				}
-/////////******************************************************************************************************************				
-
 				List<String> testList=new ArrayList<String>();
+				 final	BillVO[] bos = billListPanel_User_check.getBillVOs();//这里获取到的是当前选中柜员的得分
+				   for (int i = 0; i < bos.length; i++) {
+					if("评分结束".equals(bos[i].getStringValue("state"))){
+						testList.add(bos[i].getStringValue("id"));
+					}
+				   }
+				   if(testList.size()==bos.length){
+				   MessageBox.show(this,"当前柜员评分已经结束，请勿重复操作！！！");
+				   return;
+			   }
+				final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil
+						.lookUpRemoteService(WnSalaryServiceIfc.class);
+				List<String> list=new ArrayList<String>();
 				//判断当前选中柜员评分是否结束
-				BillVO[] bos = billListPanel_User_check.getBillVOs();//这里获取到的是当前选中柜员的得分
 			   for (int i = 0; i < bos.length; i++) {
 				if("评分结束".equals(bos[i].getStringValue("state"))){
-					testList.add(bos[i].getStringValue("id"));
+					list.add(bos[i].getStringValue("id"));
 				}
 			   }
-			   if(testList.size()==bos.length){
-			   MessageBox.show(this,"当前柜员评分已经结束，请勿重复操作！！！");
-			   return;
-		   }
-				StringBuffer sb = new StringBuffer("");
-				Double FENZHI = 0.0;
-				Double KOUOFEN = 0.0;
-				Double result = 0.0;
-				String pfreason = "";
-				int count = 1;
-				BillVO vov = billListPanel_User_Post.getSelectedBillVO();
-				// String pfUsercode=vov.getStringValue("USERCODE");
-				String usercode = billListPanel_User_Post.getSelectedBillVO()
-						.getStringValue("usercode");
-				pfTime = UIUtil.getStringValueByDS(null,
-						"SELECT max(PFTIME) FROM WN_GYPF_TABLE WHERE USERCODE='"
-								+ usercode + "'");
-				if (vov== null) {//这里判断的是当前有没有选中一名柜员进行操作
-					MessageBox.show(this, "请选中一位柜员进行操作!!!");
-					return;
-				}
-				List list = new ArrayList<String>();
-				UpdateSQLBuilder update = new UpdateSQLBuilder(
-						billListPanel_User_check.getTempletVO().getTablename());
-				for (int i = 0; i < bos.length; i++) {//验证
-					if (bos[i].getStringValue("xiangmu").equals("总分")) {
-						continue;
-					}
-					if (bos[i].getStringValue("KOUOFEN") != null
-							&& !bos[i].getStringValue("KOUOFEN").isEmpty()) {
-						KOUOFEN = Double.parseDouble(bos[i]
-								.getStringValue("KOUOFEN"));
-						FENZHI = Double.parseDouble(bos[i]
-								.getStringValue("FENZHI"));
-						if (FENZHI < KOUOFEN) {//判断当前扣分项是不是大于总分值
-							sb.append("第" + (count) + "行数据项目为["
-									+ bos[i].getStringValue("XIANGMU")
-									+ "],指标为["
-									+ bos[i].getStringValue("ZHIBIAO")
-									+ "]扣分项大于分值  \n");
-						}
-					} else {//判断当前扣分项是否为空
-						sb.append("第" + (count) + "行数据项目为["
-								+ bos[i].getStringValue("XIANGMU") + "],指标为["
-								+ bos[i].getStringValue("ZHIBIAO")
-								+ "]扣分项为空  \n");
-					}
-				}
+			   if(list.size()==bos.length){
+				   MessageBox.show(this,"当前柜员评分已经结束，请勿重复操作！！！");
+				   return;
+			   }
+				new SplashWindow(this, new AbstractAction() {
 
-				if (sb.length() <= 0) {
-					for (int i = 0; i < bos.length - 1; i++) {
-						KOUOFEN = Double.parseDouble(bos[i]
-								.getStringValue("KOUOFEN"));
-						FENZHI = Double.parseDouble(bos[i]
-								.getStringValue("FENZHI"));
-						if (KOUOFEN != 0) {
-							KOUOFEN = FENZHI;
-						}
-						pfreason = bos[i].getStringValue("FHREASON");
-						result = result + KOUOFEN;
-						count = count + 1;
-						update.setWhereCondition("id='"
-								+ bos[i].getStringValue("id") + "'");
-						update.putFieldValue("KOUOFEN", KOUOFEN);
-
-						update.putFieldValue("FHREASON", pfreason);
-						list.add(update.getSQL());
+					@Override
+					public void actionPerformed(ActionEvent e) {//重写方法，将方法放到后台执行
+						message=service.saveGradeScore(bos);
 					}
-					billListPanel_User_check.setRealValueAt(
-							String.valueOf(100 - result), bos.length - 1,
-							"KOUOFEN");
-					update.setWhereCondition("id='"
-							+ bos[bos.length - 1].getStringValue("id") + "'");
-					update.putFieldValue("KOUOFEN", 100 - result);
-					list.add(update.getSQL());
-					//这个update负责修改所有的值
-					UpdateSQLBuilder update2 = new UpdateSQLBuilder(
-							billListPanel_User_check.getTempletVO()
-									.getTablename());
-					update2.setWhereCondition("USERCODE='"
-							+ vov.getStringValue("USERCODE")
-							+ "' and USERDEPT='"
-							+ vov.getStringValue("USERDEPT") + "' and PFTIME ='"+pfTime+"'");
-					update2.putFieldValue("PFUSERNAME", PFUSERNAME);
-					update2.putFieldValue("PFSUERCODE", PFSUERCODE);
-					String PFDEPTCODE = USERCODES.get(PFUSERDEPT).toString();
-					update2.putFieldValue("PFUSERDEPT", PFDEPTCODE);
-					update2.putFieldValue("FHRESULT", "未复核");
-					list.add(update2.getSQL());
-					UIUtil.executeBatchByDS(null, list);
-					MessageBox.show(this, "保存完成");
+				});
+				if(message.contains("成功")){
+					MessageBox.show(this,message);
 					billListPanel_User_check.refreshData();
-				} else {
-					MessageBox.show(this, sb.toString());
+				}else{
+					MessageBox.show(this,message);
 				}
+			
+
+				   
+				   //代码废弃，暂时保留
+//				List<String> testList=new ArrayList<String>();
+//				//判断当前选中柜员评分是否结束
+//				BillVO[] bos = billListPanel_User_check.getBillVOs();//这里获取到的是当前选中柜员的得分
+//			   for (int i = 0; i < bos.length; i++) {
+//				if("评分结束".equals(bos[i].getStringValue("state"))){
+//					testList.add(bos[i].getStringValue("id"));
+//				}
+//			   }
+//			   if(testList.size()==bos.length){
+//			   MessageBox.show(this,"当前柜员评分已经结束，请勿重复操作！！！");
+//			   return;
+//		   }
+//				StringBuffer sb = new StringBuffer("");
+//				Double FENZHI = 0.0;
+//				Double KOUOFEN = 0.0;
+//				Double result = 0.0;
+//				String pfreason = "";
+//				int count = 1;
+//				BillVO vov = billListPanel_User_Post.getSelectedBillVO();
+//				// String pfUsercode=vov.getStringValue("USERCODE");
+//				String usercode = billListPanel_User_Post.getSelectedBillVO()
+//						.getStringValue("usercode");
+//				pfTime = UIUtil.getStringValueByDS(null,
+//						"SELECT max(PFTIME) FROM WN_GYPF_TABLE WHERE USERCODE='"
+//								+ usercode + "'");
+//				if (vov== null) {//这里判断的是当前有没有选中一名柜员进行操作
+//					MessageBox.show(this, "请选中一位柜员进行操作!!!");
+//					return;
+//				}
+//				List list = new ArrayList<String>();
+//				UpdateSQLBuilder update = new UpdateSQLBuilder(
+//						billListPanel_User_check.getTempletVO().getTablename());
+//				for (int i = 0; i < bos.length; i++) {//验证
+//					if (bos[i].getStringValue("xiangmu").equals("总分")) {
+//						continue;
+//					}
+//					if (bos[i].getStringValue("KOUOFEN") != null
+//							&& !bos[i].getStringValue("KOUOFEN").isEmpty()) {
+//						KOUOFEN = Double.parseDouble(bos[i]
+//								.getStringValue("KOUOFEN"));
+//						FENZHI = Double.parseDouble(bos[i]
+//								.getStringValue("FENZHI"));
+//						if (FENZHI < KOUOFEN) {//判断当前扣分项是不是大于总分值
+//							sb.append("第" + (count) + "行数据项目为["
+//									+ bos[i].getStringValue("XIANGMU")
+//									+ "],指标为["
+//									+ bos[i].getStringValue("ZHIBIAO")
+//									+ "]扣分项大于分值  \n");
+//						}
+//					} else {//判断当前扣分项是否为空
+//						sb.append("第" + (count) + "行数据项目为["
+//								+ bos[i].getStringValue("XIANGMU") + "],指标为["
+//								+ bos[i].getStringValue("ZHIBIAO")
+//								+ "]扣分项为空  \n");
+//					}
+//				}
+//
+//				if (sb.length() <= 0) {
+//					for (int i = 0; i < bos.length - 1; i++) {
+//						KOUOFEN = Double.parseDouble(bos[i]
+//								.getStringValue("KOUOFEN"));
+//						FENZHI = Double.parseDouble(bos[i]
+//								.getStringValue("FENZHI"));
+//						if (KOUOFEN != 0) {
+//							KOUOFEN = FENZHI;
+//						}
+//						pfreason = bos[i].getStringValue("FHREASON");
+//						result = result + KOUOFEN;
+//						count = count + 1;
+//						update.setWhereCondition("id='"
+//								+ bos[i].getStringValue("id") + "'");
+//						update.putFieldValue("KOUOFEN", KOUOFEN);
+//
+//						update.putFieldValue("FHREASON", pfreason);
+//						list.add(update.getSQL());
+//					}
+//					billListPanel_User_check.setRealValueAt(
+//							String.valueOf(100 - result), bos.length - 1,
+//							"KOUOFEN");
+//					update.setWhereCondition("id='"
+//							+ bos[bos.length - 1].getStringValue("id") + "'");
+//					update.putFieldValue("KOUOFEN", 100 - result);
+//					list.add(update.getSQL());
+//					//这个update负责修改所有的值
+//					UpdateSQLBuilder update2 = new UpdateSQLBuilder(
+//							billListPanel_User_check.getTempletVO()
+//									.getTablename());
+//					update2.setWhereCondition("USERCODE='"
+//							+ vov.getStringValue("USERCODE")
+//							+ "' and USERDEPT='"
+//							+ vov.getStringValue("USERDEPT") + "' and PFTIME ='"+pfTime+"'");
+//					update2.putFieldValue("PFUSERNAME", PFUSERNAME);
+//					update2.putFieldValue("PFSUERCODE", PFSUERCODE);
+//					String PFDEPTCODE = USERCODES.get(PFUSERDEPT).toString();
+//					update2.putFieldValue("PFUSERDEPT", PFDEPTCODE);
+//					update2.putFieldValue("FHRESULT", "未复核");
+//					list.add(update2.getSQL());
+//					UIUtil.executeBatchByDS(null, list);
+//					MessageBox.show(this, "保存完成");
+//					billListPanel_User_check.refreshData();
+//				} else {
+//					MessageBox.show(this, sb.toString());
+//				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
@@ -298,155 +307,152 @@ public class GYServerKH extends AbstractWorkPanel implements
 							+ "】服务质量考核已经结束，无须重复结束！");
 					return;
 				};
-				
 			    final	BillVO[] bos = billListPanel_User_check.getBillVOs();
-//********************************************************************************************************
-//			    这段代码保留，如果下面的代码出现找不到异常的情况下，可以启动这段代码
-//				//获取到复核人姓名，以及复核人部门
-//				HashMap<String, String> map = UIUtil.getHashMapBySQLByDS(null,
-//						"select id,name from pub_corp_dept");
-//				//PFUSERNAME 评分人名称
-//				final String pfUserDept=map.get(PFUSERDEPT);//评分人机构号
-//				final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil
-//						.lookUpRemoteService(WnSalaryServiceIfc.class);
-//				new SplashWindow(this,new AbstractAction() {
-//					
-//					@Override
-//					public void actionPerformed(ActionEvent e) {
-//					message=service.finishGradeScore(bos,PFUSERNAME,PFSUERCODE,pfUserDept);
-//						
-//					}
-//				});
-//				if(message.contains("成功")){
-//					MessageBox.show(this,message);
-//					billListPanel_User_check.refreshData();
-//				}else{
-//					MessageBox.show(this,message);
-//				}
-//********************************************************************************************************		
-			    
-				Double FENZHI=0.0;
-				Double KOUOFEN=0.0;
-				Double result=0.0;
-				StringBuffer sb = new StringBuffer();
+				//获取到复核人姓名，以及复核人部门
 				HashMap<String, String> map = UIUtil.getHashMapBySQLByDS(null,
 						"select id,name from pub_corp_dept");
-				UpdateSQLBuilder update3 = new UpdateSQLBuilder(
-						billListPanel_User_check.getTempletVO().getTablename());
-				update3.setWhereCondition("USERCODE='" + gyUserCode
-						+ "' and PFTIME='" + pfTime + "'");
-				// MessageBox.show(this,billListPanel_User_check.getTempletVO().getTablename());
-				for (int j = 0; j < bos.length; j++) {//判断当前考核得分是否存在为空的值
-					if (bos[j].getStringValue("KOUOFEN") == null
-							|| bos[j].getStringValue("KOUOFEN").isEmpty()) {
-						sb.append("部门为["
-								+ map.get(bos[j].getStringValue("USERDEPT"))
-								+ "],柜员名称为["
-								+ bos[j].getStringValue("USERNAME")
-								+ "]评分未完成！ \n");
-					}
-				}
-				if (sb.length() > 0) {
-					if (MessageBox.confirm(this, "当前柜员【" + gyUserName
-							+ "】尚未完成,确定强制结束吗？  \n" + sb.toString())) {
-						UpdateSQLBuilder update = new UpdateSQLBuilder(
-								billListPanel_User_check.getTempletVO()
-										.getTablename());
-
-						List<String> sqlList = new ArrayList<String>();
-						UpdateSQLBuilder update2 = new UpdateSQLBuilder(
-								"WN_GYPF_TABLE");
-						for (int j = 0; j < bos.length; j++) {
-							if (bos[j].getStringValue("XIANGMU").equals("总分")) {
-								continue;
-							}
-							update.setWhereCondition(" USERCODE='" + gyUserCode
-									+ "' and PFTIME='" + pfTime
-									+ "' and zhibiao='"
-									+ bos[j].getStringValue("zhibiao") + "'");
-							// 获取到扣分项
-							FENZHI = Double.parseDouble(bos[j]
-									.getStringValue("FENZHI"));
-							if (bos[j].getStringValue("KOUOFEN") == null) {
-								KOUOFEN = 0.0;
-							}
-							KOUOFEN = Double.parseDouble(bos[j]
-									.getStringValue("KOUOFEN"));
-							if (FENZHI <= KOUOFEN || KOUOFEN != 0) {
-								KOUOFEN = FENZHI;
-							}
-							System.out.println("当前扣分项:"
-									+ bos[j].getStringValue("xiangmu") + ",扣分="
-									+ KOUOFEN);
-							result = result - KOUOFEN;
-							update.putFieldValue("KOUOFEN", KOUOFEN);
-							update.putFieldValue("PFUSERNAME", PFUSERNAME);
-							update.putFieldValue("PFSUERCODE", PFSUERCODE);
-							update.putFieldValue("PFUSERDEPT", PFDEPTCODE);
-							sqlList.add(update.getSQL());
-						}
-						UIUtil.executeBatchByDS(null, sqlList);
-						update2.setWhereCondition("USERCODE='" + gyUserCode
-								+ "' and pftime='" + pfTime
-								+ "' and xiangmu='总分'");
-						update2.putFieldValue("state", "评分结束");
-						update2.putFieldValue("kouofen", result);
-						update2.putFieldValue("PFUSERNAME", PFUSERNAME);
-						update2.putFieldValue("PFSUERCODE", PFSUERCODE);
-						update2.putFieldValue("PFUSERDEPT", PFDEPTCODE);
-						UIUtil.executeUpdateByDS(null, update2.getSQL());
-						MessageBox.show(this, "评分结束成功");
-						billListPanel_User_check.refreshData();
-					} else {
-						return;
-					}
-				} else {
-					UpdateSQLBuilder update = new UpdateSQLBuilder(
-							billListPanel_User_check.getTempletVO()
-									.getTablename());
-					List<String> sqlList = new ArrayList<String>();
-					UpdateSQLBuilder update2 = new UpdateSQLBuilder(
-							"WN_GYPF_TABLE");
-					for (int j = 0; j < bos.length; j++) {
-						update.setWhereCondition(" USERCODE='" + gyUserCode
-								+ "' and PFTIME='" + pfTime + "' and zhibiao='"
-								+ bos[j].getStringValue("zhibiao") + "'");
-						// 获取到扣分项
-						if (bos[j].getStringValue("XIANGMU").equals("总分")) {
-							continue;
-						}
-						FENZHI = Double.parseDouble(bos[j]
-								.getStringValue("FENZHI"));
-						if (bos[j].getStringValue("KOUOFEN") == null) {
-							KOUOFEN = 0.0;
-						}
-						KOUOFEN = Double.parseDouble(bos[j]
-								.getStringValue("KOUOFEN"));
-						if (FENZHI <= KOUOFEN || KOUOFEN != 0) {
-							KOUOFEN = FENZHI;
-						}
-						update.putFieldValue("state", "评分结束");
-						update.putFieldValue("KOUOFEN", KOUOFEN);
-						update.putFieldValue("PFUSERNAME", PFUSERNAME);
-						update.putFieldValue("PFSUERCODE", PFSUERCODE);
-						update.putFieldValue("PFUSERDEPT", PFDEPTCODE);
+				//PFUSERNAME 评分人名称
+				final String pfUserDept=map.get(PFUSERDEPT);//评分人机构号
+				final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil
+						.lookUpRemoteService(WnSalaryServiceIfc.class);
+				new SplashWindow(this,new AbstractAction() {
+					
+					@Override
+					public void actionPerformed(ActionEvent e) {
+					message=service.finishGradeScore(bos,PFUSERNAME,PFSUERCODE,pfUserDept);
 						
-						sqlList.add(update.getSQL());
-						result = result - KOUOFEN;
 					}
-					UIUtil.executeBatchByDS(null, sqlList);
-					update2.setWhereCondition("USERCODE='" + gyUserCode
-							+ "' and pftime='" + pfTime + "' and xiangmu='总分'");
-					update2.putFieldValue("state", "评分结束");
-					update2.putFieldValue("kouofen", result);
-					update2.putFieldValue("PFUSERNAME", PFUSERNAME);
-					update2.putFieldValue("PFSUERCODE", PFSUERCODE);
-					update2.putFieldValue("PFUSERDEPT", PFDEPTCODE);
-					update2.putFieldValue("fhresult", "未复核");
-					UIUtil.executeUpdateByDS(null, update2.getSQL());
-					MessageBox.show(this, "评分结束成功");
+				});
+				if(message.contains("成功")){
+					MessageBox.show(this,message);
 					billListPanel_User_check.refreshData();
+				}else{
+					MessageBox.show(this,message);
 				}
+	
+			    //代码废弃 ，暂时保留
+//				Double FENZHI=0.0;
+//				Double KOUOFEN=0.0;
+//				Double result=0.0;
+//				StringBuffer sb = new StringBuffer();
+//				HashMap<String, String> map = UIUtil.getHashMapBySQLByDS(null,
+//						"select id,name from pub_corp_dept");
+//				UpdateSQLBuilder update3 = new UpdateSQLBuilder(
+//						billListPanel_User_check.getTempletVO().getTablename());
+//				update3.setWhereCondition("USERCODE='" + gyUserCode
+//						+ "' and PFTIME='" + pfTime + "'");
+//				// MessageBox.show(this,billListPanel_User_check.getTempletVO().getTablename());
+//				for (int j = 0; j < bos.length; j++) {//判断当前考核得分是否存在为空的值
+//					if (bos[j].getStringValue("KOUOFEN") == null
+//							|| bos[j].getStringValue("KOUOFEN").isEmpty()) {
+//						sb.append("部门为["
+//								+ map.get(bos[j].getStringValue("USERDEPT"))
+//								+ "],柜员名称为["
+//								+ bos[j].getStringValue("USERNAME")
+//								+ "]评分未完成！ \n");
+//					}
+//				}
+//				if (sb.length() > 0) {
+//					if (MessageBox.confirm(this, "当前柜员【" + gyUserName
+//							+ "】尚未完成,确定强制结束吗？  \n" + sb.toString())) {
+//						UpdateSQLBuilder update = new UpdateSQLBuilder(
+//								billListPanel_User_check.getTempletVO()
+//										.getTablename());
+//
+//						List<String> sqlList = new ArrayList<String>();
+//						UpdateSQLBuilder update2 = new UpdateSQLBuilder(
+//								"WN_GYPF_TABLE");
+//						for (int j = 0; j < bos.length; j++) {
+//							if (bos[j].getStringValue("XIANGMU").equals("总分")) {
+//								continue;
+//							}
+//							update.setWhereCondition(" USERCODE='" + gyUserCode
+//									+ "' and PFTIME='" + pfTime
+//									+ "' and zhibiao='"
+//									+ bos[j].getStringValue("zhibiao") + "'");
+//							// 获取到扣分项
+//							FENZHI = Double.parseDouble(bos[j]
+//									.getStringValue("FENZHI"));
+//							if (bos[j].getStringValue("KOUOFEN") == null) {
+//								KOUOFEN = 0.0;
+//							}
+//							KOUOFEN = Double.parseDouble(bos[j]
+//									.getStringValue("KOUOFEN"));
+//							if (FENZHI <= KOUOFEN || KOUOFEN != 0) {
+//								KOUOFEN = FENZHI;
+//							}
+//							System.out.println("当前扣分项:"
+//									+ bos[j].getStringValue("xiangmu") + ",扣分="
+//									+ KOUOFEN);
+//							result = result - KOUOFEN;
+//							update.putFieldValue("KOUOFEN", KOUOFEN);
+//							update.putFieldValue("PFUSERNAME", PFUSERNAME);
+//							update.putFieldValue("PFSUERCODE", PFSUERCODE);
+//							update.putFieldValue("PFUSERDEPT", PFDEPTCODE);
+//							sqlList.add(update.getSQL());
+//						}
+//						UIUtil.executeBatchByDS(null, sqlList);
+//						update2.setWhereCondition("USERCODE='" + gyUserCode
+//								+ "' and pftime='" + pfTime
+//								+ "' and xiangmu='总分'");
+//						update2.putFieldValue("state", "评分结束");
+//						update2.putFieldValue("kouofen", result);
+//						update2.putFieldValue("PFUSERNAME", PFUSERNAME);
+//						update2.putFieldValue("PFSUERCODE", PFSUERCODE);
+//						update2.putFieldValue("PFUSERDEPT", PFDEPTCODE);
+//						UIUtil.executeUpdateByDS(null, update2.getSQL());
+//						MessageBox.show(this, "评分结束成功");
+//						billListPanel_User_check.refreshData();
+//					} else {
+//						return;
+//					}
+//				} else {
+//					UpdateSQLBuilder update = new UpdateSQLBuilder(
+//							billListPanel_User_check.getTempletVO()
+//									.getTablename());
+//					List<String> sqlList = new ArrayList<String>();
+//					UpdateSQLBuilder update2 = new UpdateSQLBuilder(
+//							"WN_GYPF_TABLE");
+//					for (int j = 0; j < bos.length; j++) {
+//						update.setWhereCondition(" USERCODE='" + gyUserCode
+//								+ "' and PFTIME='" + pfTime + "' and zhibiao='"
+//								+ bos[j].getStringValue("zhibiao") + "'");
+//						// 获取到扣分项
+//						if (bos[j].getStringValue("XIANGMU").equals("总分")) {
+//							continue;
+//						}
+//						FENZHI = Double.parseDouble(bos[j]
+//								.getStringValue("FENZHI"));
+//						if (bos[j].getStringValue("KOUOFEN") == null) {
+//							KOUOFEN = 0.0;
+//						}
+//						KOUOFEN = Double.parseDouble(bos[j]
+//								.getStringValue("KOUOFEN"));
+//						if (FENZHI <= KOUOFEN || KOUOFEN != 0) {
+//							KOUOFEN = FENZHI;
+//						}
+//						update.putFieldValue("state", "评分结束");
+//						update.putFieldValue("KOUOFEN", KOUOFEN);
+//						update.putFieldValue("PFUSERNAME", PFUSERNAME);
+//						update.putFieldValue("PFSUERCODE", PFSUERCODE);
+//						update.putFieldValue("PFUSERDEPT", PFDEPTCODE);
+//						
+//						sqlList.add(update.getSQL());
+//						result = result - KOUOFEN;
+//					}
+//					UIUtil.executeBatchByDS(null, sqlList);
+//					update2.setWhereCondition("USERCODE='" + gyUserCode
+//							+ "' and pftime='" + pfTime + "' and xiangmu='总分'");
+//					update2.putFieldValue("state", "评分结束");
+//					update2.putFieldValue("kouofen", result);
+//					update2.putFieldValue("PFUSERNAME", PFUSERNAME);
+//					update2.putFieldValue("PFSUERCODE", PFSUERCODE);
+//					update2.putFieldValue("PFUSERDEPT", PFDEPTCODE);
+//					update2.putFieldValue("fhresult", "未复核");
+//					UIUtil.executeUpdateByDS(null, update2.getSQL());
+//					MessageBox.show(this, "评分结束成功");
+//					billListPanel_User_check.refreshData();
+//				}
 			} catch (Exception eq) {
 				MessageBox.show(this, "评分结束失败");
 				eq.printStackTrace();
