@@ -172,7 +172,7 @@ public class YearAverageDailyManAnd {
 	}
 
 	/**
-	 * ---对私定期定期 单身
+	 * ---对私定存款 单身
 	 * 
 	 * @param date
 	 * @return

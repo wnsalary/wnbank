@@ -34,7 +34,7 @@ public class JDFKMhuizong extends AbstractWorkPanel implements ActionListener {
 		removeButton.addActionListener(this);
 		listPanel.addBatchBillListButton(new WLTButton[] { updateButton,
 				removeButton, submitButton });
-		listPanel.getQuickQueryPanel().addBillQuickActionListener(this);// 获取到快速查询事件
+//		listPanel.getQuickQueryPanel().addBillQuickActionListener(this);// 获取到快速查询事件
 		listPanel.repaintBillListButton();
 		this.add(listPanel);
 	}
@@ -47,23 +47,22 @@ public class JDFKMhuizong extends AbstractWorkPanel implements ActionListener {
 			removeData();
 		} else if (e.getSource() == updateButton) {
 			updateData();
-		} else if (listPanel.getQuickQueryPanel() == e.getSource()) {
-			QuickQuery();
+//		} else if (listPanel.getQuickQueryPanel() == e.getSource()) {
+//			QuickQuery();
 		}
 	}
 
 	// 重写快速查询
 	private void QuickQuery() {
-		/*
-		 * String
-		 * condition="1=1 "+listPanel.getQuickQueryPanel().getQuerySQLCondition
-		 * (); String
-		 * GY_Name=ClientEnvironment.getInstance().getLoginUserCode();
-		 * //获取到当前用户的code System.out.println("code:"+GY_Name);
-		 * condition=condition+" and GY_ID='"+GY_Name+"'";
-		 * System.out.println(condition);
-		 * listPanel.QueryDataByCondition(condition);
-		 */
+		
+		 String condition="1=1 "+listPanel.getQuickQueryPanel().getQuerySQLCondition(); 
+		 String GY_Name=ClientEnvironment.getInstance().getLoginUserCode();
+		 //获取到当前用户的code
+		 System.out.println("code:"+GY_Name);
+		 condition=condition+" and GY_ID='"+GY_Name+"'";
+		  System.out.println(condition);
+		  listPanel.QueryDataByCondition(condition);
+		 
 	}
 
 	// 修改数据

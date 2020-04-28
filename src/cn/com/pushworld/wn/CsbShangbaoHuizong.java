@@ -44,7 +44,7 @@ public class CsbShangbaoHuizong extends AbstractWorkPanel implements
 		btn_edit = list_01.getBillListBtn("$列表弹出编辑");
 		btn_edit.addActionListener(this);
 		list_01.setVisible(true);
-		list_01.getQuickQueryPanel().addBillQuickActionListener(this);// 获取到快速查询事件
+//		list_01.getQuickQueryPanel().addBillQuickActionListener(this);// 获取到快速查询事件
 		this.add(list_01);
 	}
 
@@ -56,8 +56,8 @@ public class CsbShangbaoHuizong extends AbstractWorkPanel implements
 			onDel();
 		} else if (obj == btn_edit) {
 			onEdit();
-		} else if (list_01.getQuickQueryPanel() == e.getSource()) {
-			QuickQuery();
+//		} else if (list_01.getQuickQueryPanel() == e.getSource()) {
+//			QuickQuery();
 		}
 	}
 

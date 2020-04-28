@@ -141,7 +141,7 @@ public class StaffRadioChangeMonitor extends AbstractWorkPanel implements
 				//判断岗位系数是否存在
 				SimpleDateFormat simple=new SimpleDateFormat("yyyy-MM");
 				String handleDate= getLastMonth(simple.format(new Date()));
-				String[]existsDate = UIUtil.getStringArrayFirstColByDS(null, "SELECT 1 FROM wn_workerStadio WHERE CREATETIME='"+handleDate+"'");
+				String[] existsDate = UIUtil.getStringArrayFirstColByDS(null, "SELECT 1 FROM wn_workerStadio WHERE CREATETIME='"+handleDate+"'");
 				if(existsDate.length>0){//当前数据已经存在，是否需要重新导入
 					int result = MessageBox.showOptionDialog(this, "当前员工系数已经存在，是否需要重新导入", "提示",
 							new String[] { "是", "否" }, 1);
@@ -154,7 +154,10 @@ public class StaffRadioChangeMonitor extends AbstractWorkPanel implements
 						return;
 					}
 				}else {
-					return;
+					WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil
+							.lookUpRemoteService(WnSalaryServiceIfc.class);
+					service.insertStaffRadio(handleDate);
+					MessageBox.show(this,"数据导入成功");
 				}
 			} catch (Exception e2) {
 				e2.printStackTrace();
