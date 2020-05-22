@@ -82,7 +82,7 @@ public class BMqualitativeScorePanel extends AbstractWorkPanel implements
 				} else if ("安全保卫部".equals(PFUSERDEPTNAME)) {
 					deptN = "安全保卫";
 				} else if ("内控合规部".equals(PFUSERDEPTNAME)) {
-					deptN = "内控合规";
+					deptN = "案件防控";
 				}
 
 				for (int i = 0; i <= bos.length - 1; i++) {
@@ -167,8 +167,8 @@ public class BMqualitativeScorePanel extends AbstractWorkPanel implements
 					sql = sql + " and xiangmu like '安全保卫%'";
 					deptN = "安全保卫";
 				} else if ("内控合规部".equals(PFUSERDEPTNAME)) {
-					sql = sql + " and xiangmu like '内控合规%'";
-					deptN = "内控合规";
+					sql = sql + " and xiangmu like '案件防控%'";
+					deptN = "案件防控";
 				}
 				String _sql = sql + " and KOUFEN IS NULL";
 				HashVO[] vos = UIUtil.getHashVoArrayByDS(null, _sql);// 查询当前部门尚未评分项
@@ -305,7 +305,7 @@ public class BMqualitativeScorePanel extends AbstractWorkPanel implements
 				billListPanel_Dept_check.queryDataByCondition(
 						"1=1 and deptname='" + selectedDeptName
 								+ "' and xiangmu like '文明客户服务部%'  and PFTIME='"
-								+ maxTime + "' ", "fenzhi");
+								+ maxTime + "' ", "xiangmu");
 
 				System.out.println("查询的SQL:"
 						+ billListPanel_Dept_check.getQuickQueryPanel()
@@ -326,12 +326,12 @@ public class BMqualitativeScorePanel extends AbstractWorkPanel implements
 			} else if ("内控合规部".equals(deptName)) {
 				billListPanel_Dept_check.queryDataByCondition(
 						"1=1 and deptname='" + selectedDeptName
-								+ "' and xiangmu like '内控合规%' and PFTIME='"
-								+ maxTime + "'", "fenzhi");
+								+ "' and xiangmu like '案件防控%' and PFTIME='"
+								+ maxTime + "'", "xiangmu");
 				String state = UIUtil.getStringValueByDS(null,
 						"select state from WN_BMPF_TABLE WHERE deptname='"
 								+ selectedDeptName
-								+ "' and xiangmu like '内控合规%'  and PFTIME='"
+								+ "' and xiangmu like '案件防控%'  and PFTIME='"
 								+ maxTime + "' AND  ROWNUM=1");
 				if ("评分结束".equals(state)) {
 					billListPanel_Dept_check.setItemEditable("KOUFEN", false);
@@ -344,7 +344,7 @@ public class BMqualitativeScorePanel extends AbstractWorkPanel implements
 				billListPanel_Dept_check.queryDataByCondition(
 						"1=1 and deptname='" + selectedDeptName
 								+ "' and xiangmu like '安全保卫%' and  PFTIME='"
-								+ maxTime + "'", "fenzhi");
+								+ maxTime + "'", "xiangmu");
 				String state = UIUtil.getStringValueByDS(null,
 						"select state from WN_BMPF_TABLE WHERE deptname='"
 								+ selectedDeptName
@@ -361,7 +361,7 @@ public class BMqualitativeScorePanel extends AbstractWorkPanel implements
 				billListPanel_Dept_check.queryDataByCondition(
 						"1=1 and deptname='" + selectedDeptName
 								+ "' and xiangmu like '党建%' and PFTIME='"
-								+ maxTime + "'", "fenzhi");
+								+ maxTime + "'", "xiangmu");
 				String state = UIUtil.getStringValueByDS(null,
 						"select state from WN_BMPF_TABLE WHERE deptname='"
 								+ selectedDeptName
