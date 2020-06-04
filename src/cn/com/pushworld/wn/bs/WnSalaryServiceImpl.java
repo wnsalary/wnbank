@@ -213,7 +213,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			HashVO[] vos = dmo
 					.getHashVoArrayByDS(
 							null,
-							"select * from sal_target_list where type='部门定性指标' AND (name LIKE '文明客户服务部%' OR name LIKE '党建工作%' OR name LIKE '内控合规%' OR name LIKE '安全保卫%')");
+							"select * from sal_target_list where type='部门定性指标' AND (name LIKE '文明客户服务部%' OR name LIKE '党建工作%' OR name LIKE '案件防控%' OR name LIKE '安全保卫%')");
 			HashMap deptMap = getdeptName();
 			InsertSQLBuilder insertSQLBuilder = new InsertSQLBuilder(
 					"wn_BMPF_table");
@@ -328,7 +328,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 							list.add(insert.getSQL());
 							aqsumList.add(deptcodes[j]);
 						}
-					} else if ("内控合规".equals(name)) {
+					} else if ("案件防控".equals(name)) {
 						if (!nksumList.contains(deptcodes[j])) {
 							insert.putFieldValue("PLANID", planid);
 							insert.putFieldValue("deptcode", deptcodes[j]);
@@ -3462,7 +3462,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 										+ String.valueOf((Integer.valueOf(year) - 1))
 										+ "-09' or to_char(to_date(pftime,'yyyy-mm-dd'),'yyyy-mm')='"
 										+ String.valueOf((Integer.valueOf(year) - 1))
-										+ "-09') and xiangmu='文明客户服务部' and state='评分结束') group by deptname) b where a.deptname=b.deptname ");
+										+ "-12') and xiangmu='文明客户服务部' and state='评分结束') group by deptname) b where a.deptname=b.deptname ");
 			}
 
 			map = dmo
