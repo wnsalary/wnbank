@@ -24,7 +24,7 @@ import cn.com.infostrategy.ui.common.SplashWindow;
 import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.infostrategy.ui.common.WLTButton;
 import cn.com.infostrategy.ui.mdata.BillCardDialog;
-import cn.com.pushworld.salary.ui.paymanage.RefDialog_Month;
+//import cn.com.pushworld.salary.ui.paymanage.RefDialog_Month;
 
 /**
  * 

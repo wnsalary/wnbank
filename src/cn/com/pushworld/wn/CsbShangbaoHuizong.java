@@ -29,7 +29,7 @@ public class CsbShangbaoHuizong extends AbstractWorkPanel implements
 	private BillListPanel list_01;
 	private WLTButton btn_submit, btn_edit, btn_del;
 	private String id;
-
+	private String deptId=ClientEnvironment.getInstance().getLoginUserDeptId();
 	@Override
 	public void initialize() {
 		id = ClientEnvironment.getCurrLoginUserVO().getId();

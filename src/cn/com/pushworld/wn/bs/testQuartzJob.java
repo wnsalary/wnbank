@@ -8,12 +8,13 @@ public class testQuartzJob implements WLTJobIFC {
 
 	@Override
 	public String run() throws Exception {
-		File file=new File("D:\\testjob.txt");
+		/*File file=new File("D:\\testjob.txt");
 		if(file.exists()){
 			file.delete();
 		}else {
 			file.createNewFile();
-		}
+		}*/
+		System.out.println("开始执行任务~~");
 		return "执行成功";
 	}
 }
