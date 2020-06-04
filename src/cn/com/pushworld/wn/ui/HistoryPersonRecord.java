@@ -52,7 +52,7 @@ public class HistoryPersonRecord implements WLTJobIFC {
 	private String getSYYCMonth() {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(new Date());
-		cal.add(Calendar.MONTH, -2);
+		cal.add(Calendar.MONTH, -1);
 		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DATE));
 		Date otherDate = cal.getTime();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM");

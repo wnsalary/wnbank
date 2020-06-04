@@ -7,7 +7,7 @@ import java.util.List;
 import cn.com.infostrategy.bs.common.CommDMO;
 import cn.com.infostrategy.to.common.HashVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
-import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
+import cn.com.infostrategy.ui.common.UIUtil;
 
 /**
  * 
@@ -18,6 +18,7 @@ import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
  *         [上月指月末日期]+";"+[年初月初日期]+";"+[年初月末日期]+";"+[天数]
  */
 public class ManAndWifeHouseholdsCount {
+	private UIUtil uiutil = new UIUtil();
 	private CommDMO dmo = new CommDMO();
 	private YearManAndWifeHouseholdsCount year = new YearManAndWifeHouseholdsCount();// 年初的户数
 	private MonthManAndWifeHouseholdsCount month = new MonthManAndWifeHouseholdsCount();// 上月的户数
