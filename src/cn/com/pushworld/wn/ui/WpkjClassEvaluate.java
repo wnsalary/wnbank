@@ -8,13 +8,18 @@ import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.infostrategy.ui.common.WLTButton;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
 
+/**
+ * 委派会计评级考核
+ * @author 85378
+ *
+ */
 public class WpkjClassEvaluate extends AbstractWorkPanel implements
 		ActionListener {
 
 	private UIUtil uiutil = new UIUtil();
 	private String date = uiutil.getCurrDate();
 	private BillListPanel billListPanel;
-	private WLTButton btn_evaluate;
+	private WLTButton btn_evaluate;//评级考核按钮
 
 	@Override
 	public void actionPerformed(ActionEvent e) {

@@ -19,14 +19,17 @@ import java.util.Set;
 import cn.com.infostrategy.bs.common.CommDMO;
 import cn.com.infostrategy.bs.common.ServerEnvironment;
 import cn.com.infostrategy.to.common.HashVO;
+import cn.com.infostrategy.to.common.TBUtil;
 import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
 import cn.com.infostrategy.to.mdata.jepfunctions.GetDateDifference;
 import cn.com.infostrategy.to.mdata.jepfunctions.GetStringItemVO;
+import cn.com.infostrategy.ui.common.ClientEnvironment;
 import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.pushworld.wn.to.WnUtils;
 import cn.com.pushworld.wn.ui.WnSalaryServiceIfc;
+import freemarker.template.SimpleDate;
 
 public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	private CommDMO dmo = new CommDMO();
@@ -534,17 +537,17 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		scal.setTime(date);
 		scal.add(Calendar.MONTH, -2);// 取当前日期的后一天.
 		scal.set(Calendar.DAY_OF_MONTH, scal.getActualMaximum(Calendar.DATE));
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		SimpleDateFormat df = new SimpleDateFormat("yyyyMM");
 		String smonth = df.format(scal.getTime());// 上月的月数
 		Calendar cal = Calendar.getInstance();// 使用默认时区和语言环境获得一个日历。
 		cal.setTime(date);
 		cal.add(Calendar.MONTH, -1);// 取当前日期的后一天.
 		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DATE));
-		String kmonth = df.format(cal.getTime());// 考核月的月数
+		String kmonth = df.format(cal.getTime());// 考核的月末日期
 		StringBuffer sb = new StringBuffer();
 		StringBuffer sqlsb = new StringBuffer();
 		try {
-			UpdateSQLBuilder update = new UpdateSQLBuilder("wnbank.s_loan_dk");
+			UpdateSQLBuilder update = new UpdateSQLBuilder("");
 			List list = new ArrayList<String>();
 			// 客户经理的信息表map
 			HashMap<String, String> map = dmo.getHashMapBySQLByDS(null,
@@ -3159,17 +3162,18 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		}
 		try {
 			HashMap<String, String> userMap = dmo.getHashMapBySQLByDS(null, "");
-			String userCount = dmo.getStringValueByDS(null, "");
-			HashMap<String, String> userDeptMap = dmo.getHashMapBySQLByDS(null,
-					"select username,deptname from v_pub_user_post_1");
+			String userCount = dmo.getStringValueByDS(null, "");// 获取到考核人数
+			HashMap<String, String> userDeptMap = dmo
+					.getHashMapBySQLByDS(null,
+							"select username,deptname from v_pub_user_post_1 where postname='委派会计'");
 			HashMap<String, String> xcdfMap = dmo.getHashMapBySQLByDS(null, "");
 			HashMap<String, String> ypjfMap = dmo.getHashMapBySQLByDS(null, "");
 			HashMap<String, String> jzksMap = dmo.getHashMapBySQLByDS(null, "");
 			HashMap<String, String> wgjfMap = dmo.getHashMapBySQLByDS(null, "");
 			for (String user : userMap.keySet()) {
-				Double xcdf = 0.0;
-				Double ypjf = 0.0;
-				Double jzks = 0.0;
+				Double xcdf = 0.0;// 现场打分
+				Double ypjf = 0.0;// 月平均打分
+				Double jzks = 0.0;// 集中考试
 				Double wgjf = 0.0;
 				Double count = 0.0;
 				if (xcdfMap.get(user) == null) {
@@ -4780,7 +4784,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	 * 员工异常行为监测数据导入
 	 */
 	@Override
-	public String importMonitorData() {
+	public String importMonitorData(String curSelectDate,
+			String curSelectMonthStart, String curSelectMonth, boolean flag) {
 		String message = "";
 		try {
 			// String[] existsData = dmo.getStringArrayFirstColByDS(null,
@@ -4831,56 +4836,223 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			// list.clear();
 			// }
 			// }
+
+			// List<String> list = new ArrayList<String>();
+			// // 对汇总表进行处理
+			// String[] existsData = existsData =
+			// dmo.getStringArrayFirstColByDS(
+			// null, "select 1 from wn_gather_monitor_result");
+			// SimpleDateFormat simple = new SimpleDateFormat("yyyy-MM");
+			// String currentMonth = simple.format(new Date());// 获取到当前考核月
+			// String gatherSQL =
+			// "select * from V_wn_gather_monitor_result where amt_txn_2>=5";//
+			// 将数据进行汇总
+			// String loanSQL = "";
+			// if (existsData == null || existsData.length <= 0) {//
+			// gatherSQL = gatherSQL + " and dat_txn<'" + currentMonth + "'";
+			// loanSQL =
+			// "SELECT a.xd_col16, sum(a.xd_col7) FROM WNBANK.s_loan_dk  a LEFT JOIN (WNSALARYDB.V_SAL_PERSONINFO) b ON a.xd_col16=b.CARDID WHERE b.Cardid IS NOT NULL AND TO_CHAR(TO_DATE(a.LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')<'"
+			// + currentMonth + "'   GROUP BY a.xd_col16,a.LOAD_DATES";
+			// } else {
+			// String maxDate = dmo.getStringValueByDS(null,
+			// "select max(dat_txn) from wn_gather_monitor_result");
+			// gatherSQL = gatherSQL + " and dat_txn<'" + currentMonth
+			// + "' and dat_txn>='" + maxDate + "'";
+			// loanSQL =
+			// "SELECT a.xd_col16, sum(a.xd_col7) FROM WNBANK.s_loan_dk  a LEFT JOIN (WNSALARYDB.V_SAL_PERSONINFO) b ON a.xd_col16=b.CARDID WHERE b.Cardid IS NOT NULL AND TO_CHAR(TO_DATE(a.LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')<'"
+			// + currentMonth
+			// +
+			// "' AND TO_CHAR(TO_DATE(a.LOAD_DATES, 'yyyy-mm-dd'),'yyyy-mm-dd')>'"
+			// + maxDate + "'  GROUP BY a.xd_col16,a.LOAD_DATES";
+			// }
+			// HashVO[] gatherDataVos = dmo.getHashVoArrayByDS(null, gatherSQL);
+			// HashMap<String, String> loanVos = dmo.getHashMapBySQLByDS(null,
+			// loanSQL);// ZPY 【2019-08-21】增加监测员工贷款余额 心情贼不爽
+			// InsertSQLBuilder gatherDataInsert = new InsertSQLBuilder(
+			// "wn_gather_monitor_result");
+			// for (int i = 0; i < gatherDataVos.length; i++) {// 获取到当前所有的汇总数据
+			// gatherDataInsert.putFieldValue("dat_txn",
+			// gatherDataVos[i].getStringValue("dat_txn"));
+			// gatherDataInsert.putFieldValue("amt_txn_sum",
+			// gatherDataVos[i].getStringValue("amt_txn"));
+			// gatherDataInsert.putFieldValue("amt_txn_sum2",
+			// gatherDataVos[i].getStringValue("amt_txn_2"));
+			// gatherDataInsert.putFieldValue("EXTERNAL_CUSTOMER_IC",
+			// gatherDataVos[i].getStringValue("cardid"));
+			// gatherDataInsert.putFieldValue("name",
+			// gatherDataVos[i].getStringValue("name"));
+			// gatherDataInsert.putFieldValue("mainstation",
+			// gatherDataVos[i].getStringValue("mainstation"));
+			// gatherDataInsert.putFieldValue("deptname",
+			// gatherDataVos[i].getStringValue("deptname"));
+			// gatherDataInsert.putFieldValue("deal_result", "未处理");
+			// gatherDataInsert.putFieldValue("ck", "查看");
+			// // 获取当前员工的贷款情况 ZPY[2019-08-21]
+			// String loan_balance = loanVos.get(gatherDataVos[i]
+			// .getStringValue("cardid")) == null ? "0" : loanVos
+			// .get(gatherDataVos[i].getStringValue("cardid"));
+			// gatherDataInsert.putFieldValue("loan_balance", loan_balance);
+			// list.add(gatherDataInsert.getSQL());
+			// if (list.size() >= 5000) {
+			// dmo.executeBatchByDS(null, list);
+			// list.clear();
+			// }
+			// }
+			// if (list.size() > 0) {
+			// dmo.executeBatchByDS(null, list);
+			// }
+
 			List<String> list = new ArrayList<String>();
-			// 对汇总表进行处理
-			String[] existsData = existsData = dmo.getStringArrayFirstColByDS(
-					null, "select 1 from wn_gather_monitor_result");
-			SimpleDateFormat simple = new SimpleDateFormat("yyyy-MM");
-			String currentMonth = simple.format(new Date());// 获取到当前考核月
-			String gatherSQL = "select * from V_wn_gather_monitor_result where amt_txn_2>=5";// 将数据进行汇总
-			String loanSQL = "";
-			if (existsData == null || existsData.length <= 0) {//
-				gatherSQL = gatherSQL + " and dat_txn<'" + currentMonth + "'";
-				loanSQL = "SELECT a.xd_col16, sum(a.xd_col7) FROM WNBANK.s_loan_dk  a LEFT JOIN (WNSALARYDB.V_SAL_PERSONINFO) b ON a.xd_col16=b.CARDID WHERE b.Cardid IS NOT NULL AND TO_CHAR(TO_DATE(a.LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')<'"
-						+ currentMonth + "'   GROUP BY a.xd_col16,a.LOAD_DATES";
-			} else {
-				String maxDate = dmo.getStringValueByDS(null,
-						"select max(dat_txn) from wn_gather_monitor_result");
-				gatherSQL = gatherSQL + " and dat_txn<'" + currentMonth
-						+ "' and dat_txn>='" + maxDate + "'";
-				loanSQL = "SELECT a.xd_col16, sum(a.xd_col7) FROM WNBANK.s_loan_dk  a LEFT JOIN (WNSALARYDB.V_SAL_PERSONINFO) b ON a.xd_col16=b.CARDID WHERE b.Cardid IS NOT NULL AND TO_CHAR(TO_DATE(a.LOAD_DATES,'yyyy-mm-dd'),'yyyy-mm-dd')<'"
-						+ currentMonth
-						+ "' AND TO_CHAR(TO_DATE(a.LOAD_DATES, 'yyyy-mm-dd'),'yyyy-mm-dd')>'"
-						+ maxDate + "'  GROUP BY a.xd_col16,a.LOAD_DATES";
+			if (flag) {// 表示当前选中日期已经存在，需要删除
+				dmo.executeUpdateByDS(null,
+						"delete from WN_GATHER_MONITOR_RESULT where dat_txn='"
+								+ curSelectMonth + "'"); // 删除交易汇总数据
+				dmo.executeUpdateByDS(null,
+						"delete from wn_deal_info where dat_txn2 like'"
+								+ curSelectMonth + "%'");// 删除交易明细
+				dmo.executeUpdateByDS(null, "delete from wn_dk_info where dkdate2 like '"+curSelectMonth+"%' ");
 			}
-			HashVO[] gatherDataVos = dmo.getHashVoArrayByDS(null, gatherSQL);
-			HashMap<String, String> loanVos = dmo.getHashMapBySQLByDS(null,
-					loanSQL);// ZPY 【2019-08-21】增加监测员工贷款余额 心情贼不爽
-			InsertSQLBuilder gatherDataInsert = new InsertSQLBuilder(
+			/**
+			 * 执行SQL，查询出每个联社成员的交易数据和贷款数据
+			 */
+			HashVO[] dealVo = dmo
+					.getHashVoArrayByDS(
+							null,
+							"SELECT mainstation,EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL,code,deptname,ROUND(sum(amt_txn),2) money FROM  ("
+									+ "  SELECT * FROM ("
+									+ "(select cod_acct_no, sum(amt_txn)/10000 amt_txn from ("
+									+ "select  to_char(to_date(substr(dat_txn,1,10),'yyyy-mm-dd'),'yyyy-mm-dd') dat_txn, amt_txn ,txt_txn_desc,cod_acct_no from wnbank.s_ofcr_ch_nobook "
+									+ ") where  dat_txn >='"
+									+ curSelectMonthStart
+									+ "' and dat_txn<='"
+									+ curSelectDate
+									+ "' group by cod_acct_no)  deal "
+									+ " JOIN (SELECT COD_ACCT_NO,COD_CUST,COD_ACCT_TITLE FROM wnbank.S_OFCR_CH_ACCT_MAST_"
+									+ curSelectMonth.replaceAll("-", "")
+									+ ") cod ON deal.cod_acct_no=cod.COD_ACCT_NO "
+									+ " JOIN (SELECT COD_CUST_ID,EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL FROM wnbank.S_OFCR_CI_CUSTMAST_"
+									+ curSelectMonth.replaceAll("-", "")
+									+ ") cust ON cod.COD_CUST=cust.COD_CUST_ID "
+									+ " JOIN (SELECT code,name,cardid,mainstation, deptname FROM WNSALARYDB.V_SAL_PERSONINFO) sal ON sal.cardid=cust.EXTERNAL_CUSTOMER_IC "
+									+ " )) GROUP BY EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL,code,mainstation,deptname");
+
+			HashMap<String, String> dkMap = dmo
+					.getHashMapBySQLByDS(
+							null,
+							"select xd_col16,(sum(xd_col7)/10000) xd_col7 from ( "
+									+ "(select xd_col7,xd_col16,to_char(cast (cast (xd_col3 as timestamp) as date), 'yyyy-mm-dd') xd_col3 from wnbank.s_loan_dk where  xd_col7 >0) dk "
+									+ "join (select cardid from wnsalarydb.v_sal_personinfo) sal on sal.cardid=dk.xd_col16 "
+									+ ") where dk.xd_col3>='"
+									+ curSelectMonthStart
+									+ "' and dk.xd_col3<='" + curSelectDate
+									+ "'  group by xd_col16");
+			InsertSQLBuilder insert = new InsertSQLBuilder(
 					"wn_gather_monitor_result");
-			for (int i = 0; i < gatherDataVos.length; i++) {// 获取到当前所有的汇总数据
-				gatherDataInsert.putFieldValue("dat_txn",
-						gatherDataVos[i].getStringValue("dat_txn"));
-				gatherDataInsert.putFieldValue("amt_txn_sum",
-						gatherDataVos[i].getStringValue("amt_txn"));
-				gatherDataInsert.putFieldValue("amt_txn_sum2",
-						gatherDataVos[i].getStringValue("amt_txn_2"));
-				gatherDataInsert.putFieldValue("EXTERNAL_CUSTOMER_IC",
-						gatherDataVos[i].getStringValue("cardid"));
-				gatherDataInsert.putFieldValue("name",
-						gatherDataVos[i].getStringValue("name"));
-				gatherDataInsert.putFieldValue("mainstation",
-						gatherDataVos[i].getStringValue("mainstation"));
-				gatherDataInsert.putFieldValue("deptname",
-						gatherDataVos[i].getStringValue("deptname"));
-				gatherDataInsert.putFieldValue("deal_result", "未处理");
-				gatherDataInsert.putFieldValue("ck", "查看");
-				// 获取当前员工的贷款情况 ZPY[2019-08-21]
-				String loan_balance = loanVos.get(gatherDataVos[i]
-						.getStringValue("cardid")) == null ? "0" : loanVos
-						.get(gatherDataVos[i].getStringValue("cardid"));
-				gatherDataInsert.putFieldValue("loan_balance", loan_balance);
-				list.add(gatherDataInsert.getSQL());
+			for (int i = 0; i < dealVo.length; i++) {// 将交易明细和贷款信息导入到数据库中
+				insert.putFieldValue("dat_txn", curSelectMonth);// 考核月日期
+				insert.putFieldValue("amt_txn_sum",
+						dealVo[i].getStringValue("money"));// 交易金额
+				insert.putFieldValue("external_customer_ic",
+						dealVo[i].getStringValue("EXTERNAL_CUSTOMER_IC"));// 身份证号
+				insert.putFieldValue("name",
+						dealVo[i].getStringValue("NAM_CUST_FULL"));// 员工姓名
+				insert.putFieldValue("ck", "查看");
+				insert.putFieldValue("deal_result", "未处理");
+				insert.putFieldValue("deptname",
+						dealVo[i].getStringValue("deptname"));// 机构号
+				insert.putFieldValue("mainstation",
+						dealVo[i].getStringValue("mainstation"));// 主岗位
+				insert.putFieldValue(
+						"loan_balance",
+						dkMap.get(dealVo[i]
+								.getStringValue("EXTERNAL_CUSTOMER_IC")) == null ? "0.00"
+								: dkMap.get(dealVo[i]
+										.getStringValue("EXTERNAL_CUSTOMER_IC")));
+				insert.putFieldValue("code", dealVo[i].getStringValue("code"));// 插入员工code
+				list.add(insert.getSQL());
+			}
+			dmo.executeBatchByDS(null, list);
+			list.clear();
+			// 我还需要导入明细数据，即交易明细，这样方便查看交易明细 数据
+			HashVO[] dealInfo = dmo
+					.getHashVoArrayByDS(
+							null,
+							"SELECT * FROM ( "
+									+ " (SELECT * FROM ("
+									+ " select  to_char(to_date(substr(dat_txn,1,10),'yyyy-mm-dd'),'yyyy-mm-dd') dat_txn2,dat_txn, amt_txn ,txt_txn_desc,cod_acct_no from wnbank.s_ofcr_ch_nobook "
+									+ ") WHERE dat_txn2 >='"
+									+ curSelectMonthStart
+									+ "' and dat_txn2<='"
+									+ curSelectDate
+									+ "') deal "
+									+ " JOIN (SELECT COD_ACCT_NO,COD_CUST,COD_ACCT_TITLE FROM wnbank.S_OFCR_CH_ACCT_MAST_"
+									+ curSelectMonth.replaceAll("-", "")
+									+ ") cod ON deal.cod_acct_no=cod.COD_ACCT_NO "
+									+ " JOIN (SELECT COD_CUST_ID,EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL FROM wnbank.S_OFCR_CI_CUSTMAST_"
+									+ curSelectMonth.replaceAll("-", "")
+									+ ") cust ON cod.COD_CUST=cust.COD_CUST_ID "
+									+ " JOIN (SELECT code,name,cardid,mainstation, deptcode,deptname FROM WNSALARYDB.V_SAL_PERSONINFO) sal ON sal.cardid=cust.EXTERNAL_CUSTOMER_IC "
+									+ ")");
+			InsertSQLBuilder infoInsert = new InsertSQLBuilder("wn_deal_info"); // 交易明细表
+			for (int i = 0; i < dealInfo.length; i++) {
+				infoInsert.putFieldValue("id",
+						dmo.getSequenceNextValByDS(null, "S_WN_DEAL_INFO"));
+				infoInsert.putFieldValue("dat_txn",
+						dealInfo[i].getStringValue("dat_txn")); // 精确到时分秒的日期
+				infoInsert.putFieldValue("dat_txn2",
+						dealInfo[i].getStringValue("dat_txn2"));// 年月日的日期
+				infoInsert.putFieldValue("amt_txn",
+						dealInfo[i].getStringValue("amt_txn"));// 交易明细
+				infoInsert.putFieldValue("txt_txn_desc",
+						dealInfo[i].getStringValue("txt_txn_desc"));// 交易描述
+				infoInsert.putFieldValue("cod_acct_no",
+						dealInfo[i].getStringValue("cod_acct_no"));// 交易账号
+				infoInsert.putFieldValue("name",
+						dealInfo[i].getStringValue("name"));// 员工姓名
+				infoInsert.putFieldValue("cardid",
+						dealInfo[i].getStringValue("cardid"));// 身份证号
+				infoInsert.putFieldValue("mainstation",
+						dealInfo[i].getStringValue("mainstation"));// 主岗位
+				list.add(infoInsert.getSQL());
+				if (list.size() >= 5000) {
+					dmo.executeBatchByDS(null, list);
+					list.clear();
+				}
+			}
+			// if(list.size()>0){
+			// dmo.executeBatchByDS(null, list);
+			// list.clear();
+			// }
+			// 贷款明细表
+			HashVO[] dkInfo = dmo
+					.getHashVoArrayByDS(
+							null,
+							"select dkdate,dkdate2,dkmoney,jqmoney,cardid,name,code,deptname from ( "
+									+ " (select  xd_col3 dkdate, to_char(cast (cast (xd_col3 as timestamp) as date), 'yyyy-mm-dd') dkdate2,xd_col6 dkmoney,xd_col7 jqmoney,xd_col16  from wnbank.s_loan_dk ) dk "
+									+ "join (select cardid,name,code,deptname from wnsalarydb.v_sal_personinfo) sal on sal.cardid=dk.xd_col16 "
+									+ ") where dkdate2>='" + curSelectMonthStart
+									+ "' and dkdate2<='" + curSelectDate + "'");
+			InsertSQLBuilder dkInfoInsert = new InsertSQLBuilder("wn_dk_info");
+			for (int i = 0; i < dkInfo.length; i++) {
+				dkInfoInsert.putFieldValue("id",
+						dmo.getSequenceNextValByDS(null, "S_WN_DK_INFO"));
+				dkInfoInsert.putFieldValue("dkdate",
+						dkInfo[i].getStringValue("dkdate"));// 贷款日期 精确到时分秒
+				dkInfoInsert.putFieldValue("dkdate2",
+						dkInfo[i].getStringValue("dkdate2"));// 贷款日期 精确到年月日
+				dkInfoInsert.putFieldValue("cardid",
+						dkInfo[i].getStringValue("cardid"));// 身份证号
+				dkInfoInsert.putFieldValue("dkmoney",
+						dkInfo[i].getStringValue("dkmoney"));// 贷款金额
+				dkInfoInsert.putFieldValue("jqmoney",
+						dkInfo[i].getStringValue("jqmoney"));// 结欠金额
+				dkInfoInsert.putFieldValue("name",
+						dkInfo[i].getStringValue("name"));// 姓名
+				dkInfoInsert.putFieldValue("code",
+						dkInfo[i].getStringValue("code"));// 员工号
+				dkInfoInsert.putFieldValue("deptname",
+						dkInfo[i].getStringValue("deptname"));// 部门
+				list.add(dkInfoInsert.getSQL());
 				if (list.size() >= 5000) {
 					dmo.executeBatchByDS(null, list);
 					list.clear();
@@ -4888,9 +5060,11 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			}
 			if (list.size() > 0) {
 				dmo.executeBatchByDS(null, list);
+				list.clear();
 			}
 			message = "数据导入成功";
 		} catch (Exception e) {
+			message = "数据导入失败";
 			e.printStackTrace();
 		}
 		return message;
@@ -4959,12 +5133,13 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	 * 结束柜员服务质量打分
 	 */
 	@Override
-	public String finishGradeScore(BillVO[] bos, String pfUserName, String pfUserCode,String pfUserDept) {
-		String message="";
-		try{
+	public String finishGradeScore(BillVO[] bos, String pfUserName,
+			String pfUserCode, String pfUserDept) {
+		String message = "";
+		try {
 			StringBuffer msg = new StringBuffer("");
 			for (int i = 0; i < bos.length; i++) {
-				if("总分".equals(bos[i].getStringValue("XIANGMU"))){
+				if ("总分".equals(bos[i].getStringValue("XIANGMU"))) {
 					continue;
 				}
 				if (isEmpty(bos[i].getStringValue("KOUOFEN"))) {
@@ -4983,7 +5158,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				msg.append("请修改后继续操作!!!");
 				return msg.toString();
 			}
-			UpdateSQLBuilder update=new UpdateSQLBuilder("WN_GYPF_TABLE");
+			UpdateSQLBuilder update = new UpdateSQLBuilder("WN_GYPF_TABLE");
 			String xiangmu = "总分";
 
 			List<String> _sqllist = new ArrayList<String>();
@@ -5001,14 +5176,16 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 							+ bos[i].getStringValue("USERCODE")
 							+ "' AND PFTIME='"
 							+ bos[i].getStringValue("PFTIME") + "' AND KHSM= '"
-							+ bos[i].getStringValue("KHSM") + "' AND ZHIBIAO = '"+bos[i].getStringValue("ZHIBIAO")+"'");
+							+ bos[i].getStringValue("KHSM")
+							+ "' AND ZHIBIAO = '"
+							+ bos[i].getStringValue("ZHIBIAO") + "'");
 					// 联社要求每次扣分，要不全部扣完，要么不扣
 					if (Double.parseDouble(bos[i].getStringValue("KOUOFEN")) > 0) {
 						result -= Double.parseDouble(bos[i]
 								.getStringValue("FENZHI"));
 						update.putFieldValue("KOUOFEN",
 								bos[i].getStringValue("FENZHI"));
-					}else {
+					} else {
 						update.putFieldValue("KOUOFEN",
 								bos[i].getStringValue("KOUOFEN"));
 					}
@@ -5021,12 +5198,12 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				_sqllist.add(update.getSQL());
 			}
 			dmo.executeBatchByDS(null, _sqllist);
-			message="操作成功";
-		}catch(Exception e){
-			message="操作异常！！！";
+			message = "操作成功";
+		} catch (Exception e) {
+			message = "操作异常！！！";
 			e.printStackTrace();
 		}
-        return message;
+		return message;
 	}
 
 	/**
@@ -5039,7 +5216,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 
 			StringBuffer msg = new StringBuffer("");
 			for (int i = 0; i < bos.length; i++) {
-				if("总分".equals(bos[i].getStringValue("XIANGMU"))){
+				if ("总分".equals(bos[i].getStringValue("XIANGMU"))) {
 					continue;
 				}
 				if (isEmpty(bos[i].getStringValue("KOUOFEN"))) {
@@ -5076,18 +5253,20 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 							+ bos[i].getStringValue("USERCODE")
 							+ "' AND PFTIME='"
 							+ bos[i].getStringValue("PFTIME") + "' AND KHSM= '"
-							+ bos[i].getStringValue("KHSM") + "' AND ZHIBIAO = '"+bos[i].getStringValue("ZHIBIAO")+"'");
+							+ bos[i].getStringValue("KHSM")
+							+ "' AND ZHIBIAO = '"
+							+ bos[i].getStringValue("ZHIBIAO") + "'");
 					// 联社要求每次扣分，要不全部扣完，要么不扣
 					if (Double.parseDouble(bos[i].getStringValue("KOUOFEN")) > 0) {
 						result -= Double.parseDouble(bos[i]
 								.getStringValue("FENZHI"));
 						update.putFieldValue("KOUOFEN",
 								bos[i].getStringValue("FENZHI"));
-					}else {
+					} else {
 						update.putFieldValue("KOUOFEN",
 								bos[i].getStringValue("KOUOFEN"));
 					}
-					
+
 				}
 				_sqllist.add(update.getSQL());
 			}
@@ -5105,5 +5284,129 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * 贷款数据网格号信息变更 变更部分 【分区一 分区二 客户经理】 日期 格式: 202006
+	 */
+	@Override
+	public String getNewChange(String lastDate, String curDate) {
+		String message = "";
+		try {
+			String diffSQL = "SELECT dkl.b lastb, dkl.bu lastbu,dkl.bv lastbv,dkl.ba lastba,dk.b curb,dk.bu curbu,dk.bv curbv,dk.ba curba FROM ((select b,bu,BV,BA from wnsalarydb.s_loan_dk_"
+					+ lastDate
+					+ ") dkl"
+					+ " LEFT JOIN (select b,bu,BV,BA from wnsalarydb.s_loan_dk_"
+					+ curDate
+					+ ") dk  ON dkl.b=dk.b "
+					+ ") WHERE  dkl.bv!=dk.bv OR dkl.bu!=dk.bu OR dkl.ba!=dk.ba";
+			HashVO[] diffHashVo = dmo.getHashVoArrayByDS(null, diffSQL);
+			if (diffHashVo == null || diffHashVo.length <= 0) {
+				message = "当前客户经理信息一致，不需要更改";
+				return message;
+			}
+			UpdateSQLBuilder update = new UpdateSQLBuilder(
+					"wnsalarydb.s_loan_dk_" + lastDate);
+			List<String> list = new ArrayList<String>();
+			for (int i = 0; i < diffHashVo.length; i++) {
+				update.setWhereCondition("b='"
+						+ diffHashVo[i].getStringValue("lastb") + "'");// 修改时的查询条件，客户号
+				update.putFieldValue("bu",
+						diffHashVo[i].getStringValue("curbu"));
+			}
+		} catch (Exception e) {
+			message = "贷款信息变更失败";
+			e.printStackTrace();
+		}
+
+		return message;
+	}
+
+	/**
+	 * 助农商户维护指标 户数统计
+	 * 
+	 * @param curSelectMonthStart
+	 *            :选中月当月开始时间 2020-05-01
+	 * @param curSelectDate
+	 *            : 用户选中时间 2020-05-08
+	 * @param curSelectMonth
+	 *            :用户选中月 2020-05
+	 * @param b
+	 *            :是否重新计算
+	 * @return
+	 */
+	@Override
+	public String znCount(String curSelectMonthStart, String curSelectDate,
+			String curSelectMonth, boolean b) {
+		String message = "";
+		try {
+			// 清空以前计算的结果
+			if (b) {
+				dmo.executeUpdateByDS(null,
+						"delete from wn_znshcount_result where createdate='"
+								+ curSelectMonth + "'");
+			}
+			// 执行计算结果，并将计算结果导入数据库中
+			String sql = "select xx.a mer_id  ,case when  znqk.num  is null then 0 else znqk.num end  znqk ,case when znzz.num is null then 0 else znzz.num end znzz ,case when  znsb.num is null then 0 else znsb.num end znsb ,case when znyl.num is null then 0 else znyl.num end znyl ,case when zndf.num is null then 0 else zndf.num end  zndf, case when dxqy.num is null then 0 else dxqy.num end  dxqy,(case when  znqk.num  is null then 0 else znqk.num end +case when znzz.num is null then 0 else znzz.num end +case when  znsb.num is null then 0 else znsb.num end +case when znyl.num is null then 0 else znyl.num end +case when zndf.num is null then 0 else zndf.num end+case when dxqy.num is null then 0 else dxqy.num end) total   from  ( select a,b,c from  wnsalarydb.excel_tab_83 where year||'-'||month='2020-04') xx left join (select mer_id,sum (num) num from (select mer_id,case when count(mer_id)>=5 then 5 else count(mer_id) end num  from  wnbank.t_dis_ifsp_intgr_txn_dtl where to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
+					+ curSelectMonthStart
+					+ "' and to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
+					+ curSelectDate
+					+ "' and mcht_prop='助农'   and txn_sub_type_desc='助农取款' and txn_order_amt>=10 and txn_state='交易成功'  group by txn_acc_no,mer_id) group by mer_id) znqk on xx.a=znqk.mer_id left join (select mer_id,sum(num) num  from (select mer_id,case when  count(mer_id)>=5 then 5 else count(mer_id) end num  from  wnbank.t_dis_ifsp_intgr_txn_dtl where to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
+					+ curSelectMonthStart
+					+ "' and to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
+					+ curSelectDate
+					+ "' and mcht_prop='助农'   and txn_sub_type_desc='助农转账' and txn_order_amt>=10 and txn_state='交易成功' group by oppo_acct_no,mer_id) group by mer_id) znzz on xx.a=znzz.mer_id left join ( "
+					+ " select mer_id, count(mer_id)  num from  wnbank.t_dis_ifsp_intgr_txn_dtl where to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
+					+ curSelectMonthStart
+					+ "' and to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
+					+ curSelectDate
+					+ "' and mcht_prop='助农' and txn_type_desc='社保税费缴费交易' and txn_sub_type_desc='个人医疗保险缴费扣款'  and txn_state='交易成功'  group by  mer_id "
+					+ ") znsb on xx.a=znsb.mer_id left join (select mer_id, count(mer_id)  num from  wnbank.t_dis_ifsp_intgr_txn_dtl where to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
+					+ curSelectMonthStart
+					+ "' and to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
+					+ curSelectDate
+					+ "' and mcht_prop='助农' and txn_type_desc='社保税费缴费交易' and txn_sub_type_desc='个人养老保险缴费扣款'  and txn_state='交易成功'  group by  mer_id) znyl on xx.a=znyl.mer_id left join (select mer_id, count(mer_id)  num from  wnbank.t_dis_ifsp_intgr_txn_dtl where to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
+					+ curSelectMonthStart
+					+ "' and to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
+					+ curSelectDate
+					+ "' and mcht_prop='助农' and txn_type_desc='电费缴费交易' and txn_sub_type_desc in ('便民缴费（电费缴费）','便民缴费（电费预缴费）')  and txn_state='交易成功'  group by  mer_id) zndf on xx.a=zndf.mer_id "
+					+ " left join (select mer_id, count(mer_id)  num from wnbank.t_dis_ifsp_intgr_txn_dtl where to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
+					+ curSelectMonthStart
+					+ "' and to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
+					+ curSelectDate
+					+ "'  and  mcht_prop='助农' and txn_type_desc='卡管交易' and  txn_sub_type_desc='短信签约变更（签约、解约、变更）' and  txn_state='交易成功' group by mer_id) dxqy on dxqy.mer_id=xx.a";
+			HashVO[] zn = dmo.getHashVoArrayByDS(null, sql);
+			InsertSQLBuilder insert = new InsertSQLBuilder(
+					"WN_ZNSHCOUNT_RESULT");
+			List<String> list = new ArrayList<String>();
+			for (int i = 0; i < zn.length; i++) {
+				insert.putFieldValue("mer_id", zn[i].getStringValue("mer_id"));
+				insert.putFieldValue("znqk", zn[i].getStringValue("znqk"));
+				insert.putFieldValue("znzz", zn[i].getStringValue("znzz"));
+				insert.putFieldValue("znyl", zn[i].getStringValue("znyl"));
+				insert.putFieldValue("znsb", zn[i].getStringValue("znsb"));
+				insert.putFieldValue("zndf", zn[i].getStringValue("zndf"));
+				insert.putFieldValue("zndx", zn[i].getStringValue("dxqy"));
+				insert.putFieldValue("total", zn[i].getStringValue("total"));
+				insert.putFieldValue("curmonth", curSelectMonth);
+				insert.putFieldValue("id", dmo.getSequenceNextValByDS(null,
+						"S_WN_ZNSHCOUNT_RESULT"));
+				list.add(insert.getSQL());
+				if (list.size() >= 0) {
+					dmo.executeBatchByDS(null, list);
+					list.clear();
+				}
+			}
+			if (!list.isEmpty()) {
+				dmo.executeBatchByDS(null, list);
+				list.clear();
+			}
+			message = "【" + curSelectMonthStart + "-" + curSelectDate + "】计算成功";
+		} catch (Exception e) {
+			message = "【" + curSelectMonthStart + "-" + curSelectDate
+					+ "】计算失败，请联系管理员";
+			e.printStackTrace();
+		}
+		return message;
 	}
 }
