@@ -5343,7 +5343,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			// 清空以前计算的结果
 			if (b) {
 				dmo.executeUpdateByDS(null,
-						"delete from wn_znshcount_result where createdate='"
+						"delete from wn_znshcount_result where CURMONTH='"
 								+ curSelectMonth + "'");
 			}
 			// 执行计算结果，并将计算结果导入数据库中
