@@ -16,6 +16,7 @@ public class AverageDailyManAndWifeHouseholdsCount {
 	public HashMap<String, String> getCount(String date) {
 		String[] time = date.split(";");
 		HashMap<String, String> map = new HashMap<String, String>();
+
 		CommDMO dmo = new CommDMO();
 		try {
 			String[][] count = dmo

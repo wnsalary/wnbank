@@ -74,7 +74,7 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource()== btn_count){//户数统计 
+		if(e.getSource()== btn_count){//特约小微户数统计 
 			try{
 				RefItemVO refItemVO = new RefItemVO();
 //				refItemVO.setId(report_date_new);
@@ -106,6 +106,7 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 									}
 								}
 							});
+							panel.QueryData("select * from wn_tyxwcount_result where CURMONTH='"+curSelectMonth+"' ");
 						}
 					}else {//当前日期区间没有数据，不需要删除
 						new SplashWindow(this, new AbstractAction() {
@@ -118,6 +119,7 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 								}
 							}
 						});
+						panel.QueryData("select * from wn_tyxwcount_result where CURMONTH='"+curSelectMonth+"' ");
 					}
 					MessageBox.show(this,message);
 					panel.refreshData();
@@ -184,6 +186,8 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 								message=service.znCount(curSelectMonthStart,curSelectDate,curSelectMonth,false);
 							}
 						});
+						panel2.QueryData("select * from wn_znshcount_result where CURMONTH='"+curSelectMonth+"' ");
+						MessageBox.show(this,message);
 					}else {// 当前考核月的数据已经存在，请用户重新计算
 						if(MessageBox.confirm(this, "日期【" + curSelectDate + "】助农商户统计信息已经存在，确定重复计算吗？")){
 							new SplashWindow(this,new AbstractAction(){
@@ -193,13 +197,14 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 									message=service.znCount(curSelectMonthStart,curSelectDate,curSelectMonth,true);
 								}
 							});
+							panel2.QueryData("select * from wn_znshcount_result where CURMONTH='"+curSelectMonth+"' ");
+							MessageBox.show(this,message);
 						}else {
 							return;
 						}
 					}
 				}
 				panel2.refreshCurrData();
-				MessageBox.show(this,message);
 			} catch (Exception e2) {
 				e2.printStackTrace();
 			}
