@@ -20,11 +20,8 @@ import cn.com.infostrategy.bs.common.CommDMO;
 import cn.com.infostrategy.bs.common.RemoteCallServlet;
 import cn.com.infostrategy.bs.common.ServerEnvironment;
 import cn.com.infostrategy.to.common.HashVO;
-<<<<<<< HEAD
 import cn.com.infostrategy.to.common.WLTLogger;
-=======
 import cn.com.infostrategy.to.common.TBUtil;
->>>>>>> c53acfd92c67ea1f188a669d2ea31191aaba050e
 import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
@@ -34,11 +31,9 @@ import cn.com.infostrategy.ui.common.ClientEnvironment;
 import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.pushworld.wn.to.WnUtils;
 import cn.com.pushworld.wn.ui.WnSalaryServiceIfc;
-<<<<<<< HEAD
 import org.apache.log4j.Logger;
-=======
 import freemarker.template.SimpleDate;
->>>>>>> c53acfd92c67ea1f188a669d2ea31191aaba050e
+
 
 public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	private CommDMO dmo = new CommDMO();
