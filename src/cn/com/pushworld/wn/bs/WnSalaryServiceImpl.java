@@ -17,9 +17,14 @@ import java.util.Map;
 import java.util.Set;
 
 import cn.com.infostrategy.bs.common.CommDMO;
+import cn.com.infostrategy.bs.common.RemoteCallServlet;
 import cn.com.infostrategy.bs.common.ServerEnvironment;
 import cn.com.infostrategy.to.common.HashVO;
+<<<<<<< HEAD
+import cn.com.infostrategy.to.common.WLTLogger;
+=======
 import cn.com.infostrategy.to.common.TBUtil;
+>>>>>>> c53acfd92c67ea1f188a669d2ea31191aaba050e
 import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
@@ -29,11 +34,16 @@ import cn.com.infostrategy.ui.common.ClientEnvironment;
 import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.pushworld.wn.to.WnUtils;
 import cn.com.pushworld.wn.ui.WnSalaryServiceIfc;
+<<<<<<< HEAD
+import org.apache.log4j.Logger;
+=======
 import freemarker.template.SimpleDate;
+>>>>>>> c53acfd92c67ea1f188a669d2ea31191aaba050e
 
 public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 	private CommDMO dmo = new CommDMO();
 	private ImportDataDMO importDmo = new ImportDataDMO();
+	private Logger logger = WLTLogger.getLogger(WnSalaryServiceImpl.class);
 
 	/**
 	 * zzl[2019-3-28] 暂不使用 柜员服务质量考核评分
@@ -828,6 +838,36 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		return xx;
 	}
 
+	/**
+	 * zzl 网格信息变更
+	 * @param date1
+	 * @param date2
+	 * @return
+	 */
+	public String getWgChange(String date1, String date2) {
+		String xx = null;
+		try{
+			String dy=date1.replace("-","").substring(0,6);
+			String sy=date2.replace("-","").substring(0,6);
+			UpdateSQLBuilder update = new UpdateSQLBuilder("wnsalarydb.s_loan_khxx_"+sy);
+			List list = new ArrayList<String>();
+			String [] [] str=dmo.getStringArrayByDS(null,"select dy.b,dy.w,dy.x,dy.v from wnsalarydb.s_loan_khxx_"+dy+" dy left join  wnsalarydb.s_loan_khxx_"+sy+" sy on dy.i=sy.i where dy.w||dy.x!=sy.w||sy.x group by dy.b,dy.w,dy.x,dy.v");
+			for(int i=0;i<str.length;i++){
+				update.setWhereCondition("B='"+str[i][0]+"'");
+				update.putFieldValue("W",str[i][1]);
+				update.putFieldValue("X",str[i][2]);
+				update.putFieldValue("V",str[i][3]);
+				list.add(update.getSQL());
+				logger.info(">>>>>"+i+">>>"+update.getSQL());
+			}
+			dmo.executeBatchByDS(null,list);
+			xx="网格信息变更成功";
+		}catch (Exception e){
+			xx="网格信息变更失败";
+			e.printStackTrace();
+		}
+		return xx;
+	}
 	/**
 	 * zpy[2019-05-22] 为每个柜员生成定性考核计划
 	 */

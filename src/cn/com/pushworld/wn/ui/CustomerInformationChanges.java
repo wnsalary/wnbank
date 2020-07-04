@@ -35,8 +35,8 @@ import cn.com.infostrategy.ui.mdata.BillCardDialog;
  */
 public class CustomerInformationChanges extends AbstractWorkPanel implements
 		ActionListener {
-	private WLTButton btn_BG = new WLTButton("贷款客户经理信息变更");
-	private WLTButton btn_BGCK = new WLTButton("存款客户经理信息变更");
+	private WLTButton btn_BG = new WLTButton("贷款网格信息变更");
+	private WLTButton btn_BGCK = new WLTButton("存款网格信息变更");
 
 	@Override
 	public void initialize() {
@@ -95,7 +95,7 @@ public class CustomerInformationChanges extends AbstractWorkPanel implements
 		try {
 			WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil
 					.lookUpRemoteService(WnSalaryServiceIfc.class);
-			String str = service.getCKChange(dates[0].toString(),
+			String str = service.getWgChange(dates[0].toString(),
 					dates[1].toString());
 			MessageBox.show(this, str);
 		} catch (Exception e) {
@@ -103,6 +103,8 @@ public class CustomerInformationChanges extends AbstractWorkPanel implements
 			e.printStackTrace();
 		}
 	}
+
+
 
 	public static void main(String[] args) {
 		Date date = new Date();
