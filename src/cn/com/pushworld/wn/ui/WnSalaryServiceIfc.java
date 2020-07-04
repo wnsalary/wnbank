@@ -57,6 +57,12 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc {
 	 * @return
 	 */
 	public String getCKChange(String date1, String date2);
+	/**
+	 * zzl[存款客户经理信息更新]
+	 *
+	 * @return
+	 */
+	public String getWgChange(String date1, String date2);
 
 	/**
 	 * zpy[2019-05-22] 为每个柜员生成定性考核计划
