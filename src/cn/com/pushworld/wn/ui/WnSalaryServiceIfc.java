@@ -50,6 +50,14 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc {
 	 * @return
 	 */
 	public String getChange(String date1, String date2);
+	
+	/**
+	 * ZPY 【2020-06-07】新贷款数据变更
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 */
+	public String getNewChange(String startDate,String endDate);
 
 	/**
 	 * zzl[存款客户经理信息更新]
@@ -255,9 +263,12 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc {
 	public void insertStaffRadio(String handleDate);
     /**
      * 员工异常行为数据监测
+     * @param curSelectMonth  用户选中考核月
+     * @param curSelectMonthStart  用户选择考核月初日期
+     * @param curSelectDate  用户选中日期
      * @return
      */
-	public String importMonitorData();
+	public String importMonitorData(String curSelectDate, String curSelectMonthStart, String curSelectMonth,boolean flag);
     /**
      * 处理员工异常行为信息
      * @param billVos
@@ -276,5 +287,16 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc {
      * @param bos
      */
 	public String saveGradeScore(BillVO[] bos);
+
+	/**
+	 * 助农商户维护指标 户数统计
+	 * @param curSelectMonthStart:选中月当月开始时间
+	 * @param curSelectDate: 用户选中时间
+	 * @param curSelectMonth:用户选中月
+	 * @param b:是否重新计算
+	 * @return
+	 */
+	public String znCount(String curSelectMonthStart, String curSelectDate,
+			String curSelectMonth, boolean b);
   
 }

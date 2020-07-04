@@ -68,7 +68,7 @@ public class CustomerInformationChanges extends AbstractWorkPanel implements
 
 	}
 
-	private void getChange() {
+	private void getChange() {// 贷款客户经理信息变更
 		final String date = getDate();
 		if (TBUtil.isEmpty(date)) {
 			return;

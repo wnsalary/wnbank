@@ -11,6 +11,8 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -22,6 +24,7 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 
 
 import cn.com.infostrategy.to.common.HashVO;
+import cn.com.infostrategy.to.common.TBUtil;
 import cn.com.infostrategy.to.mdata.Pub_Templet_1_ItemVO;
 import cn.com.infostrategy.to.mdata.RefItemVO;
 import cn.com.infostrategy.ui.common.AbstractWorkPanel;
@@ -29,20 +32,24 @@ import cn.com.infostrategy.ui.common.MessageBox;
 import cn.com.infostrategy.ui.common.SplashWindow;
 import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.infostrategy.ui.common.WLTButton;
+import cn.com.infostrategy.ui.common.WLTTabbedPane;
 import cn.com.infostrategy.ui.mdata.BillListPanel;
 import cn.com.infostrategy.ui.mdata.cardcomp.RefDialog_Date;
 import cn.com.pushworld.wn.bs.TyxwcontentCount;
 
-public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListener {
+public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListener,ChangeListener {
 
 	private BillListPanel panel;
-	private WLTButton btn_count,btn_export;
+	private BillListPanel panel2;
+	private WLTButton btn_count,btn_export,btn_zn_export,btn_zn_count;
 	private String message=null;
 	private JFileChooser chooser;
 	private String result;
 	private String queryConditionSQL;
+	private WLTTabbedPane tabPanel=null;
 	@Override
 	public void initialize() {
+		tabPanel=new WLTTabbedPane();
 		panel=new BillListPanel("WN_TYXWCOUNT_RESULT_CODE");
 		btn_count=new WLTButton("户数统计");
 		btn_count.addActionListener(this);
@@ -51,12 +58,23 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 		panel.addBatchBillListButton(new WLTButton[]{btn_count,btn_export});
 		panel.getQuickQueryPanel().addBillQuickActionListener(this);
 		panel.repaintBillListButton();
-		this.add(panel);
+		panel2=new BillListPanel("WN_ZNSHCOUNT_RESULT_CODE1");
+		btn_zn_export=new WLTButton("导出");//助农商户维护导出excel
+		btn_zn_export.addActionListener(this);
+		btn_zn_count=new WLTButton("助农统计");
+		btn_zn_count.addActionListener(this);
+		// 助农商户维护户数统计
+		panel2.addBatchBillListButton(new WLTButton[]{btn_zn_count,btn_zn_export});
+		panel2.repaintBillListButton();
+		panel2.getQuickQueryPanel().addBillQuickActionListener(this);
+		tabPanel.addTab("特约小微商户户数统计", panel);
+		tabPanel.addTab("助农商户户数统计", panel2);
+		tabPanel.addChangeListener(this);
+		this.add(tabPanel);
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource()== btn_count){//户数统计 
-
+		if(e.getSource()== btn_count){//特约小微户数统计 
 			try{
 				RefItemVO refItemVO = new RefItemVO();
 //				refItemVO.setId(report_date_new);
@@ -88,6 +106,7 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 									}
 								}
 							});
+							panel.QueryData("select * from wn_tyxwcount_result where CURMONTH='"+curSelectMonth+"' ");
 						}
 					}else {//当前日期区间没有数据，不需要删除
 						new SplashWindow(this, new AbstractAction() {
@@ -100,6 +119,7 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 								}
 							}
 						});
+						panel.QueryData("select * from wn_tyxwcount_result where CURMONTH='"+curSelectMonth+"' ");
 					}
 					MessageBox.show(this,message);
 					panel.refreshData();
@@ -109,7 +129,11 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 			}
 		}else if(e.getSource()==panel.getQuickQueryPanel()) {// 获取到对应的数据
 			String curMonth = panel.getQuickQueryPanel().getRealValueAt("CURMONTH");
-			String sql="select * from wn_tyxwcount_result where  curMonth ='"+curMonth.replace("年", "-").replace("月;", "")+"'";
+			String sql="select * from wn_tyxwcount_result where  1=1 ";
+			if(!TBUtil.isEmpty(curMonth)){
+				sql=sql+" and curMonth ='"+curMonth.replace("年", "-").replace("月;", "")+"'";
+			}
+			sql =sql+" order by curmonth desc ";
 			panel.queryDataByDS(null, sql);
 		}else  if(e.getSource() == btn_export){
 			try {
@@ -128,34 +152,108 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 				new SplashWindow(this, new AbstractAction() {
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
-						result = ImportExcel(filePath, templeName);
+						result = ImportExcel(panel,filePath, templeName,"特约小微商户户数");
 					}
 				});
 				MessageBox.show(this, result);
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
+		} else if(e.getSource()==btn_zn_count){ // 助农商户户数统计
+			try {
+				RefItemVO refItemVO = new RefItemVO();
+//				refItemVO.setId(report_date_new);
+				RefDialog_Date date = new RefDialog_Date(this, "", refItemVO, null);
+				date.initialize();
+				date.setVisible(true);// 设置日期选择框可见
+			    final WnSalaryServiceIfc service = (WnSalaryServiceIfc) UIUtil
+						.lookUpRemoteService(WnSalaryServiceIfc.class);
+				if(date.getCloseType()==1){// 
+					final RefItemVO ivo = date.getReturnRefItemVO();
+					/**
+					 * 获取到当前选中日期
+					 */
+					final	String curSelectDate =ivo.getId();// 当前选中日期
+					final String curSelectMonth =curSelectDate.substring(0,7);
+					final   String curSelectMonthStart=curSelectMonth+"-01";
+					String existsSQL="select 1 from wn_znshcount_result where curmonth='"+curSelectMonth+"'";
+					String[] existsNum = UIUtil.getStringArrayFirstColByDS(null,existsSQL );
+					final  TyxwcontentCount tyxw=new TyxwcontentCount();
+					if(existsNum.length<=0){// 结果表中没有数据，直接计算
+						new SplashWindow(this,new AbstractAction(){
+							@Override
+							public void actionPerformed(ActionEvent e) { // 执行助农商户维护计算
+								message=service.znCount(curSelectMonthStart,curSelectDate,curSelectMonth,false);
+							}
+						});
+						panel2.QueryData("select * from wn_znshcount_result where CURMONTH='"+curSelectMonth+"' ");
+						MessageBox.show(this,message);
+					}else {// 当前考核月的数据已经存在，请用户重新计算
+						if(MessageBox.confirm(this, "日期【" + curSelectDate + "】助农商户统计信息已经存在，确定重复计算吗？")){
+							new SplashWindow(this,new AbstractAction(){
+								@Override
+								public void actionPerformed(ActionEvent e) { // 执行助农商户维护计算
+									// message=tyxw.znCount(curSelectMonth+"-01", curSelectDate, curSelectMonth, true);
+									message=service.znCount(curSelectMonthStart,curSelectDate,curSelectMonth,true);
+								}
+							});
+							panel2.QueryData("select * from wn_znshcount_result where CURMONTH='"+curSelectMonth+"' ");
+							MessageBox.show(this,message);
+						}else {
+							return;
+						}
+					}
+				}
+				panel2.refreshCurrData();
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
+		}else if(e.getSource() == btn_zn_export){
+			chooser = new JFileChooser();
+			final String templeName = panel2.getTempletVO()
+					.getTempletname();// 获取到模板的名称
+			chooser.setSelectedFile(new File(templeName + ".xls"));
+			int showOpenDialog = chooser.showOpenDialog(null);
+			final String filePath;
+			if (showOpenDialog == JFileChooser.APPROVE_OPTION) {// 选择打开的文件
+				filePath = chooser.getSelectedFile().getAbsolutePath();
+			} else {
+				return;
+			}
+			new SplashWindow(this, new AbstractAction() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+				  result=ImportExcel(panel2,filePath,templeName,"助农商户维护");
+				}
+			});
+			MessageBox.show(this,"【助农商户维护】导出成功");
+		}else if(e.getSource()==panel2.getQuickQueryPanel()){
+			String curMonth = panel2.getQuickQueryPanel().getRealValueAt("curmonth");
+			String sql="select * from WN_ZNSHCOUNT_RESULT where  1=1 ";
+			if(!TBUtil.isEmpty(curMonth)){
+				sql=sql+" and curmonth ='"+curMonth.replace("年", "-").replace("月;", "")+"'";
+			}
+			sql =sql+" order by curmonth desc ";
+			panel2.queryDataByDS(null, sql);
 		}
-		
 	}
 
-	public String ImportExcel(String filePath, String templeName) {
+	public String ImportExcel(BillListPanel panel,String filePath, String templeName,String sheetName) {
 		String result = "";
 		try {
 			Workbook monitorBook = new SXSSFWorkbook(100);
-			Sheet firstSheet = monitorBook.createSheet("特约小微商户");
+			Sheet firstSheet = monitorBook.createSheet(sheetName);
 			Row firstRow = firstSheet.createRow(0);
 			 Cell firstCell = null;
 			 CellStyle firstCellStyle = monitorBook.createCellStyle();
 			 firstCellStyle.setAlignment(HSSFCellStyle.ALIGN_CENTER);
-
 			
 			// 获取到表头信息
 			Pub_Templet_1_ItemVO[] templetItemVOs = panel
 					.getTempletItemVOs();
 			List<String> unShowList = new ArrayList<String>();
 			Pub_Templet_1_ItemVO pub_Templet_1_ItemVO = null;
-			List<String> colList = new ArrayList<String>();// 存放可以显示的字段
+		    List<String> colList = new ArrayList<String>();// 存放可以显示的字段
 			for (int i = 0, n = 0; i < templetItemVOs.length; i++) {
 				pub_Templet_1_ItemVO = templetItemVOs[i];
 				String cellKey = pub_Templet_1_ItemVO.getItemkey();
@@ -171,9 +269,17 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 					n++;
 				}
 			}
+			System.out.println();
 			if (queryConditionSQL == null || "".equals(queryConditionSQL)) {
-				queryConditionSQL = "select * from wn_tyxwcount_result where 1=1";
+				queryConditionSQL = "select * from "+panel.getTempletVO().getSavedtablename()+" where 1=1 ";
 			}
+			String queryCondition=panel.getQuickQueryPanel().getQuerySQLCondition("curmonth");
+			//查询: and ((curmonth.curmonth>='2020-05-01' and curmonth.curmonth<='2020-05-31 24:00:00'))
+
+			if(!TBUtil.isEmpty(queryCondition)) {
+				queryConditionSQL=queryConditionSQL+" and  curmonth="+queryCondition.substring(queryCondition.indexOf("=")+1,queryCondition.indexOf("'")+8)+"'";
+			}
+			// 获取到当前模板的查询条件
 			HashVO[] hashVos = UIUtil.getHashVoArrayByDS(null,
 					queryConditionSQL);
 			if (hashVos == null || hashVos.length == 0) {
@@ -220,5 +326,10 @@ public class TyxwcontentWKPanel extends AbstractWorkPanel implements ActionListe
 			e.printStackTrace();
 		}
 		return result;
+	}
+	@Override
+	public void stateChanged(ChangeEvent e) {
+		
+		
 	}
 }
