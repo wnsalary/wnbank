@@ -297,6 +297,6 @@ public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc {
 	 * @return
 	 */
 	public String znCount(String curSelectMonthStart, String curSelectDate,
-			String curSelectMonth, boolean b);
+			String curSelectMonth,String dateInterVal ,boolean b);
   
 }
