@@ -20,10 +20,7 @@ import cn.com.infostrategy.bs.common.CommDMO;
 import cn.com.infostrategy.bs.common.RemoteCallServlet;
 import cn.com.infostrategy.bs.common.ServerEnvironment;
 import cn.com.infostrategy.to.common.HashVO;
-<<<<<<< HEAD
 
-=======
->>>>>>> 38692b7ae7cb66f3897e4a2708d12fea70bfb49d
 import cn.com.infostrategy.to.common.WLTLogger;
 import cn.com.infostrategy.to.common.TBUtil;
 import cn.com.infostrategy.to.mdata.BillVO;
@@ -36,11 +33,10 @@ import cn.com.infostrategy.ui.common.UIUtil;
 import cn.com.pushworld.wn.to.WnUtils;
 import cn.com.pushworld.wn.ui.WnSalaryServiceIfc;
 import org.apache.log4j.Logger;
-<<<<<<< HEAD
-=======
-import org.springframework.web.servlet.mvc.LastModified;
 
->>>>>>> 38692b7ae7cb66f3897e4a2708d12fea70bfb49d
+
+//import org.springframework.web.servlet.mvc.LastModified;
+
 import freemarker.template.SimpleDate;
 
 public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
