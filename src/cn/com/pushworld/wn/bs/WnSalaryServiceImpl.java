@@ -3330,9 +3330,9 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		HashMap<String, String> map = new HashMap<String, String>();
 		try {
 			if(str.contains("ио")){
-				map = dmo.getHashMapBySQLByDS(null, "select C,ROUND(E,2) from excel_tab_112 where year||'-'||month='"+year+"-06'");	
+				map = dmo.getHashMapBySQLByDS(null, "select c,ROUND((0-sum(e)),2) from excel_tab_112 where year||'-'||month='"+year+"-03' or year||'-'||month='"+year+"-06' group by c");	
 			}else if(str.contains("об")){
-				map = dmo.getHashMapBySQLByDS(null, "select C,ROUND(E,2) from excel_tab_112 where year||'-'||month='"+String.valueOf((Integer.valueOf(year) - 1))+"-12'");		
+				map = dmo.getHashMapBySQLByDS(null, "select C,ROUND((0-sum(e)),2) from excel_tab_112 where year||'-'||month='"+String.valueOf((Integer.valueOf(year) - 1))+"-09' or year||'-'||month='"+String.valueOf((Integer.valueOf(year) - 1))+"-12' group by c");		
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
