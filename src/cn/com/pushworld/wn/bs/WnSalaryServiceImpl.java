@@ -852,14 +852,22 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			UpdateSQLBuilder update = new UpdateSQLBuilder(
 					"wnsalarydb.s_loan_khxx_" + sy);
 			List list = new ArrayList<String>();
+//			String[][] str = dmo
+//					.getStringArrayByDS(
+//							null,
+//							"select dy.b,dy.w,dy.x,dy.v from wnsalarydb.s_loan_khxx_"
+//									+ dy
+//									+ " dy left join  wnsalarydb.s_loan_khxx_"
+//									+ sy
+//									+ " sy on dy.i=sy.i where dy.w||dy.x!=sy.w||sy.x group by dy.b,dy.w,dy.x,dy.v");
 			String[][] str = dmo
-					.getStringArrayByDS(
-							null,
-							"select dy.b,dy.w,dy.x,dy.v from wnsalarydb.s_loan_khxx_"
-									+ dy
-									+ " dy left join  wnsalarydb.s_loan_khxx_"
-									+ sy
-									+ " sy on dy.i=sy.i where dy.w||dy.x!=sy.w||sy.x group by dy.b,dy.w,dy.x,dy.v");
+				     .getStringArrayByDS(
+				       null,
+				       "select dy.b,dy.w,dy.x,dy.v from wnsalarydb.s_loan_khxx_"
+				         + dy
+				         + " dy left join  wnsalarydb.s_loan_khxx_"
+				         + sy
+				         + " sy on dy.b=sy.b where dy.w||dy.x!=sy.w||sy.x  or  dy.v!=dy.v");
 			for (int i = 0; i < str.length; i++) {
 				update.setWhereCondition("B='" + str[i][0] + "'");
 				update.putFieldValue("W", str[i][1]);
