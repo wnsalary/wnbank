@@ -127,7 +127,6 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 						}else {
 							return;
 						}
-						
 					}else {
 						new SplashWindow(this, new AbstractAction() {
 							@Override
