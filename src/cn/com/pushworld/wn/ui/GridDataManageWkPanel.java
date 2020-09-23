@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import cn.com.infostrategy.ui.common.*;
 import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
 
 import cn.com.infostrategy.to.common.WLTConstants;
@@ -14,12 +15,6 @@ import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.to.mdata.DeleteSQLBuilder;
 import cn.com.infostrategy.to.mdata.InsertSQLBuilder;
 import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
-import cn.com.infostrategy.ui.common.AbstractWorkPanel;
-import cn.com.infostrategy.ui.common.BillDialog;
-import cn.com.infostrategy.ui.common.ClientEnvironment;
-import cn.com.infostrategy.ui.common.MessageBox;
-import cn.com.infostrategy.ui.common.UIUtil;
-import cn.com.infostrategy.ui.common.WLTButton;
 import cn.com.infostrategy.ui.mdata.BillCardDialog;
 import cn.com.infostrategy.ui.mdata.BillCardPanel;
 import cn.com.infostrategy.ui.mdata.BillListDialog;
@@ -42,6 +37,7 @@ public class GridDataManageWkPanel extends AbstractWorkPanel implements
 	private final String USERNAME = ClientEnvironment.getCurrSessionVO()
 			.getLoginUserName();
 	private BillListPanel list;
+	private WLTTabbedPane tabbedPane = null; // 页签 zzl[2020-9-18]添加网格页签
 
 	@Override
 	public void initialize() {
@@ -58,7 +54,11 @@ public class GridDataManageWkPanel extends AbstractWorkPanel implements
 				.addBatchBillListButton(new WLTButton[] { btn_update, btn_log });
 		list = new BillListPanel("WN_WGINFOUPDATE_LOG_CODE");
 		listPanel.repaintBillListButton();// 刷新按钮
-		this.add(listPanel);
+		tabbedPane =new WLTTabbedPane();
+		tabbedPane.addTab("存款网格",listPanel);
+		GridDataManageDKWkPanel dk=new GridDataManageDKWkPanel();
+		tabbedPane.addTab("贷款网格",dk.getListPanel());
+		this.add(tabbedPane);
 	}
 
 	@Override

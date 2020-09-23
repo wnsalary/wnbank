@@ -90,6 +90,71 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 		return str;
 	}
 
+	@Override
+	public String getHfWg() {
+		String str1="";
+		try {
+			String [][] count=dmo.getStringArrayByDS(null,"select count(*),floor(count(*)/10000) from s_loan_khxx_202001 where J is null and K is null and H like'%县%' and H like'%乡%' and H like'%村%'");
+			int zj=Integer.parseInt(count[0][0]);
+			int xj=Integer.parseInt(count[0][1]);
+			int a=1;
+			List list=new ArrayList();
+			UpdateSQLBuilder update=new UpdateSQLBuilder("s_loan_khxx_202001");
+			for(int i=0;i<xj+1;i++){
+				HashVO [] vos=null;
+				if(i==xj){
+					vos=dmo.getHashVoArrayByDS(null,"SELECT G,H  FROM (SELECT ROWNUM AS rowno, t.* FROM s_loan_khxx_202001 t WHERE ROWNUM <= '"+zj+"' and J is null and K is null and H like'%县%' and H like'%乡%' and H like'%村%') table_alias WHERE table_alias.rowno >='"+i*10000+"'");
+				}else{
+					vos=dmo.getHashVoArrayByDS(null,"SELECT G,H  FROM (SELECT ROWNUM AS rowno, t.* FROM s_loan_khxx_202001 t WHERE ROWNUM <= '"+a*10000+"' and J is null and K is null and H like'%县%' and H like'%乡%' and H like'%村%') table_alias WHERE table_alias.rowno >='"+i*10000+"'");
+
+				}
+				for(int j=0;j<vos.length;j++){
+					String str=vos[j].getStringValue("H");
+					String strx="";
+					String strc="";
+//					if(str.contains("镇") && str.contains("乡") && str.contains("村")){
+//						strx=str.substring(str.indexOf("镇")+1,str.indexOf("乡")+1);
+//						strc=str.substring(str.indexOf("乡")+1,str.indexOf("村")+1);
+//					}else if(str.contains("镇") && str.contains("村")){
+//						strx=str.substring(str.indexOf("县")+1,str.indexOf("镇")+1);
+//						strc=str.substring(str.indexOf("镇")+1,str.indexOf("村")+1);
+//					}
+//					if(str.contains("县") && str.contains("镇") && str.contains("路")) {
+//						strx = str.substring(str.indexOf("县") + 1, str.indexOf("镇") + 1);
+//						strc = str.substring(str.indexOf("镇") + 1, str.indexOf("路") + 1);
+//					}else if(str.contains("县") && str.contains("镇") && str.contains("村")){
+//						strx = str.substring(str.indexOf("县") + 1, str.indexOf("镇") + 1);
+//						strc = str.substring(str.indexOf("镇") + 1, str.indexOf("村") + 1);
+//					}else
+						if(str.contains("县") && str.contains("乡") && str.contains("村")){
+						strx = str.substring(str.indexOf("县") + 1, str.indexOf("乡") + 1);
+						strc = str.substring(str.indexOf("乡") + 1, str.indexOf("村") + 1);
+					}
+					if(!strx.equals("") || !strc.equals("")){
+						update.setWhereCondition("G='"+vos[j].getStringValue("G")+"'");
+						update.putFieldValue("J",strx);
+						update.putFieldValue("K",strc);
+						list.add(update.getSQL());
+					}
+				}
+				if(list.size()>1000){
+					dmo.executeBatchByDS(null,list);
+					list.clear();
+				}else{
+					dmo.executeBatchByDS(null,list);
+					list.clear();
+				}
+				a++;
+			}
+			str1="导入成功";
+		} catch (Exception e) {
+			str1="导入失败";
+			e.printStackTrace();
+		}
+
+		return str1;
+	}
+
 	// zpy
 	@Override
 	public String getSqlInsert(String time) {

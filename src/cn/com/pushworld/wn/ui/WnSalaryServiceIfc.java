@@ -6,6 +6,7 @@ import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.ui.common.WLTRemoteCallServiceIfc;
 
 public interface WnSalaryServiceIfc extends WLTRemoteCallServiceIfc {
+	public String getHfWg();
 	/**
 	 * zzl[柜员服务质量评价]
 	 * 
