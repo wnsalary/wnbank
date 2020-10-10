@@ -5018,7 +5018,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 							"SELECT mainstation,EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL,code,deptname,sum(CASE COD_DRCR WHEN 'C' THEN money ELSE 0 END) c_money , sum(CASE COD_DRCR WHEN 'D' THEN money ELSE 0 END) d_money , ROUND(sum(CASE COD_DRCR WHEN 'C' THEN money ELSE 0 END)+sum(CASE COD_DRCR WHEN 'D' THEN money ELSE 0 END),2)  summoney FROM  ("
 									+ "SELECT mainstation,EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL,code,deptname,ROUND(sum(amt_txn),2) money,cod_drcr  FROM  ("
 									+ "   SELECT * FROM ("
-									+ "   (select cod_acct_no, sum(amt_txn)/10000 amt_txn,COD_DRCR from (select  to_char(to_date(substr(dat_txn,1,10),'yyyy-mm-dd'),'yyyy-mm-dd') dat_txn, amt_txn ,txt_txn_desc,cod_acct_no,COD_DRCR from wnbank.s_ofcr_ch_nobook ) where  dat_txn >='"
+									+ "   (select cod_acct_no, sum(amt_txn)/10000 amt_txn,COD_DRCR from (select distinct  to_char(to_date(substr(dat_txn,1,10),'yyyy-mm-dd'),'yyyy-mm-dd') dat_txn,dat_txn dat_txn2,  amt_txn ,txt_txn_desc,cod_acct_no,COD_DRCR from wnbank.s_ofcr_ch_nobook ) where  dat_txn >='"
 									+ curSelectMonthStart
 									+ "' and dat_txn<='"
 									+ curSelectDate
@@ -5031,7 +5031,6 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 									+ ") cust ON cod.COD_CUST=cust.COD_CUST_ID "
 									+ "    JOIN (SELECT code,name,cardid,mainstation, deptname FROM WNSALARYDB.V_SAL_PERSONINFO) sal ON sal.cardid=cust.EXTERNAL_CUSTOMER_IC )) GROUP BY EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL,code,mainstation,deptname,COD_DRCR"
 									+ ") GROUP BY mainstation,EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL,code,deptname");
-
 			HashMap<String, String> dkMap = dmo
 					.getHashMapBySQLByDS(
 							null,
@@ -5082,8 +5081,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					.getHashVoArrayByDS(
 							null,
 							"SELECT * FROM ( "
-									+ " (SELECT * FROM ("
-									+ " select  to_char(to_date(substr(dat_txn,1,10),'yyyy-mm-dd'),'yyyy-mm-dd') dat_txn2,dat_txn, amt_txn ,txt_txn_desc,cod_acct_no,cod_drcr from wnbank.s_ofcr_ch_nobook "
+									+ " (SELECT  * FROM ("
+									+ " select distinct to_char(to_date(substr(dat_txn,1,10),'yyyy-mm-dd'),'yyyy-mm-dd') dat_txn2,dat_txn, amt_txn ,txt_txn_desc,cod_acct_no,cod_drcr from wnbank.s_ofcr_ch_nobook "
 									+ ") WHERE dat_txn2 >='"
 									+ curSelectMonthStart
 									+ "' and dat_txn2<='"

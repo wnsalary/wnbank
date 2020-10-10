@@ -360,7 +360,7 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 					// 加工处理每一行数据(有一部分数据在数据表中存储的是id，需要转化成name来输出)
 				
 					// 其他(名称 描述等)
-						cellValue = hashVos[i].getStringValue(colList.get(j));
+						cellValue = hashVos[i].getStringValue(colList.get(j),"");
 					    nextRow.createCell(j - n).setCellValue(cellValue);
 				}
 			}
@@ -414,7 +414,7 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 			}else if("cod_drcr_c".equals(itemKey)){// 收入
 				dialog=new BillListDialog(this, "员工交易数据", dealListPanel);
 				dialog.getBilllistPanel().QueryDataByCondition(" DAT_TXN2 LIKE '"+vo.getStringValue("DAT_TXN")+"%' AND CARDID='"+vo.getStringValue("EXTERNAL_CUSTOMER_IC")+"' and cod_drcr='C'");
-			}else  if("cod_drcr_d".equals(itemKey)){
+			}else  if("cod_drcr_d".equals(itemKey)){//支出
 				dialog=new BillListDialog(this, "员工交易数据", dealListPanel);
 				dialog.getBilllistPanel().QueryDataByCondition(" DAT_TXN2 LIKE '"+vo.getStringValue("DAT_TXN")+"%' AND CARDID='"+vo.getStringValue("EXTERNAL_CUSTOMER_IC")+"' and cod_drcr='D'");
 			}
