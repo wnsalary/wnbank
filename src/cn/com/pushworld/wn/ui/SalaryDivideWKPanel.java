@@ -134,7 +134,8 @@ public class SalaryDivideWKPanel extends AbstractWorkPanel implements ActionList
             e.printStackTrace();
         }
         final BillListPanel list=new BillListPanel(templetVO);
-        list.setBillListTitleName("本指标分配额度"+value,255,0,0);
+//        list.setBillListTitleName("本指标分配额度"+value,255,0,0);
+        list.setBillListTitleName("本指标分配额度"+value);
         final int width=templetItemVOs[0].getListwidth()*columns.length;
         final int height=Integer.parseInt(templetVO.getListrowheight())*(vos.length+1);
         list.putValue(vos);

@@ -20,7 +20,7 @@ public class TyxwcontentCount  extends AbstractDMO{
 	 * @param endDate:结束时间(用户选中的日期)
 	 * @return
 	 */
-	public  String count(String startDate,String endDate,String curMonth,boolean exists){
+	public  String count(String startDate,String endDate,String curMonth,String dateInterval,boolean exists){
 		InsertSQLBuilder insert=new  InsertSQLBuilder();
 		insert.setTableName("wn_tyxwcount_result");
 		DeleteSQLBuilder delete=new DeleteSQLBuilder();
@@ -40,6 +40,7 @@ public class TyxwcontentCount  extends AbstractDMO{
 				insert.putFieldValue("num", vo.getStringValue("num"));
 				insert.putFieldValue("money", vo.getStringValue("money"));
 				insert.putFieldValue("curmonth", curMonth);
+				insert.putFieldValue("dateInterval", dateInterval);
 			    list.add(insert.getSQL());
 			    if(list.size()>=5000){
 			    	UIUtil.executeBatchByDS(null, list);

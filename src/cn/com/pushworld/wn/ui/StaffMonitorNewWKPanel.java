@@ -13,6 +13,7 @@ import javax.swing.JComboBox;
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 
+import org.apache.axis.encoding.ser.ArraySerializer;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -25,8 +26,10 @@ import cn.com.infostrategy.to.common.TBUtil;
 import cn.com.infostrategy.to.mdata.BillVO;
 import cn.com.infostrategy.to.mdata.Pub_Templet_1_ItemVO;
 import cn.com.infostrategy.to.mdata.RefItemVO;
+import cn.com.infostrategy.to.mdata.UpdateSQLBuilder;
 import cn.com.infostrategy.ui.common.AbstractWorkPanel;
 import cn.com.infostrategy.ui.common.BillDialog;
+import cn.com.infostrategy.ui.common.ClientEnvironment;
 import cn.com.infostrategy.ui.common.MessageBox;
 import cn.com.infostrategy.ui.common.SplashWindow;
 import cn.com.infostrategy.ui.common.UIUtil;
@@ -47,15 +50,16 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 	private WLTButton sonexportButton;// 子模板上数据导出成excel按钮
 	private WLTButton exportButton;//
 	private WLTButton checkButton;// 数据处理
+	private WLTButton submitButton;// 提交按钮
 	private String message;// 提示信息
 	private JFileChooser fileChooser;
+	private String username=ClientEnvironment.getInstance().getLoginUserName();//获取到当前登录人姓名
+	private String usercode=ClientEnvironment.getInstance().getLoginUserCode();//获取到当前登录人柜员号
 
 	@Override
 	public void initialize() {// 初始
 		listPanel = new BillListPanel("WN_GATHER_MONITOR_RESULT_ZPY_Q01");
-		// sonListPanel=new BillListPanel("WN_SHOW_MONITOR_ZPY_Q01");
 		sonListPanel = new BillListPanel("WN_CURRENT_DEAL_DATE_ZPY_Q01");
-		// listPanel.
 		dealListPanel=new BillListPanel("WN_DEAL_INFO_CODE_ZPY");
 		dkListPanel=new BillListPanel("WN_DK_INFO_ZPY");
 		comboBox = new JComboBox();
@@ -68,8 +72,10 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 		sonexportButton.addActionListener(this);
 		checkButton = new WLTButton("员工异常数据处理");
 		checkButton.addActionListener(this);
+		submitButton=new WLTButton("提交");
+		submitButton.addActionListener(this);
 		listPanel.addBatchBillListButton(new WLTButton[] { importButton,
-				exportButton, checkButton });
+				exportButton, checkButton,submitButton});
 		listPanel.repaintBillListButton();
 		listPanel.addBillListHtmlHrefListener(this);
 		listPanel.getQuickQueryPanel().addBillQuickActionListener(this);// 重写快速查询的方法
@@ -121,7 +127,6 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 						}else {
 							return;
 						}
-						
 					}else {
 						new SplashWindow(this, new AbstractAction() {
 							@Override
@@ -152,8 +157,14 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 					return;
 				}
 				String dealMessage = "";
+//				for (int i = 0; i < billVos.length; i++) {
+//					if (!billVos[i].getStringValue("deal_result").equals("未处理")) {
+//						dealMessage = dealMessage
+//								+ billVos[i].getStringValue("NAME") + ",";
+//					}
+//				}
 				for (int i = 0; i < billVos.length; i++) {
-					if (!billVos[i].getStringValue("deal_result").equals("未处理")) {
+					if(billVos[i].getStringValue("status").equals("已提交")){
 						dealMessage = dealMessage
 								+ billVos[i].getStringValue("NAME") + ",";
 					}
@@ -162,7 +173,7 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 					dealMessage = dealMessage.substring(0,
 							dealMessage.lastIndexOf(","));
 					MessageBox.show(this, "当前选中【" + dealMessage
-							+ "】员工异常数据已经处理，请勿重复操作");
+							+ "】员工异常数据已提交，请勿重复操作");
 					return;
 				}
 				final BillCardDialog cardDialog = new BillCardDialog(this,
@@ -176,7 +187,7 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 						new ActionListener() {
 							@Override
 							public void actionPerformed(ActionEvent e) {
-								Map<String, String> paraMap = new HashMap<String, String>();
+								Map<String, String> paraMap = new HashMap<String, String>(); // 这里只记录处理情况
 								paraMap.put("CHECK_RESULT", cardDialog
 										.getCardItemValue("CHECK_RESULT"));
 								paraMap.put("CHECK_REASON", cardDialog
@@ -187,6 +198,8 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 										.getCardItemValue("CHECK_USERNAME"));
 								paraMap.put("CHECK_DATE", cardDialog
 										.getCardItemValue("CHECK_DATE"));
+								System.out.println("附件:"+cardDialog.getCardItemValue("APPTH"));
+								paraMap.put("APPTH", cardDialog.getCardItemValue("APPTH"));
 								message = service.dealExceptionData(billVos,
 										paraMap);
 								cardDialog.closeMe();
@@ -240,6 +253,45 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 				listPanel.QueryData(querySQL);
 			} catch (Exception e2) {
 				e2.printStackTrace();
+			}
+		} else  if(e.getSource() == submitButton){ // 提交按钮
+			// 在提交任务时，必须保证当前任务已经处理，未处理状态下的任务禁止提交
+			BillVO[] vos = listPanel.getCheckedBillVOs();
+			StringBuilder message= new  StringBuilder("");
+			for (int i = 0; i < vos.length; i++) {// 循环遍历整个任务
+				if("未处理".equals(vos[i].getStringValue("DEAL_RESULT"))){// 当前员工未处理
+					message.append(vos[i].getStringValue("name")+" ");
+				}else {
+					continue;
+				}
+			}
+			if(message.length()>0){
+				MessageBox.show(this,"存在员工【"+message.toString()+"】尚未处理，请重新选择!!!");
+				return;
+			}
+			// 开始处理
+			try{
+				// 获取到当前数据
+				UpdateSQLBuilder resultUpdate=new  UpdateSQLBuilder("WN_GATHER_MONITOR_RESULT");
+				UpdateSQLBuilder monitorUpdate=new UpdateSQLBuilder("WN_DEAL_MONITOR");
+				List<String> list=new ArrayList<String>();
+				for (int i = 0; i < vos.length; i++) { // 提交任务
+					resultUpdate.setWhereCondition("id="+vos[i].getStringValue("id"));
+					resultUpdate.putFieldValue("status", "已提交");
+					resultUpdate.putFieldValue("submit_person_code",usercode );
+					resultUpdate.putFieldValue("submit_person_name", username);
+					list.add(resultUpdate.getSQL());
+					monitorUpdate.setWhereCondition("monitor_id="+vos[i].getStringValue("id"));
+					monitorUpdate.putFieldValue("status", "已提交");
+					monitorUpdate.putFieldValue("submit_person_code",usercode);
+					monitorUpdate.putFieldValue("submit_person_name",username);
+					list.add(monitorUpdate.getSQL());
+				}
+				UIUtil.executeBatchByDS(null, list);//执行提交操作，修改状态
+				listPanel.refreshData();
+				MessageBox.show(this,"员工异常信息提交成功");
+			}catch(Exception ex){// 出现异常
+				MessageBox.show(this,"员工异常信息提交失败");
 			}
 		}
 	}
@@ -308,7 +360,7 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 					// 加工处理每一行数据(有一部分数据在数据表中存储的是id，需要转化成name来输出)
 				
 					// 其他(名称 描述等)
-						cellValue = hashVos[i].getStringValue(colList.get(j));
+						cellValue = hashVos[i].getStringValue(colList.get(j),"");
 					    nextRow.createCell(j - n).setCellValue(cellValue);
 				}
 			}
@@ -359,6 +411,12 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 			}else if("loan_balance".equalsIgnoreCase(itemKey)){//点击的是贷款金额
 				dialog=new BillListDialog(this, "员工贷款数据", dkListPanel);
 				dialog.getBilllistPanel().QueryDataByCondition(" DKDATE2 LIKE '"+vo.getStringValue("DAT_TXN")+"%' AND CARDID='"+vo.getStringValue("EXTERNAL_CUSTOMER_IC")+"'");
+			}else if("cod_drcr_c".equals(itemKey)){// 收入
+				dialog=new BillListDialog(this, "员工交易数据", dealListPanel);
+				dialog.getBilllistPanel().QueryDataByCondition(" DAT_TXN2 LIKE '"+vo.getStringValue("DAT_TXN")+"%' AND CARDID='"+vo.getStringValue("EXTERNAL_CUSTOMER_IC")+"' and cod_drcr='C'");
+			}else  if("cod_drcr_d".equals(itemKey)){//支出
+				dialog=new BillListDialog(this, "员工交易数据", dealListPanel);
+				dialog.getBilllistPanel().QueryDataByCondition(" DAT_TXN2 LIKE '"+vo.getStringValue("DAT_TXN")+"%' AND CARDID='"+vo.getStringValue("EXTERNAL_CUSTOMER_IC")+"' and cod_drcr='D'");
 			}
 			dialog.getBtn_confirm().setVisible(false);
 			dialog.setVisible(true);
