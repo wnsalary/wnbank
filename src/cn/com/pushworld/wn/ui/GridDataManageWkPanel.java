@@ -55,12 +55,15 @@ public class GridDataManageWkPanel extends AbstractWorkPanel implements
 		if(ClientEnvironment.isAdmin()){
 			listPanel.QueryDataByCondition("PARENTID='1'");//zzl[20201012]
 			listPanel.addBatchBillListButton(new WLTButton[] {btn_add, btn_update});
+			listPanel.setDataFilterCustCondition("PARENTID='1'");
 		}else if(vos[0].getStringValue("POSTNAME").contains("行长")){
 			listPanel.QueryDataByCondition("PARENTID='1' and F='"+vos[0].getStringValue("DEPTCODE")+"'");//zzl[20201012]
 			listPanel.addBatchBillListButton(new WLTButton[] {btn_add, btn_update});
+			listPanel.setDataFilterCustCondition("PARENTID='1' and F='"+vos[0].getStringValue("DEPTCODE")+"'");
 		}else{
 			listPanel.QueryDataByCondition("PARENTID='1' and G='"+vos[0].getStringValue("USERCODE")+"'");//zzl[20201012]
-			listPanel.addBatchBillListButton(new WLTButton[] {btn_update});
+//			listPanel.addBatchBillListButton(new WLTButton[] {btn_update});
+			listPanel.setDataFilterCustCondition("PARENTID='1' and G='"+vos[0].getStringValue("USERCODE")+"'");
 		}
 		list = new BillListPanel("WN_WGINFOUPDATE_LOG_CODE");
 		listPanel.repaintBillListButton();// 刷新按钮
@@ -78,11 +81,13 @@ public class GridDataManageWkPanel extends AbstractWorkPanel implements
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == btn_add) {// 新增按钮
 		 BillCardDialog dialog=new BillCardDialog(listPanel,"新增","EXCEL_TAB_85_EDIT_CODE",900,300);
-		 dialog.setCardEditable(true);
+		 dialog.getBillcardPanel().setEditable("PARENTID",false);
+		 dialog.getBillcardPanel().setRealValueAt("PARENTID","1");
 		 dialog.setSaveBtnVisiable(false);
 		 dialog.setVisible(true);
+		 listPanel.addRow(dialog.getBillcardPanel().getBillVO());
 		} else if (e.getSource() == btn_update) {// 修改操作
-			BillVO vo = listPanel.getSelectedBillVO();
+			BillVO vo=listPanel.getSelectedBillVO();
 			if (vo == null) {
 				MessageBox.show(this, "请选中一条数据进行修改");
 				return;
@@ -94,8 +99,6 @@ public class GridDataManageWkPanel extends AbstractWorkPanel implements
 					cardPanel, WLTConstants.BILLDATAEDITSTATE_UPDATE);// 修改设置
 			dialog.setSaveBtnVisiable(false);
 			dialog.setVisible(true);
-			// UIUtil.getStringValueByDS(null,
-			// "SELECT * FROM WNSALARYDB.PUB_USER WHERE CODE='"+newVo.getStringValue("G")+"'");
 			try {
 				int closeType = dialog.getCloseType();
 				System.out.printf("closeType=%d", closeType);
@@ -233,18 +236,20 @@ public class GridDataManageWkPanel extends AbstractWorkPanel implements
 
 	/**
 	 * zzl【20201012】
-	 * 导入户籍数据还要检验一把
+	 * 导入户籍数据
 	 */
 	public void onImpData(BillListDialog dialog,final BillVO vo){
 		final BillCardDialog cardDialog=new BillCardDialog(dialog,"网格信息查看","S_LOAN_KHXX_202001_CODE1",600,400);
 		cardDialog.getBillcardPanel().setRealValueAt("J",vo.getStringValue("C"));
 		cardDialog.getBillcardPanel().setRealValueAt("K",vo.getStringValue("D"));
+		cardDialog.getBillcardPanel().setRealValueAt("deptcode",vo.getStringValue("F"));
 		cardDialog.getBtn_save().setVisible(false);
 		cardDialog.getBtn_confirm().addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
-				try{
-					HashVO [] vos=UIUtil.getHashVoArrayByDS(null,"select * from S_LOAN_KHXX_202001 where G='"+cardDialog.getBillcardPanel().getRealValueAt("G")+"'");
+				try{//and J='"+vo.getStringValue("C")+"' and K='"+vo.getStringValue("D")+"'
+					HashVO [] vos=UIUtil.getHashVoArrayByDS(null,"select * from S_LOAN_KHXX_202001 where G='"+
+							cardDialog.getBillcardPanel().getRealValueAt("G")+"' and deptcode='"+vo.getStringValue("F")+"'");
 					if(vos.length>0){
 						if(vos[0].getStringValue("J")==null && vos[0].getStringValue("K")==null){//zzl 已存在但是没有划入网格
 							UIUtil.executeUpdateByDS(null,"update S_LOAN_KHXX_202001 set J='"+vo.getStringValue("C")+"',K='"+vo.getStringValue("D")+"' where G='"+vos[0].getStringValue("G")+"'");
@@ -257,6 +262,7 @@ public class GridDataManageWkPanel extends AbstractWorkPanel implements
 					}else{
 						cardDialog.getBillcardPanel().updateData();
 						MessageBox.show(cardDialog,"导入成功重新查询即可");
+						cardDialog.dispose();
 					}
 				}catch (Exception e){
 					e.printStackTrace();
