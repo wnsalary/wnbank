@@ -5106,7 +5106,39 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 									+ curSelectMonthStart
 									+ "' and dk.xd_col3<='" + curSelectDate
 									+ "'  group by xd_col16");
-
+			/**
+			 * ZPY【2020-11-09】 新增查询两个月的存款差
+			 */
+			String lastMonth = getLastMonthDate(curSelectMonth);
+			String ckDiffSql = "select  cur.external_customer_ic,(cur.money-l.money)diff  from ( "
+					+ "(select external_customer_ic,vsp.name,sum(acct_bal) money  from ("
+					+ "((select ck.acct_bal,sc.external_customer_ic,ck.acct_no from wnbank.a_agr_dep_acct_psn_fx_"
+					+ curSelectMonth.replace("-", "")
+					+ " ck join wnbank.s_ofcr_ci_custmast_"
+					+ curSelectMonth.replace("-", "")
+					+ " sc on sc.cod_cust_id =ck.cust_no where ck.acct_bal >0) union all"
+					+ " (select ck.f acct_bal,sc.external_customer_ic,ck.acct_no from wnbank.a_agr_dep_acct_psn_sv_"
+					+ curSelectMonth.replace("-", "")
+					+ " ck join wnbank.s_ofcr_ci_custmast_"
+					+ curSelectMonth.replace("-", "")
+					+ " sc on sc.cod_cust_id =ck.cust_no where ck.f>0)) ck "
+					+ "join (wnsalarydb.v_sal_personinfo )vsp on vsp.cardid=ck.external_customer_ic "
+					+ ") group by external_customer_ic,vsp.name) cur left  join "
+					+ "(select external_customer_ic,vsp.name,sum (acct_bal) money from ( "
+					+ "((select ck.acct_bal,sc.external_customer_ic,ck.acct_no from wnbank.a_agr_dep_acct_psn_fx_"
+					+ lastMonth
+					+ " ck join wnbank.s_ofcr_ci_custmast_"
+					+ lastMonth
+					+ " sc on sc.cod_cust_id =ck.cust_no where ck.acct_bal >0) union all"
+					+ "(select ck.f acct_bal,sc.external_customer_ic,ck.acct_no from wnbank.a_agr_dep_acct_psn_sv_"
+					+ lastMonth
+					+ " ck join wnbank.s_ofcr_ci_custmast_"
+					+ lastMonth
+					+ " sc on sc.cod_cust_id =ck.cust_no where ck.f>0)) ck "
+					+ " join (wnsalarydb.v_sal_personinfo )vsp on vsp.cardid=ck.external_customer_ic"
+					+ ") group by external_customer_ic,vsp.name) l on l.external_customer_ic = cur.external_customer_ic) ";
+			HashMap<String, String> ckDiffMap = dmo.getHashMapBySQLByDS(null,
+					ckDiffSql);
 			InsertSQLBuilder insert = new InsertSQLBuilder(
 					"wn_gather_monitor_result");
 			for (int i = 0; i < dealVo.length; i++) {// 将交易明细和贷款信息导入到数据库中
@@ -5137,6 +5169,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 				insert.putFieldValue("id", dmo.getSequenceNextValByDS(null,
 						"S_WN_GATHER_MONITOR_RESULT")); // id字段
 				insert.putFieldValue("status", "未提交");// 提交状态 ：已提交 已通过 已退回
+				insert.putFieldValue("ck_diff", ckDiffMap.get(dealVo[i].getStringValue("EXTERNAL_CUSTOMER_IC"))== null ?"0":ckDiffMap.get(dealVo[i].getStringValue("EXTERNAL_CUSTOMER_IC")));
 				list.add(insert.getSQL());
 			}
 			dmo.executeBatchByDS(null, list);
@@ -5662,5 +5695,26 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			e.printStackTrace();
 		}
 		return message;
+	}
+	
+	public   String getLastMonthDate(String curSelectMonth){
+		String result="";
+		try{
+		SimpleDateFormat simple = new SimpleDateFormat("yyyy-MM");
+		int year = Integer.parseInt(new SimpleDateFormat("yyyy")
+				.format(simple.parse(curSelectMonth)));
+		int month = Integer.parseInt(new SimpleDateFormat("MM")
+				.format(simple.parse(curSelectMonth)));
+		if(month==1){
+			month=12;
+			year=year-1;
+		}else {
+			month=month-1;
+		}
+		result=year+(month<10? String.valueOf("0"+month):String.valueOf(month));
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return result;
 	}
 }
