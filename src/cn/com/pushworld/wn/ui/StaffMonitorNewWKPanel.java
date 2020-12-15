@@ -410,7 +410,7 @@ public class StaffMonitorNewWKPanel extends AbstractWorkPanel implements
 				dialog.getBilllistPanel().QueryDataByCondition(" DAT_TXN2 LIKE '"+vo.getStringValue("DAT_TXN")+"%' AND CARDID='"+vo.getStringValue("EXTERNAL_CUSTOMER_IC")+"'");
 			}else if("loan_balance".equalsIgnoreCase(itemKey)){//点击的是贷款金额
 				dialog=new BillListDialog(this, "员工贷款数据", dkListPanel);
-				dialog.getBilllistPanel().QueryDataByCondition(" DKDATE2 LIKE '"+vo.getStringValue("DAT_TXN")+"%' AND CARDID='"+vo.getStringValue("EXTERNAL_CUSTOMER_IC")+"'");
+				dialog.getBilllistPanel().QueryDataByCondition(" loadmonth = '"+vo.getStringValue("DAT_TXN")+"' AND CARDID='"+vo.getStringValue("EXTERNAL_CUSTOMER_IC")+"'");
 			}else if("cod_drcr_c".equals(itemKey)){// 收入
 				dialog=new BillListDialog(this, "员工交易数据", dealListPanel);
 				dialog.getBilllistPanel().QueryDataByCondition(" DAT_TXN2 LIKE '"+vo.getStringValue("DAT_TXN")+"%' AND CARDID='"+vo.getStringValue("EXTERNAL_CUSTOMER_IC")+"' and cod_drcr='C'");

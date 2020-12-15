@@ -5063,6 +5063,7 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			// }
 
 			List<String> list = new ArrayList<String>();
+			String loadMonth=curSelectMonth.replaceAll("-", "");
 			if (flag) {// 表示当前选中日期已经存在，需要删除
 				dmo.executeUpdateByDS(null,
 						"delete from WN_GATHER_MONITOR_RESULT where dat_txn='"
@@ -5071,9 +5072,9 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 						"delete from wn_deal_info where dat_txn2 like'"
 								+ curSelectMonth + "%'");// 删除交易明细
 				dmo.executeUpdateByDS(null,
-						"delete from wn_dk_info where dkdate2 like '"
-								+ curSelectMonth + "%' ");
+						"delete from wn_dk_info where loadMonth = '"+loadMonth+"'");
 			}
+			
 			/**
 			 * 执行SQL，查询出每个联社成员的交易数据和贷款数据
 			 */
@@ -5089,10 +5090,10 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 									+ curSelectDate
 									+ "' group by cod_acct_no,COD_DRCR)  deal "
 									+ "    JOIN (SELECT COD_ACCT_NO,COD_CUST,COD_ACCT_TITLE FROM wnbank.S_OFCR_CH_ACCT_MAST_"
-									+ curSelectMonth.replace("-", "")
+									+ loadMonth
 									+ ") cod ON deal.cod_acct_no=cod.COD_ACCT_NO "
 									+ "    JOIN (SELECT COD_CUST_ID,EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL FROM wnbank.S_OFCR_CI_CUSTMAST_"
-									+ curSelectMonth.replace("-", "")
+									+ loadMonth
 									+ ") cust ON cod.COD_CUST=cust.COD_CUST_ID "
 									+ "    JOIN (SELECT code,name,cardid,mainstation, deptname FROM WNSALARYDB.V_SAL_PERSONINFO) sal ON sal.cardid=cust.EXTERNAL_CUSTOMER_IC )) GROUP BY EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL,code,mainstation,deptname,COD_DRCR"
 									+ ") GROUP BY mainstation,EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL,code,deptname");
@@ -5100,12 +5101,9 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					.getHashMapBySQLByDS(
 							null,
 							"select xd_col16,(sum(xd_col7)/10000) xd_col7 from ( "
-									+ "(select distinct xd_col7,xd_col16,to_char(cast (cast (xd_col3 as timestamp) as date), 'yyyy-mm-dd') xd_col3 from wnbank.s_loan_dk where  xd_col7 >0) dk "
+									+ "(select distinct xd_col7,xd_col16,to_char(cast (cast (xd_col3 as timestamp) as date), 'yyyy-mm-dd') xd_col3 from wnbank.s_loan_dk_"+loadMonth+" where  xd_col7 >0) dk "
 									+ "join (select cardid from wnsalarydb.v_sal_personinfo) sal on sal.cardid=dk.xd_col16 "
-									+ ") where dk.xd_col3>='"
-									+ curSelectMonthStart
-									+ "' and dk.xd_col3<='" + curSelectDate
-									+ "'  group by xd_col16");
+									+ ")  group by xd_col16");
 			/**
 			 * ZPY【2020-11-09】 新增查询两个月的存款差
 			 */
@@ -5118,9 +5116,9 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					+ curSelectMonth.replace("-", "")
 					+ " sc on sc.cod_cust_id =ck.cust_no where ck.acct_bal >0) union all"
 					+ " (select ck.f acct_bal,sc.external_customer_ic,ck.acct_no from wnbank.a_agr_dep_acct_psn_sv_"
-					+ curSelectMonth.replace("-", "")
+					+ loadMonth
 					+ " ck join wnbank.s_ofcr_ci_custmast_"
-					+ curSelectMonth.replace("-", "")
+					+ loadMonth
 					+ " sc on sc.cod_cust_id =ck.cust_no where ck.f>0)) ck "
 					+ "join (wnsalarydb.v_sal_personinfo )vsp on vsp.cardid=ck.external_customer_ic "
 					+ ") group by external_customer_ic,vsp.name) cur left  join "
@@ -5187,10 +5185,10 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 									+ curSelectDate
 									+ "') deal "
 									+ " JOIN (SELECT COD_ACCT_NO,COD_CUST,COD_ACCT_TITLE FROM wnbank.S_OFCR_CH_ACCT_MAST_"
-									+ curSelectMonth.replaceAll("-", "")
+									+ loadMonth
 									+ ") cod ON deal.cod_acct_no=cod.COD_ACCT_NO "
 									+ " JOIN (SELECT COD_CUST_ID,EXTERNAL_CUSTOMER_IC,NAM_CUST_FULL FROM wnbank.S_OFCR_CI_CUSTMAST_"
-									+ curSelectMonth.replaceAll("-", "")
+									+ loadMonth
 									+ ") cust ON cod.COD_CUST=cust.COD_CUST_ID "
 									+ " JOIN (SELECT code,name,cardid,mainstation, deptcode,deptname FROM WNSALARYDB.V_SAL_PERSONINFO) sal ON sal.cardid=cust.EXTERNAL_CUSTOMER_IC "
 									+ ")");
@@ -5230,12 +5228,10 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 			HashVO[] dkInfo = dmo
 					.getHashVoArrayByDS(
 							null,
-							"select dkdate,dkdate2,dkmoney,jqmoney,cardid,name,code,deptname from ( "
-									+ " (select distinct xd_col3 dkdate, to_char(cast (cast (xd_col3 as timestamp) as date), 'yyyy-mm-dd') dkdate2,xd_col6 dkmoney,xd_col7 jqmoney,xd_col16  from wnbank.s_loan_dk ) dk "
+							"select dkdate,dkdate2,dkmoney,jqmoney,cardid,name,code,deptname,hkdate from ( "
+									+ " (select distinct xd_col3 dkdate, to_char(cast (cast (xd_col3 as timestamp) as date), 'yyyy-mm-dd') dkdate2,to_char(cast (cast (xd_col5 as timestamp) as date), 'yyyy-mm-dd') hkdate,xd_col6 dkmoney,xd_col7 jqmoney,xd_col16  from wnbank.s_loan_dk_"+loadMonth+" ) dk "
 									+ "join (select cardid,name,code,deptname from wnsalarydb.v_sal_personinfo) sal on sal.cardid=dk.xd_col16 "
-									+ ") where dkdate2>='"
-									+ curSelectMonthStart + "' and dkdate2<='"
-									+ curSelectDate + "' and jqmoney>0");
+									+ ") where jqmoney>0");
 			InsertSQLBuilder dkInfoInsert = new InsertSQLBuilder("wn_dk_info");
 			for (int i = 0; i < dkInfo.length; i++) {
 				dkInfoInsert.putFieldValue("id",
@@ -5244,6 +5240,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 						dkInfo[i].getStringValue("dkdate"));// 贷款日期 精确到时分秒
 				dkInfoInsert.putFieldValue("dkdate2",
 						dkInfo[i].getStringValue("dkdate2"));// 贷款日期 精确到年月日
+				dkInfoInsert.putFieldValue("hkdate",
+						dkInfo[i].getStringValue("hkdate"));// 还款日期 精确到年月日
 				dkInfoInsert.putFieldValue("cardid",
 						dkInfo[i].getStringValue("cardid"));// 身份证号
 				dkInfoInsert.putFieldValue("dkmoney",
@@ -5256,6 +5254,8 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 						dkInfo[i].getStringValue("code"));// 员工号
 				dkInfoInsert.putFieldValue("deptname",
 						dkInfo[i].getStringValue("deptname"));// 部门
+				dkInfoInsert.putFieldValue("loadmonth",
+						curSelectMonth); // 加载日期
 				list.add(dkInfoInsert.getSQL());
 				if (list.size() >= 5000) {
 					dmo.executeBatchByDS(null, list);
@@ -5647,16 +5647,16 @@ public class WnSalaryServiceImpl implements WnSalaryServiceIfc {
 					+ curSelectMonthStart
 					+ "' and to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
 					+ curSelectDate
-					+ "' and mcht_prop='助农' and txn_type_desc='社保税费缴费交易' and txn_sub_type_desc='个人医疗保险缴费扣款'  and txn_state='交易成功'  group by  mer_id "
+					+ "' and mcht_prop='助农' and txn_type_desc='社保税费缴费交易' and txn_sub_type_desc in ('个人医疗保险缴费扣款','医疗保险缴费(城乡居民)')  and txn_state='交易成功'  group by  mer_id "
 					+ ") znsb on xx.a=znsb.mer_id left join (select mer_id, count(mer_id)  num from  wnbank.t_dis_ifsp_intgr_txn_dtl where to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
 					+ curSelectMonthStart
 					+ "' and to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
 					+ curSelectDate
-					+ "' and mcht_prop='助农' and txn_type_desc='社保税费缴费交易' and txn_sub_type_desc='个人养老保险缴费扣款'  and txn_state='交易成功'  group by  mer_id) znyl on xx.a=znyl.mer_id left join (select mer_id, count(mer_id)  num from  wnbank.t_dis_ifsp_intgr_txn_dtl where to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
+					+ "' and mcht_prop='助农' and txn_type_desc='社保税费缴费交易' and txn_sub_type_desc in ('个人养老保险缴费扣款','养老保险缴费(城乡居民)','养老保险缴费(个人)')  and txn_state='交易成功'  group by  mer_id) znyl on xx.a=znyl.mer_id left join (select mer_id, count(mer_id)  num from  wnbank.t_dis_ifsp_intgr_txn_dtl where to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
 					+ curSelectMonthStart
 					+ "' and to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
 					+ curSelectDate
-					+ "' and mcht_prop='助农' and txn_type_desc='电费缴费交易' and txn_sub_type_desc in ('便民缴费（电费缴费）','便民缴费（电费预缴费）')  and txn_state='交易成功'  group by  mer_id) zndf on xx.a=zndf.mer_id "
+					+ "' and mcht_prop='助农' and txn_type_desc='电费缴费交易' and txn_sub_type_desc in ('便民缴费（电费缴费）','便民缴费（电费预缴费）','电费缴费（全省）','电费预缴费（全省）')  and txn_state='交易成功'  group by  mer_id) zndf on xx.a=zndf.mer_id "
 					+ " left join (select mer_id, count(mer_id)  num from wnbank.t_dis_ifsp_intgr_txn_dtl where to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')>='"
 					+ curSelectMonthStart
 					+ "' and to_char(to_date(biz_dt,'yyyy-mm-dd'),'yyyy-mm-dd')<='"
